@@ -34,10 +34,10 @@ struct ModifyGarmentView: View {
     private var color: Color
     
     @State
-    private var selectedType: GarmentType
+    private var selectedType: GarmentCategory
     
     @State
-    private var washingSymbols: Set<WashingSymbol>
+    private var washingSymbols: Set<LaundrySymbol>
     
     @State
     private var purchaseDate: Date
@@ -75,7 +75,7 @@ struct ModifyGarmentView: View {
         self.name            = garment.name
         self.brand           = garment.brand ?? ""
         self.color           = Color(hex: garment.color)
-        self.selectedType    = garment.type
+        self.selectedType    = garment.category
         self.washingSymbols  = Set(garment.washingSymbols)
         self.purchaseDate    = garment.purchaseDate
         self.imagePath       = garment.imagePath
@@ -122,7 +122,7 @@ struct ModifyGarmentView: View {
                 )
                 
                 Picker("Type", selection: $selectedType) {
-                    ForEach(GarmentType.allCases) { type in
+                    ForEach(GarmentCategory.allCases) { type in
                         Text(type.rawValue).tag(type)
                     }
                 }
@@ -136,7 +136,7 @@ struct ModifyGarmentView: View {
                 MultiPicker(
                     "Washing Symbols",
                     selection: self.$washingSymbols,
-                    items    : WashingSymbol.allCases
+                    items    : LaundrySymbol.allCases
                 ) { symbols in
                     Text(symbols.label).tag(symbols)
                 }
@@ -230,7 +230,7 @@ struct ModifyGarmentView: View {
         self.item.name           = self.name
         self.item.brand          = self.brand.isEmpty ? nil : self.brand
         self.item.color          = self.color.toHex() ?? "nil"
-        self.item.type           = self.selectedType
+        self.item.category           = self.selectedType
         self.item.washingSymbols = Array(self.washingSymbols)
         self.item.purchaseDate   = self.purchaseDate
         self.item.imagePath      = self.imagePath ?? ""

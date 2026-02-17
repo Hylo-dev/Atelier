@@ -12,27 +12,42 @@ import Foundation
 final class Garment {
     @Attribute(.unique) var id: UUID
     
-    var name : String
-    var brand: String?
-    var color: String
-    var type : GarmentType
+    // MARK: - Object Description
+    var name        : String
+    var brand       : String?
+    var color       : String
+    var composition : [GarmentComposition]
+    var category    : GarmentCategory
+    var subCategory : GarmentSubCategory
+    var season      : Season
+    var style       : GarmentStyle
+    var purchaseDate: Date
+    var state       : GarmentState
+
     
-    var washingSymbols : [WashingSymbol]
+    // MARK: - Washing Info
+    var washingSymbols : [LaundrySymbol]
     var lastWashingDate: Date?
-    var purchaseDate   : Date
     var wearCount      : Int
     
+        
+    // MARK: - Graphic
     var imagePath  : String? // Path to image 2D
     var model3DPath: String? // Path to model 3D
+    
     
     init(
         id            : UUID = UUID(),
         name          : String,
         brand         : String? = nil,
         color         : String,
-        type          : GarmentType,
-        washingSymbols: [WashingSymbol] = [],
+        composition   : [GarmentComposition],
+        category      : GarmentCategory,
+        subCategory   : GarmentSubCategory,
+        season        : Season,
+        style         : GarmentStyle,
         purchaseDate  : Date = .now,
+        washingSymbols: [LaundrySymbol] = [],
         imagePath     : String? = nil,
         model3DPath   : String? = nil
     ) {
@@ -40,10 +55,17 @@ final class Garment {
         self.name           = name
         self.brand          = brand
         self.color          = color
-        self.type           = type
-        self.washingSymbols = washingSymbols
+        self.composition    = composition
+        self.category       = category
+        self.subCategory    = subCategory
+        self.season         = season
+        self.style          = style
         self.purchaseDate   = purchaseDate
+        self.state          = .available
+        
+        self.washingSymbols = washingSymbols
         self.wearCount      = 0
+        
         self.imagePath      = imagePath
         self.model3DPath    = model3DPath
     }
