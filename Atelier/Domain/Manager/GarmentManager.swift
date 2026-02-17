@@ -9,6 +9,7 @@ import SwiftData
 import Foundation
 
 @Observable
+@MainActor
 final class GarmentManager {
     var context: ModelContext
     
@@ -21,19 +22,14 @@ final class GarmentManager {
         save()
     }
     
-//    func updateGarment(
-//        _ garment: Garment,
-//        newName: String,
-//        newSize: String
-//    ) {
-//        garment.name = newName
-//        garment.size = newSize
-//        
-//        save()
-//    }
+    func updateGarment() {
+        print("Modified garment in DB")
+        
+        save()
+    }
     
     func deleteGarment(_ garment: Garment) {
-        context.delete(garment)
+        self.context.delete(garment)
         save()
     }
     

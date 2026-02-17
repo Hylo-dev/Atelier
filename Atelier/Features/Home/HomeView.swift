@@ -12,7 +12,7 @@ struct HomeView: View {
     private var sizeClass
     
     @State
-    private var selectedTab: AppTab? = .inventory
+    private var selectedTab: AppTab? = .wardrobe
     
     @State
     private var manager = CaptureManager()
@@ -33,7 +33,10 @@ struct HomeView: View {
                 Tab(tab.title, systemImage: tab.icon, value: tab, role: tab.role) {
                     NavigationStack {
                         destinationView(for: tab)
+                            .toolbarTitleDisplayMode(.large)
+                            .navigationTitle(tab.title)
                     }
+                    
                 }
             }
         }
@@ -68,17 +71,14 @@ struct HomeView: View {
     @ViewBuilder
     private func destinationView(for tab: AppTab) -> some View {
         switch tab {
-            case .inventory:
+            case .wardrobe:
                 InventoryView(manager: self.manager)
-                    .navigationTitle(tab.title)
             
             case .outfitBuilder:
                 Text("Schermata Outfit")
-                    .navigationTitle(tab.title)
             
             case .maintenance:
                 Text("Schermata Manutenzione")
-                    .navigationTitle(tab.title)
         }
     }
 }

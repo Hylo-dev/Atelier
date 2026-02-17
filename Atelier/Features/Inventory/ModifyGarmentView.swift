@@ -1,15 +1,15 @@
 //
-//  AddGarmentView.swift
+//  ModifyGarmentView.swift
 //  Atelier
 //
-//  Created by Eliomar Alejandro Rodriguez Ferrer on 16/02/26.
+//  Created by Eliomar Alejandro Rodriguez Ferrer on 17/02/26.
 //
 
 import SwiftUI
 import PhotosUI
-import UIKit
 
-struct AddGarmentView: View {
+struct ModifyGarmentView: View {
+    
     @Environment(\.dismiss)
     var dismiss
     
@@ -17,28 +17,30 @@ struct AddGarmentView: View {
     private var modelContext
     
     @Binding
-    var garmentManager: GarmentManager?
+    private var garmentManager: GarmentManager?
+    
+    private var item: Garment
     
     
     // MARK: - Garment Attributes
     
     @State
-    private var name: String = ""
+    private var name: String
     
     @State
-    private var brand: String = ""
+    private var brand: String
     
     @State
-    private var color: Color = Color.clear
+    private var color: Color
     
     @State
-    private var selectedType: GarmentType = .top
+    private var selectedType: GarmentType
     
     @State
-    private var washingSymbols: Set<WashingSymbol> = []
+    private var washingSymbols: Set<WashingSymbol>
     
     @State
-    private var purchaseDate: Date = .now
+    private var purchaseDate: Date
     
     
     // MARK: - Image Handling States
@@ -63,32 +65,29 @@ struct AddGarmentView: View {
     
     @State
     private var showImageSourceDialog = false
+    
+    init(
+        garmentManager: Binding<GarmentManager?>,
+        garment       : Garment,
         
-    @ViewBuilder
-    private var avatarView: some View {
-        ZStack {
-            if let displayImage = self.selectedImage {
-                displayImage
-                    .resizable()
-                    .scaledToFill()
-                    .frame(width: 140, height: 140)
-                    .clipShape(Circle())
-                
-            } else {
-                Circle()
-                    .fill(.ultraThinMaterial)
-                    .frame(width: 140, height: 140)
-                    .overlay {
-                        Image(systemName: "camera.fill")
-                            .font(.largeTitle)
-                            .foregroundStyle(.secondary)
-                    }
-            }
+    ) {
+        self.item            = garment
+        self.name            = garment.name
+        self.brand           = garment.brand ?? ""
+        self.color           = Color(hex: garment.color)
+        self.selectedType    = garment.type
+        self.washingSymbols  = Set(garment.washingSymbols)
+        self.purchaseDate    = garment.purchaseDate
+        self.imagePath       = garment.imagePath
+        
+        if let path = garment.imagePath, let image = ImageStorage.loadImage(from: path) {
+            self.selectedImage = Image(uiImage: image)
         }
+        
+        self._garmentManager = garmentManager
     }
     
     var body: some View {
-        
         Form {
             Section {
                 HStack {
@@ -152,7 +151,7 @@ struct AddGarmentView: View {
             
             ToolbarItem(placement: .confirmationAction) {
                 Button("Finish", systemImage: "checkmark") {
-                    saveGarment()
+                    updateGarment()
                 }
                 .fontWeight(.bold)
                 .disabled(self.name.isEmpty)
@@ -203,25 +202,42 @@ struct AddGarmentView: View {
         }
     }
     
-    // MARK: - Tools
-    
-    private var isFormValid: Bool {
-        !self.name.isEmpty && self.color == Color.clear
+    @ViewBuilder
+    private var avatarView: some View {
+        ZStack {
+            if let displayImage = self.selectedImage {
+                displayImage
+                    .resizable()
+                    .scaledToFill()
+                    .frame(width: 140, height: 140)
+                    .clipShape(Circle())
+                
+            } else {
+                Circle()
+                    .fill(.ultraThinMaterial)
+                    .frame(width: 140, height: 140)
+                    .overlay {
+                        Image(systemName: "camera.fill")
+                            .font(.largeTitle)
+                            .foregroundStyle(.secondary)
+                    }
+            }
+        }
     }
     
-    private func saveGarment() {
-        let newGarment = Garment(
-            name          : self.name,
-            brand         : self.brand.isEmpty ? nil : self.brand,
-            color         : self.color.toHex() ?? "nil",
-            type          : self.selectedType,
-            washingSymbols: Array(self.washingSymbols),
-            purchaseDate  : self.purchaseDate,
-            imagePath     : self.imagePath ?? ""
-        )
+    func updateGarment() {
+        
+        self.item.name           = self.name
+        self.item.brand          = self.brand.isEmpty ? nil : self.brand
+        self.item.color          = self.color.toHex() ?? "nil"
+        self.item.type           = self.selectedType
+        self.item.washingSymbols = Array(self.washingSymbols)
+        self.item.purchaseDate   = self.purchaseDate
+        self.item.imagePath      = self.imagePath ?? ""
+         
         
         if let manager = self.garmentManager {
-            manager.addGarment(newGarment)
+            manager.updateGarment()
             
         } else { print("Manager is nil") }
         

@@ -8,7 +8,7 @@
 import SwiftUI
 
 enum AppTab: String, CaseIterable, Identifiable {
-    case inventory
+    case wardrobe
     case outfitBuilder
     case maintenance
     
@@ -16,7 +16,7 @@ enum AppTab: String, CaseIterable, Identifiable {
     
     var title: String {
         switch self {
-        case .inventory    : return "Inventory"
+        case .wardrobe     : return "Wardrobe"
         case .outfitBuilder: return "Outfit"
         case .maintenance  : return "Manutenzione"
         }
@@ -24,7 +24,7 @@ enum AppTab: String, CaseIterable, Identifiable {
     
     var icon: String {
         switch self {
-        case .inventory    : return "archivebox"
+        case .wardrobe     : return "cabinet"
         case .outfitBuilder: return "tshirt"
         case .maintenance  : return "wrench.and.screwdriver"
         }

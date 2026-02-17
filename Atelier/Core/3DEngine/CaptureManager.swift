@@ -50,16 +50,27 @@ final class CaptureManager {
     
     // MARK: - iOS Logic
     #if os(iOS)
-    func savePhotoToDisk(_ data: Data) {
+    func savePhotoToDisk(_ photoData: Data) -> (
+        filename: String?,
+        image   : UIImage?
+    ) {
         let filename = "\(UUID().uuidString).heic"
-        let url = fileManager.temporaryDirectory.appendingPathComponent(filename)
+        
+        let paths = FileManager.default.urls(
+            for: .documentDirectory,
+            in: .userDomainMask
+        )
+        let fileURL = paths[0].appendingPathComponent(filename)
         
         do {
-            try data.write(to: url)
-            Task { self.capturedPhotoURLs.append(url) }
+            try photoData.write(to: fileURL)
+            
+            let image = UIImage(data: photoData)
+            return (filename, image)
             
         } catch {
-            print("Error save image `iOS`: \(error)")
+            print("Error save image: \(error)")
+            return (nil, nil)
         }
     }
     

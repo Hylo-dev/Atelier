@@ -32,7 +32,9 @@ final class Garment {
         color         : String,
         type          : GarmentType,
         washingSymbols: [WashingSymbol] = [],
-        purchaseDate  : Date = .now
+        purchaseDate  : Date = .now,
+        imagePath     : String? = nil,
+        model3DPath   : String? = nil
     ) {
         self.id             = id
         self.name           = name
@@ -42,5 +44,7 @@ final class Garment {
         self.washingSymbols = washingSymbols
         self.purchaseDate   = purchaseDate
         self.wearCount      = 0
+        self.imagePath      = imagePath
+        self.model3DPath    = model3DPath
     }
 }

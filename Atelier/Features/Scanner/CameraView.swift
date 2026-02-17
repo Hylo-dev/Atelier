@@ -3,7 +3,11 @@ import SwiftUI
 import AVFoundation
 
 struct CameraView: UIViewControllerRepresentable {
-    var captureManager: CaptureManager
+    var captureManager = CaptureManager()
+    
+    var onImageCaptured: ((String, UIImage) -> Void)
+    @Environment(\.dismiss) var dismiss
+    
     
     func makeUIViewController(context: Context) -> CameraViewController {
         let controller = CameraViewController()
@@ -20,7 +24,12 @@ struct CameraView: UIViewControllerRepresentable {
         init(_ parent: CameraView) { self.parent = parent }
         
         func didTakePhoto(_ photoData: Data) {
-            self.parent.captureManager.savePhotoToDisk(photoData)
+            let result = self.parent.captureManager.savePhotoToDisk(photoData)
+            
+            if let filename = result.filename, let image = result.image {
+                self.parent.onImageCaptured(filename, image)
+                self.parent.dismiss()
+            }
         }
     }
 }
@@ -36,7 +45,6 @@ class CameraViewController: UIViewController {
     private let photoOutput = AVCapturePhotoOutput()
     private var previewLayer: AVCaptureVideoPreviewLayer!
     
-    // UI Elements (Semplificati per brevità, aggiungi i tuoi stili)
     private let captureButton = UIButton()
     
     override func viewDidLoad() {
@@ -103,8 +111,18 @@ class CameraViewController: UIViewController {
         captureButton.backgroundColor = .white
         captureButton.layer.borderWidth = 4
         captureButton.layer.borderColor = UIColor.black.cgColor
-        captureButton.center = CGPoint(x: view.bounds.midX, y: view.bounds.height - 100)
-        captureButton.addTarget(self, action: #selector(takePhoto), for: .touchUpInside)
+        
+        captureButton.center = CGPoint(
+            x: view.bounds.midX,
+            y: view.bounds.height - 250
+        )
+        
+        captureButton.addTarget(
+            self,
+            action: #selector(takePhoto),
+            for: .touchUpInside
+        )
+        
         view.addSubview(captureButton)
     }
     
@@ -137,6 +155,8 @@ class CameraViewController: UIViewController {
         view.addSubview(flash)
         UIView.animate(withDuration: 0.1, animations: { flash.alpha = 0.5 }) { _ in flash.removeFromSuperview() }
     }
+    
+    
 }
 
 extension CameraViewController: AVCapturePhotoCaptureDelegate {
