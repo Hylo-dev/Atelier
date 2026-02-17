@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct ModelCard: View {
+struct ModelCardView: View {
     let item: Garment
     
     init(_ item: Garment) {
@@ -28,6 +28,7 @@ struct ModelCard: View {
                                 .frame(width: proxy.size.width, height: proxy.size.height)
                                 .contentShape(Rectangle())
                                 .clipped()
+                            
                         } else {
                             Image(systemName: "hanger")
                                 .font(.largeTitle)
@@ -42,11 +43,14 @@ struct ModelCard: View {
                 Text(self.item.name)
                     .font(.headline)
                     .fontDesign(.rounded)
+                    .fontWeight(.semibold)
                     .lineLimit(1)
                     .foregroundStyle(.primary)
                 
                 Text(self.item.brand ?? " ")
                     .font(.subheadline)
+                    .fontDesign(.rounded)
+                    .fontWeight(.regular)
                     .foregroundStyle(self.item.brand == nil ? .clear : .secondary)
                     .lineLimit(1)
                 
@@ -57,6 +61,15 @@ struct ModelCard: View {
                 alignment: .leading
             )
             .background(Color(.secondarySystemBackground))
+//            .clipShape(
+//                UnevenRoundedRectangle(
+//                    topLeadingRadius    : 16,
+//                    bottomLeadingRadius : 0,
+//                    bottomTrailingRadius: 0,
+//                    topTrailingRadius   : 16
+//                )
+//            )
+            
         }
         .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
         .contentShape(.contextMenuPreview, RoundedRectangle(cornerRadius: 16, style: .continuous))

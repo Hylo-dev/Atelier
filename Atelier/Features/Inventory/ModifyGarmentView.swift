@@ -7,6 +7,7 @@
 
 import SwiftUI
 import PhotosUI
+import UIKit
 
 struct ModifyGarmentView: View {
     
@@ -33,8 +34,30 @@ struct ModifyGarmentView: View {
     @State
     private var color: Color
     
+    
+    
     @State
-    private var selectedType: GarmentCategory
+    private var selectedFabrics: Set<GarmentFabric>
+    
+    @State
+    private var selectedComposition: [GarmentComposition]
+    
+    @State
+    private var selectedCategory: GarmentCategory
+    
+    @State
+    private var selectedSubCategory: GarmentSubCategory
+    
+    @State
+    private var selectedSeason: Season
+    
+    @State
+    private var selectedStyle: GarmentStyle
+    
+    @State
+    private var selectedState: GarmentState
+    
+    
     
     @State
     private var washingSymbols: Set<LaundrySymbol>
@@ -66,22 +89,35 @@ struct ModifyGarmentView: View {
     @State
     private var showImageSourceDialog = false
     
+    private var currentTotalComposition: Int {
+        Int(selectedComposition.reduce(0) { $0 + $1.percentual })
+    }
+    
     init(
         garmentManager: Binding<GarmentManager?>,
-        garment       : Garment,
-        
+        garment       : Garment
     ) {
         self.item            = garment
-        self.name            = garment.name
-        self.brand           = garment.brand ?? ""
-        self.color           = Color(hex: garment.color)
-        self.selectedType    = garment.category
-        self.washingSymbols  = Set(garment.washingSymbols)
-        self.purchaseDate    = garment.purchaseDate
-        self.imagePath       = garment.imagePath
+        
+        _name                = State(initialValue: garment.name)
+        _brand               = State(initialValue: garment.brand ?? "")
+        _color               = State(initialValue: Color(hex: garment.color))
+        
+        _selectedComposition = State(initialValue: garment.composition)
+        _selectedFabrics     = State(initialValue: Set(garment.composition.map { $0.fabric }))
+        
+        _selectedCategory    = State(initialValue: garment.category)
+        _selectedSubCategory = State(initialValue: garment.subCategory)
+        _selectedSeason      = State(initialValue: garment.season)
+        _selectedStyle       = State(initialValue: garment.style)
+        _selectedState       = State(initialValue: garment.state)
+        
+        _washingSymbols      = State(initialValue: Set(garment.washingSymbols))
+        _purchaseDate        = State(initialValue: garment.purchaseDate)
+        _imagePath           = State(initialValue: garment.imagePath)
         
         if let path = garment.imagePath, let image = ImageStorage.loadImage(from: path) {
-            self.selectedImage = Image(uiImage: image)
+            _selectedImage = State(initialValue: Image(uiImage: image))
         }
         
         self._garmentManager = garmentManager
@@ -89,6 +125,7 @@ struct ModifyGarmentView: View {
     
     var body: some View {
         Form {
+
             Section {
                 HStack {
                     
@@ -109,41 +146,26 @@ struct ModifyGarmentView: View {
             }
             .listRowBackground(Color.clear)
             
-            Section {
-                TextField("Name", text: self.$name)
-                TextField("Brand", text: self.$brand)
-            }
+            // MARK: - Sections
             
-            Section {
-                
-                ColorPicker(
-                    "Color",
-                    selection: self.$color
-                )
-                
-                Picker("Type", selection: $selectedType) {
-                    ForEach(GarmentCategory.allCases) { type in
-                        Text(type.rawValue).tag(type)
-                    }
-                }
-                
-                DatePicker(
-                    "Purchase Date",
-                    selection: self.$purchaseDate,
-                    displayedComponents: [.date]
-                )
-                
-                MultiPicker(
-                    "Washing Symbols",
-                    selection: self.$washingSymbols,
-                    items    : LaundrySymbol.allCases
-                ) { symbols in
-                    Text(symbols.label).tag(symbols)
-                }
-            }
+            // Section 1: Info
+            self.sectionGeneralInfo
+            
+            // Section 2: Physical details
+            self.sectionPhysicalDetails
+            
+            // Section 3: Care
+            self.sectionCare
+            
+            // Section 4: Style & Category
+            self.sectionStyleAndCategory
+            
+            // Section 5: Composition Garment
+            self.sectionComposition
         }
-        .navigationTitle("New garment")
+        .navigationTitle("Edit garment")
         .navigationBarTitleDisplayMode(.inline)
+        .scrollDismissesKeyboard(.interactively)
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
                 Button("Cancel", systemImage: "xmark") { dismiss() }
@@ -151,78 +173,284 @@ struct ModifyGarmentView: View {
             
             ToolbarItem(placement: .confirmationAction) {
                 Button("Finish", systemImage: "checkmark") {
-                    updateGarment()
+                    self.updateGarment()
                 }
                 .fontWeight(.bold)
                 .disabled(self.name.isEmpty)
             }
         }
-        .confirmationDialog("Choose Image", isPresented: $showImageSourceDialog) {
-            Button("Camera") {
-                showCamera = true
-            }
-            
-            Button("Gallery") {
-                showGalleryPicker = true
-            }
-            
-            if selectedImage != nil {
-                Button("Remove Photo", role: .destructive) {
-                    self.selectedImage = nil
-                    self.uiImageToSave = nil
-                    self.imagePath = nil
+        .confirmationDialog(
+            "Choose Image",
+            isPresented: self.$showImageSourceDialog,
+            actions: self.confirmationDialogHandler,
+            message: { Text("Select how you want to add the photo") }
+        )
+        .sheet(
+            isPresented: self.$showCamera,
+            content    : self.sheetHandler
+        )
+        .photosPicker(
+            isPresented: self.$showGalleryPicker,
+            selection  : self.$selectedItem,
+            matching   : .images
+        )
+        .onChange(
+            of: self.selectedItem,
+            selectedItemChanged
+        )
+        .onChange(
+            of: self.selectedFabrics,
+            selectedFabricsChanged
+        )
+        .onChange(of: self.selectedCategory) { _, newValue in
+            self.selectedSubCategory = newValue.subCategory.first ?? GarmentSubCategory.top
+        }
+    }
+    
+    // MARK: - Views
+    
+    @ViewBuilder
+    private var avatarView: some View {
+        Group {
+            if let path = self.imagePath, let image = ImageStorage.loadImage(from: path) {
+                Image(uiImage: image)
+                    .resizable()
+                    .scaledToFill()
+                
+            } else {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 22, style: .continuous)
+                        .fill(self.color.gradient)
+                    
+                    Image(systemName: "hanger")
+                        .font(.system(size: 80))
+                        .foregroundStyle(.white.opacity(0.5))
                 }
             }
+        }
+        .frame(width: 260)
+        .aspectRatio(3/4, contentMode: .fit)
+        .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+        .shadow(color: Color.black.opacity(0.15), radius: 10, x: 0, y: 5)
+    }
+    
+    @ViewBuilder
+    var sectionGeneralInfo: some View {
+        Section("Info Garment") {
+            TextField("Name", text: self.$name)
+            TextField("Brand", text: self.$brand)
             
-        } message: {
-            Text("Select how you want to add the photo")
+            DatePicker(
+                "Purchase Date",
+                selection: self.$purchaseDate,
+                displayedComponents: [.date]
+            )
         }
-        .sheet(isPresented: $showCamera) {
-            CameraView(onImageCaptured: { filename, image in
-                self.selectedImage = Image(uiImage: image)
-                self.uiImageToSave = image
-                self.imagePath = filename
-            })
-            .ignoresSafeArea()
-        }
-        .photosPicker(isPresented: $showGalleryPicker, selection: $selectedItem, matching: .images)
-        .onChange(of: selectedItem) {
-            Task {
-                if let data = try? await selectedItem?.loadTransferable(type: Data.self),
-                   let uiImage = UIImage(data: data) {
+    }
+    
+    @ViewBuilder
+    var sectionPhysicalDetails: some View {
+        Section("Details") {
+            ColorPicker("Color", selection: self.$color)
+            
+            NavigationLink {
+                GenericSelectionView<GarmentFabric>(selection: self.$selectedFabrics)
+                    .navigationTitle("Fabrics")
+                
+            } label: {
+                HStack {
+                    Text("Fabrics")
                     
-                    self.uiImageToSave = uiImage
-                    self.selectedImage = Image(uiImage: uiImage)
+                    Spacer()
                     
-                    if let filename = ImageStorage.saveImage(uiImage) {
-                        self.imagePath = filename
-                    }
+                    Text(self.selectedFabrics.isEmpty ? "None" : "\(self.selectedFabrics.count) selected")
+                        .foregroundStyle(.secondary)
+                    
                 }
             }
         }
     }
     
     @ViewBuilder
-    private var avatarView: some View {
-        ZStack {
-            if let displayImage = self.selectedImage {
-                displayImage
-                    .resizable()
-                    .scaledToFill()
-                    .frame(width: 140, height: 140)
-                    .clipShape(Circle())
+    var sectionCare: some View {
+        Section("Care") {
+            NavigationLink {
+                GenericSelectionView<LaundrySymbol>(selection: self.$washingSymbols)
+                    .navigationTitle("Care Symbols")
                 
-            } else {
-                Circle()
-                    .fill(.ultraThinMaterial)
-                    .frame(width: 140, height: 140)
-                    .overlay {
-                        Image(systemName: "camera.fill")
-                            .font(.largeTitle)
-                            .foregroundStyle(.secondary)
-                    }
+            } label: {
+                HStack {
+                    Text("Washing Symbols")
+                    
+                    Spacer()
+                    
+                    Text(self.washingSymbols.isEmpty ? "None" : "\(self.washingSymbols.count) selected")
+                        .foregroundStyle(.secondary)
+                }
+            }
+            
+            Picker("State", selection: self.$selectedState) {
+                ForEach(GarmentState.allCases, id: \.id) { state in
+                    Text(state.rawValue).tag(state)
+                    
+                }
             }
         }
+    }
+    
+    @ViewBuilder
+    var sectionStyleAndCategory: some View {
+        Section("Style & Category") {
+            
+            Picker("Type", selection: self.$selectedCategory) {
+                ForEach(GarmentCategory.allCases, id: \.id) { type in
+                    Text(type.label).tag(type)
+                }
+            }
+            
+            Picker("Model", selection: self.$selectedSubCategory) {
+                ForEach(self.selectedCategory.subCategory, id: \.id) { type in
+                    Text(type.rawValue).tag(type)
+                }
+            }
+            .id(self.selectedCategory)
+            .disabled(self.selectedCategory == .other)
+            
+            Picker("Season", selection: self.$selectedSeason) {
+                ForEach(Season.allCases, id: \.id) { type in
+                    Text(type.rawValue).tag(type)
+                }
+            }
+            
+            Picker("Style", selection: self.$selectedStyle) {
+                ForEach(GarmentStyle.allCases, id: \.id) { type in
+                    Text(type.rawValue).tag(type)
+                }
+            }
+        }
+    }
+    
+    @ViewBuilder
+    var sectionComposition: some View {
+        if !selectedFabrics.isEmpty {
+            Section("Composition") {
+                
+                VStack(alignment: .leading) {
+                    HStack {
+                        Text("Total")
+                        
+                        Spacer()
+                        
+                        Text("\(self.currentTotalComposition)%")
+                            .foregroundColor(self.currentTotalComposition == 100 ? .green : (self.currentTotalComposition > 100 ? .red : .primary))
+                            .fontWeight(.bold)
+                    }
+                    
+                    ProgressView(value: Double(self.currentTotalComposition), total: 100)
+                        .tint(self.currentTotalComposition == 100 ? .green : .orange)
+                }
+                .padding(.vertical, 5)
+                
+                ForEach(self.$selectedComposition, id: \.id) { $comp in
+                    VStack(alignment: .leading) {
+                        HStack {
+                            Text(comp.fabric.rawValue)
+                                .fontWeight(.medium)
+                            
+                            Spacer()
+                            
+                            Text("\(Int(comp.percentual))%")
+                                .monospacedDigit()
+                                .foregroundStyle(.secondary)
+                        }
+                        
+                        Slider(
+                            value: Binding<Double>(
+                                get: { comp.percentual },
+                                set: { newValue in
+                                    
+                                    let otherFabricsSum = self.selectedComposition
+                                        .filter { $0.id != comp.id }
+                                        .reduce(0) { $0 + $1.percentual }
+                                    
+                                    let availableSpace = 100.0 - otherFabricsSum
+                                    
+                                    comp.percentual = min(newValue, availableSpace)
+                                }
+                            ),
+                            in: 0...100,
+                            step: 1
+                        )
+                        .buttonStyle(.plain)
+                    }
+                    .padding(.vertical, 4)
+                }
+            }
+        }
+    }
+    
+    // MARK: - Handlers
+    
+    @ViewBuilder
+    private func confirmationDialogHandler() -> some View {
+        Button("Camera") {
+            self.showCamera = true
+        }
+        
+        Button("Gallery") {
+            self.showGalleryPicker = true
+        }
+        
+        if self.selectedImage != nil {
+            Button("Remove Photo", role: .destructive) {
+                self.selectedImage = nil
+                self.uiImageToSave = nil
+                self.imagePath = nil
+            }
+        }
+    }
+    
+    @ViewBuilder
+    private func sheetHandler() -> some View {
+        CameraView(onImageCaptured: { filename, image in
+            self.selectedImage = Image(uiImage: image)
+            self.uiImageToSave = image
+            self.imagePath     = filename
+        })
+        .ignoresSafeArea()
+    }
+    
+    private func selectedItemChanged(
+        _ oldValue: PhotosPickerItem?,
+        _ newValue: PhotosPickerItem?
+    ) {
+        Task {
+            if let data = try? await selectedItem?.loadTransferable(type: Data.self),
+               let uiImage = UIImage(data: data) {
+                
+                self.uiImageToSave = uiImage
+                self.selectedImage = Image(uiImage: uiImage)
+                
+                if let filename = ImageStorage.saveImage(uiImage) {
+                    self.imagePath = filename
+                }
+            }
+        }
+    }
+    
+    private func selectedFabricsChanged(_ oldValue: Set<GarmentFabric>, _ newValue: Set<GarmentFabric>) {
+        var newCompositionList: [GarmentComposition] = []
+        
+        for fabric in newValue {
+            if let existing = self.selectedComposition.first(where: { $0.fabric == fabric }) {
+                newCompositionList.append(existing)
+                
+            } else {
+                newCompositionList.append(GarmentComposition(fabric: fabric, percentual: 0))
+            }
+        }
+        
+        self.selectedComposition = newCompositionList
     }
     
     func updateGarment() {
@@ -230,11 +458,18 @@ struct ModifyGarmentView: View {
         self.item.name           = self.name
         self.item.brand          = self.brand.isEmpty ? nil : self.brand
         self.item.color          = self.color.toHex() ?? "nil"
-        self.item.category           = self.selectedType
+        
+        // Updated properties
+        self.item.composition    = Array(self.selectedComposition)
+        self.item.category       = self.selectedCategory
+        self.item.subCategory    = self.selectedSubCategory
+        self.item.season         = self.selectedSeason
+        self.item.style          = self.selectedStyle
+        
         self.item.washingSymbols = Array(self.washingSymbols)
         self.item.purchaseDate   = self.purchaseDate
         self.item.imagePath      = self.imagePath ?? ""
-         
+        
         
         if let manager = self.garmentManager {
             manager.updateGarment()

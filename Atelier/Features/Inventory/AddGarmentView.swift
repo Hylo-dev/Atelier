@@ -29,7 +29,7 @@ struct AddGarmentView: View {
     private var brand: String = ""
     
     @State
-    private var color: Color = Color.clear
+    private var color: Color = Color.accentColor
     
     
     
@@ -178,25 +178,27 @@ struct AddGarmentView: View {
     
     @ViewBuilder
     private var avatarView: some View {
-        ZStack {
-            if let displayImage = self.selectedImage {
-                displayImage
+        Group {
+            if let path = self.imagePath, let image = ImageStorage.loadImage(from: path) {
+                Image(uiImage: image)
                     .resizable()
                     .scaledToFill()
-                    .frame(width: 140, height: 140)
-                    .clipShape(Circle())
                 
             } else {
-                Circle()
-                    .fill(.ultraThinMaterial)
-                    .frame(width: 140, height: 140)
-                    .overlay {
-                        Image(systemName: "camera.fill")
-                            .font(.largeTitle)
-                            .foregroundStyle(.secondary)
-                    }
+                ZStack {
+                    RoundedRectangle(cornerRadius: 22, style: .continuous)
+                        .fill(self.color.gradient)
+                    
+                    Image(systemName: "hanger")
+                        .font(.system(size: 80))
+                        .foregroundStyle(.white.opacity(0.5))
+                }
             }
         }
+        .frame(width: 260)
+        .aspectRatio(3/4, contentMode: .fit)
+        .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+        .shadow(color: Color.black.opacity(0.15), radius: 10, x: 0, y: 5)
     }
     
     @ViewBuilder
@@ -261,13 +263,13 @@ struct AddGarmentView: View {
         Section("Style & Category") {
             
             Picker("Type", selection: self.$selectedCategory) {
-                ForEach(GarmentCategory.allCases) { type in
+                ForEach(GarmentCategory.allCases, id: \.id) { type in
                     Text(type.label).tag(type)
                 }
             }
             
             Picker("Model", selection: self.$selectedSubCategory) {
-                ForEach(self.selectedCategory.subCategory) { type in
+                ForEach(self.selectedCategory.subCategory, id: \.id) { type in
                     Text(type.rawValue).tag(type)
                 }
             }
@@ -275,13 +277,13 @@ struct AddGarmentView: View {
             .disabled(self.selectedCategory == .other)
             
             Picker("Season", selection: self.$selectedSeason) {
-                ForEach(Season.allCases) { type in
+                ForEach(Season.allCases, id: \.id) { type in
                     Text(type.rawValue).tag(type)
                 }
             }
             
             Picker("Style", selection: self.$selectedStyle) {
-                ForEach(GarmentStyle.allCases) { type in
+                ForEach(GarmentStyle.allCases, id: \.id) { type in
                     Text(type.rawValue).tag(type)
                 }
             }
@@ -309,7 +311,7 @@ struct AddGarmentView: View {
                 }
                 .padding(.vertical, 5)
                 
-                ForEach($selectedComposition) { $comp in
+                ForEach(self.$selectedComposition, id: \.id) { $comp in
                     VStack(alignment: .leading) {
                         HStack {
                             Text(comp.fabric.rawValue)

@@ -28,10 +28,15 @@ struct InventoryView: View {
     @State
     private var searchText: String = ""
     
+    
     // MARK: - Sheet property
     
     @State
     private var isAddGarmentSheetVisible: Bool = false
+    
+    @State
+    private var selectedItem: Garment?
+    
     
     static private let columns = [
         GridItem(.adaptive(minimum: 150), spacing: 20)
@@ -80,6 +85,15 @@ struct InventoryView: View {
                 AddGarmentView(garmentManager: self.$garmentManager)
             }
         }
+        .sheet(item: self.$selectedItem) { germent in
+            
+            NavigationStack {
+                ModifyGarmentView(
+                    garmentManager: self.$garmentManager,
+                    garment       : germent
+                )
+            }
+        }
         
     }
     
@@ -88,21 +102,63 @@ struct InventoryView: View {
     private var modelGridView: some View {
         LazyVGrid(columns: Self.columns, spacing: 20) {
             
-            ForEach(self.filteredModels, id: \.self) { item in
+            ForEach(self.filteredModels, id: \.id) { item in
                 
                 NavigationLink(value: item) {
-                    ModelCard(item)
+                    ModelCardView(item)
                         .contextMenu {
+                            let washingState = item.state == .toWash
+                            let loanState    = item.state == .onLoan
+                            
                             Button {
-                                deleteModel(item)
+                                item.state = washingState ? .drying : .toWash
+                                self.garmentManager?.updateGarment()
+                                
                             } label: {
-                                Label("Delete", systemImage: "trash.fill")
+                                Label(
+                                    washingState ? "Mark as Clean" : "Move to Wash",
+                                    systemImage: washingState ? "sparkle" : "washer.fill"
+                                )
                             }
+                            .disabled(!item.state.readyToWash())
+                            
+                            Button {
+                                item.state = loanState ? .available : .onLoan
+                                self.garmentManager?.updateGarment()
+                                
+                            } label: {
+                                Label(
+                                    loanState ? "Mark as Returned" : "Mark as Lent",
+                                    systemImage: loanState ? "arrow.uturn.backward" : "person.2"
+                                )
+                            }
+                            .disabled(!item.state.readyToLent())
+                            
+                            
+                            Divider()
+                            
                             
                             Button {
                                 
                             } label: {
-                                Label("Modify", systemImage: "pencil")
+                                Label("Add to Outfit", systemImage: "tshirt.fill")
+                            }
+                            
+                            
+                            Divider()
+                            
+                            
+                            Button {
+                                self.selectedItem = item
+                                
+                            } label: {
+                                Label("Edit Details", systemImage: "pencil")
+                            }
+                            
+                            Button {
+                                self.deleteModel(item)
+                            } label: {
+                                Label("Delete", systemImage: "trash")
                             }
                         }
                 }

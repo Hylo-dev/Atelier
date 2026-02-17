@@ -18,7 +18,6 @@ struct HomeView: View {
     private var manager = CaptureManager()
     
     var body: some View {
-        
         if sizeClass == .regular {
             self.sidebarLayout
             
@@ -32,7 +31,7 @@ struct HomeView: View {
                 
                 Tab(tab.title, systemImage: tab.icon, value: tab, role: tab.role) {
                     NavigationStack {
-                        destinationView(for: tab)
+                        self.destinationView(for: tab)
                             .toolbarTitleDisplayMode(.large)
                             .navigationTitle(tab.title)
                     }
@@ -40,14 +39,14 @@ struct HomeView: View {
                 }
             }
         }
-        .tint(.teal)
+        // .tint(.teal) Color the UI
     }
     
     private var sidebarLayout: some View {
         NavigationSplitView {
         
             List(selection: $selectedTab) {
-                ForEach(AppTab.allCases.filter(\.isAvailable)) { tab in
+                ForEach(AppTab.allCases.filter(\.isAvailable), id: \.id) { tab in
                     NavigationLink(value: tab) {
                         Label(tab.title, systemImage: tab.icon)
                     }

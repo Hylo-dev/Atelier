@@ -24,13 +24,14 @@ struct GenericSelectionView<Item: SelectableItem>: View {
     var body: some View {
         List {
 
-            ForEach(Array(Item.CategoryType.allCases)) { category in
+            ForEach(Array(Item.CategoryType.allCases), id: \.id) { category in
                 Section(header: Text(category.rawValue)) {
                     LazyVGrid(columns: columns, spacing: 20) {
 
-                        ForEach(Item.allCases.filter { $0.category == category }) { item in
+                        ForEach(Item.allCases.filter { $0.category == category }, id: \.id) { item in
                             VStack {
                                 selectionCell(for: item)
+                                
                             }
                             .onTapGesture {
                                 toggleSelection(item)

@@ -162,6 +162,14 @@ enum GarmentState: String, Codable, CaseIterable, Identifiable {
     
     var id: String { rawValue }
     
+    func readyToWash() -> Bool {
+        return self != .drying && self != .onLoan && self != .underRepair
+    }
+    
+    func readyToLent() -> Bool {
+        return self != .underRepair
+    }
+    
 }
 
 enum Season: String, Codable, CaseIterable, Identifiable {

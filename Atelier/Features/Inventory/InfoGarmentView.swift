@@ -13,7 +13,7 @@ struct InfoGarmentView: View {
     var garmentManager: GarmentManager?
     
     @State
-    var isModifySheetVisible: Bool = false
+    private var isModifySheetVisible: Bool = false
     
     var item: Garment
     
@@ -144,6 +144,7 @@ struct InfoGarmentView: View {
             RowInfo(title: "Model", value: self.item.subCategory.rawValue)
             RowInfo(title: "Season", value: self.item.season.rawValue)
             RowInfo(title: "Style", value: self.item.style.rawValue)
+            RowInfo(title: "State", value: self.item.state.rawValue)
             
         }
     }
@@ -152,7 +153,7 @@ struct InfoGarmentView: View {
     var sectionComposition: some View {
         Section("Composition") {
             
-            ForEach(self.item.composition) { item in
+            ForEach(self.item.composition, id: \.id) { item in
                 CompositionRow(
                     fabricName: item.fabric.rawValue,
                     percentage: item.percentual,
@@ -170,9 +171,9 @@ struct InfoGarmentView: View {
                     
                     HStack(spacing: 12) {
                         
-                        ForEach(self.item.washingSymbols, id: \.self) { symbol in
+                        ForEach(self.item.washingSymbols, id: \.id) { symbol in
                             VStack(alignment: .center) {
-                                Image("do_not_machine_wash")
+                                Image(symbol.iconName ?? "")
                                     .frame(width: 30, height: 30)
                                     .foregroundStyle(.secondary)
                                 
@@ -194,6 +195,7 @@ struct InfoGarmentView: View {
                     .padding(.vertical, 8)
                 }
                 .listRowInsets(EdgeInsets(top: 0, leading: 20, bottom: 0, trailing: 0))
+                .padding(.top, 5)
             }
             
             // Stats

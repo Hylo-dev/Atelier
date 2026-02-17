@@ -84,12 +84,9 @@ class CameraViewController: UIViewController {
         if captureSession.canAddInput(input) { captureSession.addInput(input) }
         if captureSession.canAddOutput(photoOutput) { captureSession.addOutput(photoOutput) }
         
-        // 2. CONFIGURAZIONE CRITICA PER IL 3D
-        photoOutput.isHighResolutionCaptureEnabled = true
-        // Attiva la profondità se disponibile (senza questo, il 3D viene male)
+        
         if photoOutput.isDepthDataDeliverySupported {
-            photoOutput.isDepthDataDeliveryEnabled = true
-            // Priorità alla qualità, non alla velocità
+            photoOutput.isDepthDataDeliveryEnabled    = true
             photoOutput.maxPhotoQualityPrioritization = .quality
         }
         
