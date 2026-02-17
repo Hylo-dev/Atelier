@@ -17,7 +17,8 @@ protocol SelectableItem: CaseIterable, Hashable, Identifiable {
 }
 
 struct GenericSelectionView<Item: SelectableItem>: View {
-    @Binding var selection: Set<Item>
+    @Binding
+    var selection: Set<Item>
     
     let columns = [GridItem(.adaptive(minimum: 80, maximum: 100))]
     

@@ -14,6 +14,7 @@ struct AtelierApp: App {
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
             Garment.self,
+            Outfit.self
         ])
         
         let modelConfiguration = ModelConfiguration(

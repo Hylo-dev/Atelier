@@ -8,10 +8,18 @@
 import SwiftUI
 
 struct ModelCardView: View {
-    let item: Garment
+    let title      : String
+    let subheadline: String
+    let imagePath  : String?
     
-    init(_ item: Garment) {
-        self.item = item
+    init(
+        title      : String,
+        subheadline: String,
+        imagePath  : String?
+    ) {
+        self.title       = title
+        self.subheadline = subheadline
+        self.imagePath   = imagePath
     }
     
     var body: some View {
@@ -21,7 +29,7 @@ struct ModelCardView: View {
                 .aspectRatio(3/4, contentMode: .fit)
                 .overlay {
                     GeometryReader { proxy in
-                        if let path = item.imagePath, let image = ImageStorage.loadImage(from: path) {
+                        if let path = self.imagePath, let image = ImageStorage.loadImage(from: path) {
                             Image(uiImage: image)
                                 .resizable()
                                 .scaledToFill()
@@ -40,18 +48,18 @@ struct ModelCardView: View {
                 .clipShape(Rectangle())
             
             VStack(alignment: .leading, spacing: 4) {
-                Text(self.item.name)
+                Text(self.title)
                     .font(.headline)
                     .fontDesign(.rounded)
                     .fontWeight(.semibold)
                     .lineLimit(1)
                     .foregroundStyle(.primary)
                 
-                Text(self.item.brand ?? " ")
+                Text(self.subheadline)
                     .font(.subheadline)
                     .fontDesign(.rounded)
                     .fontWeight(.regular)
-                    .foregroundStyle(self.item.brand == nil ? .clear : .secondary)
+                    .foregroundStyle(self.subheadline == " " ? .clear : .secondary)
                     .lineLimit(1)
                 
             }
@@ -61,15 +69,6 @@ struct ModelCardView: View {
                 alignment: .leading
             )
             .background(Color(.secondarySystemBackground))
-//            .clipShape(
-//                UnevenRoundedRectangle(
-//                    topLeadingRadius    : 16,
-//                    bottomLeadingRadius : 0,
-//                    bottomTrailingRadius: 0,
-//                    topTrailingRadius   : 16
-//                )
-//            )
-            
         }
         .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
         .contentShape(.contextMenuPreview, RoundedRectangle(cornerRadius: 16, style: .continuous))

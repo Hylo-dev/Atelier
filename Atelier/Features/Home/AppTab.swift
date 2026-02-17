@@ -18,7 +18,7 @@ enum AppTab: String, CaseIterable, Identifiable {
         switch self {
         case .wardrobe     : return "Wardrobe"
         case .outfitBuilder: return "Outfit"
-        case .maintenance  : return "Manutenzione"
+        case .maintenance  : return "Cure"
         }
     }
     
@@ -26,7 +26,7 @@ enum AppTab: String, CaseIterable, Identifiable {
         switch self {
         case .wardrobe     : return "cabinet"
         case .outfitBuilder: return "tshirt"
-        case .maintenance  : return "wrench.and.screwdriver"
+        case .maintenance  : return "sparkles.2"
         }
     }
     

@@ -35,6 +35,8 @@ final class Garment {
     var imagePath  : String? // Path to image 2D
     var model3DPath: String? // Path to model 3D
     
+    @Relationship(inverse: \Outfit.garments)
+    var outfits: [Outfit]
     
     init(
         id            : UUID = UUID(),
@@ -68,5 +70,7 @@ final class Garment {
         
         self.imagePath      = imagePath
         self.model3DPath    = model3DPath
+        
+        self.outfits        = []
     }
 }

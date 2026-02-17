@@ -74,7 +74,7 @@ struct HomeView: View {
                 InventoryView(manager: self.manager)
             
             case .outfitBuilder:
-                Text("Schermata Outfit")
+                OutfitView(manager: self.manager)
             
             case .maintenance:
                 Text("Schermata Manutenzione")

@@ -91,7 +91,7 @@ struct AddGarmentView: View {
     var body: some View {
         
         Form {
-            // Sezione Immagine (Header)
+
             Section {
                 HStack {
                     
@@ -101,7 +101,11 @@ struct AddGarmentView: View {
                         self.showImageSourceDialog = true
                         
                     } label: {
-                        self.avatarView
+                        AvatarView(
+                            self.imagePath ?? "",
+                            color: self.color,
+                            icon : "hanger"
+                        )
                     }
                     .buttonStyle(.plain)
                     
@@ -175,31 +179,6 @@ struct AddGarmentView: View {
     }
     
     // MARK: - Views
-    
-    @ViewBuilder
-    private var avatarView: some View {
-        Group {
-            if let path = self.imagePath, let image = ImageStorage.loadImage(from: path) {
-                Image(uiImage: image)
-                    .resizable()
-                    .scaledToFill()
-                
-            } else {
-                ZStack {
-                    RoundedRectangle(cornerRadius: 22, style: .continuous)
-                        .fill(self.color.gradient)
-                    
-                    Image(systemName: "hanger")
-                        .font(.system(size: 80))
-                        .foregroundStyle(.white.opacity(0.5))
-                }
-            }
-        }
-        .frame(width: 260)
-        .aspectRatio(3/4, contentMode: .fit)
-        .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
-        .shadow(color: Color.black.opacity(0.15), radius: 10, x: 0, y: 5)
-    }
     
     @ViewBuilder
     var sectionGeneralInfo: some View {
