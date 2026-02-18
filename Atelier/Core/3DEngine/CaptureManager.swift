@@ -54,8 +54,15 @@ final class CaptureManager {
         filename: String?,
         image   : UIImage?
     ) {
-        let filename = "\(UUID().uuidString).heic"
+        guard let sourceImage = UIImage(data: photoData) else {
+            return (nil, nil)
+        }
         
+        guard let compressedData = sourceImage.jpegData(
+            compressionQuality: 0.7
+        ) else { return (nil, nil) }
+        
+        let filename = "\(UUID().uuidString).jpg"
         let paths = FileManager.default.urls(
             for: .documentDirectory,
             in: .userDomainMask
@@ -63,11 +70,9 @@ final class CaptureManager {
         let fileURL = paths[0].appendingPathComponent(filename)
         
         do {
-            try photoData.write(to: fileURL)
+            try compressedData.write(to: fileURL)
             
-            let image = UIImage(data: photoData)
-            return (filename, image)
-            
+            return (filename, UIImage(data: compressedData))
         } catch {
             print("Error save image: \(error)")
             return (nil, nil)

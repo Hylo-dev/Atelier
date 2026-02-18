@@ -9,22 +9,22 @@ import UIKit
 
 struct ImageStorage {
     static func saveImage(_ image: UIImage) -> String? {
-        
         guard let data = image.jpegData(compressionQuality: 0.8) else { return nil }
         
         let filename = UUID().uuidString + ".jpg"
         
-        let paths = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
+        guard let documentsURL = FileManager.default.urls(
+            for: .documentDirectory,
+            in: .userDomainMask
+        ).first else { return nil }
         
-        let documentsDirectory = paths[0]
-        let fileURL = documentsDirectory.appendingPathComponent(filename)
+        let fileURL = documentsURL.appendingPathComponent(filename)
         
         do {
             try data.write(to: fileURL)
             return filename
-            
         } catch {
-            print("Error to save image: \(error)")
+            print("Errore salvataggio: \(error)")
             return nil
         }
     }

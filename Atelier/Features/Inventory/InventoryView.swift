@@ -17,7 +17,7 @@ struct InventoryView: View {
     private var context
     
     @Query(
-        sort : \Garment.lastWashingDate,
+        sort : \Garment.name,
         order: .reverse
     )
     private var garments: [Garment]
@@ -29,13 +29,41 @@ struct InventoryView: View {
     private var searchText: String = ""
     
     
-    // MARK: - Sheet property
+    // MARK: - Garment Sheet property
     
     @State
-    private var isAddGarmentSheetVisible: Bool = false
+    private var showGarmentSheet: Bool = false
     
     @State
     private var selectedItem: Garment?
+    
+    // MARK: - Filter Sheet property
+    
+    @State
+    private var filter = FilterGarmentConfig()
+    
+    @State
+    private var showFilterSheet: Bool = false
+        
+    var visibleGarments: [Garment] {
+        return FilterGarmentConfig.filterGarments(
+            allGarments: self.garments,
+            config     : self.filter
+        )
+    }
+    
+    var filteredModels: [Garment] {
+        return if self.searchText.isEmpty {
+            self.visibleGarments
+            
+        } else {
+            self.visibleGarments.filter {
+                $0.name.localizedCaseInsensitiveContains(searchText)
+            }
+        }
+    }
+    
+    // MARK: - Static property
     
     static private let columns = [
         GridItem(.adaptive(minimum: 150), spacing: 20)
@@ -61,12 +89,37 @@ struct InventoryView: View {
             }
         }
         .searchable(
-            text  : self.$searchText,
-            prompt: "Search garment"
+            text     : self.$searchText,
+            prompt   : "Search garment"
         )
         .toolbar {
+            
             ToolbarItem(placement: .topBarTrailing) {
-                Button("Add", systemImage: "plus") { self.isAddGarmentSheetVisible = true }
+                Button("Add", systemImage: "plus") {
+                    self.showGarmentSheet = true
+                }
+            }
+            
+            ToolbarItem(placement: .topBarTrailing) {
+                Button("Filter", systemImage: "line.3.horizontal.decrease") {
+                    self.showFilterSheet = true
+                }
+            }
+            
+            ToolbarItem(placement: .topBarTrailing) {
+                
+                Menu {
+                    
+                    Button {
+                        print("Name Order")
+                        
+                    } label: {
+                        Label("Name", systemImage: "textformat.alt")
+                    }
+                    
+                } label: {
+                    Image(systemName: "ellipsis")
+                }
             }
         }
         .navigationDestination(for: Garment.self) { selectedItem in
@@ -77,8 +130,8 @@ struct InventoryView: View {
             
         }
         .sheet(
-            isPresented:   self.$isAddGarmentSheetVisible,
-            onDismiss  : { self.isAddGarmentSheetVisible = false }
+            isPresented:   self.$showGarmentSheet,
+            onDismiss  : { self.showGarmentSheet = false }
         ) {
             NavigationStack {
                 AddGarmentView(garmentManager: self.$garmentManager)
@@ -93,7 +146,12 @@ struct InventoryView: View {
                 )
             }
         }
-        
+        .sheet(isPresented: self.$showFilterSheet) {
+            FilterSheetView(
+                filters: self.$filter,
+                brands : Array(Set(self.garments.lazy.compactMap { $0.brand }))
+            )
+        }
     }
     
     // MARK: - Subviews
@@ -109,6 +167,7 @@ struct InventoryView: View {
                         subheadline: item.brand ?? " ",
                         imagePath  : item.imagePath
                     )
+                    .id(item.id)
                     .contextMenu {
                         let washingState = item.state == .toWash
                         let loanState    = item.state == .onLoan
@@ -158,7 +217,8 @@ struct InventoryView: View {
                             Label("Edit Details", systemImage: "pencil")
                         }
                             
-                        Button {
+                        Button(role: .destructive) {
+                            
                             withAnimation {
                                 self.garmentManager?.deleteGarment(item)
                             }
@@ -169,19 +229,6 @@ struct InventoryView: View {
                     }
                 }
                 .buttonStyle(.plain)
-            }
-        }
-    }
-    
-    // MARK: - Logic
-    
-    var filteredModels: [Garment] {
-        return if self.searchText.isEmpty {
-            self.garments
-            
-        } else {
-            self.garments.filter {
-                $0.name.localizedCaseInsensitiveContains(searchText)
             }
         }
     }

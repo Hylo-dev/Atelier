@@ -29,13 +29,9 @@ struct ModelCardView: View {
                 .aspectRatio(3/4, contentMode: .fit)
                 .overlay {
                     GeometryReader { proxy in
-                        if let path = self.imagePath, let image = ImageStorage.loadImage(from: path) {
-                            Image(uiImage: image)
-                                .resizable()
-                                .scaledToFill()
-                                .frame(width: proxy.size.width, height: proxy.size.height)
-                                .contentShape(Rectangle())
-                                .clipped()
+                        
+                        if let path = self.imagePath {
+                            CachedImageView(imagePath: path, size: proxy.size)
                             
                         } else {
                             Image(systemName: "hanger")

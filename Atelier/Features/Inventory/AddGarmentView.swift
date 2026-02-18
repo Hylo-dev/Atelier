@@ -354,7 +354,8 @@ struct AddGarmentView: View {
         CameraView(onImageCaptured: { filename, image in
             self.selectedImage = Image(uiImage: image)
             self.uiImageToSave = image
-            self.imagePath     = filename
+            
+            self.imagePath = (filename as NSString).lastPathComponent
         })
         .ignoresSafeArea()
     }
@@ -370,8 +371,11 @@ struct AddGarmentView: View {
                 self.uiImageToSave = uiImage
                 self.selectedImage = Image(uiImage: uiImage)
                 
-                if let filename = ImageStorage.saveImage(uiImage) {
+               
+                if let savedResult = ImageStorage.saveImage(uiImage) {
+                    let filename = (savedResult as NSString).lastPathComponent
                     self.imagePath = filename
+                    print("Save file name for DB: \(filename)")
                 }
             }
         }
@@ -413,7 +417,7 @@ struct AddGarmentView: View {
             
             washingSymbols: Array(self.washingSymbols),
             
-            imagePath     : self.imagePath ?? ""
+            imagePath     : self.imagePath
         )
         
         if let manager = self.garmentManager {

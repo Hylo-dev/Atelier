@@ -9,13 +9,19 @@ import SwiftUI
 
 struct InfoGarmentView: View {
     
+    @Environment(\.dismiss)
+    private var dismiss
+    
     @Binding
     var garmentManager: GarmentManager?
     
     @State
     private var isModifySheetVisible: Bool = false
     
-    var item: Garment
+    @State
+    private var deleteItem: Bool = false
+    
+    let item: Garment
     
     var body: some View {
         
@@ -35,9 +41,22 @@ struct InfoGarmentView: View {
                         
         }
         .toolbar {
+            
             ToolbarItem {
-                Button("Modify") {
+                Button(role: .destructive) {
+                    self.deleteItem = true
+                    
+                } label: {
+                    Label("Delete", systemImage: "trash")
+                }
+            }
+                        
+            ToolbarItem {
+                Button {
                     self.isModifySheetVisible = true
+                    
+                } label: {
+                    Label("Edit", systemImage: "pencil")
                 }
             }
         }
@@ -51,6 +70,22 @@ struct InfoGarmentView: View {
                     garment       : self.item
                 )
             }
+        }
+        .alert(
+            "Delete Garment?",
+            isPresented: self.$deleteItem
+        ) {
+            
+            Button("Delete", role: .destructive) {
+                withAnimation {
+                    self.garmentManager?.deleteGarment(self.item)
+                }
+                
+                dismiss()
+            }
+            
+        } message: {
+            Text("Are you sure? This action cannot be undone.")
         }
     }
     

@@ -29,7 +29,12 @@ struct HomeView: View {
             
             ForEach(AppTab.allCases.filter(\.isAvailable), id: \.id) { tab in
                 
-                Tab(tab.title, systemImage: tab.icon, value: tab, role: tab.role) {
+                Tab(
+                    tab.title,
+                    systemImage: tab.icon,
+                    value      : tab,
+                    role       : tab.role
+                ) {
                     NavigationStack {
                         self.destinationView(for: tab)
                             .toolbarTitleDisplayMode(.large)

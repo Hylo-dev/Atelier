@@ -23,8 +23,6 @@ final class GarmentManager {
     }
     
     func updateGarment() {
-        print("Modified garment in DB")
-        
         save()
     }
     
