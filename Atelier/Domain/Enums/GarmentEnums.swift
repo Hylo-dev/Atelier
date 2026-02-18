@@ -14,7 +14,8 @@ enum GarmentCategory: String, Codable, CaseIterable, Identifiable {
     case onePiece
     case footwear
     case accessory
-    case other
+	case lingerie
+	case other
     
     var id: String { rawValue }
     
@@ -26,6 +27,7 @@ enum GarmentCategory: String, Codable, CaseIterable, Identifiable {
             case .onePiece : "One Piece"
             case .footwear : "Footwear"
             case .accessory: "Accessory"
+		    case .lingerie : "Lingerie"
             case .other    : "Other"
         }
     }
@@ -85,9 +87,28 @@ enum GarmentCategory: String, Codable, CaseIterable, Identifiable {
                 .eyewear,
                 .watches
             ]
-                
-            case .other: [ .none ]
-        }
+			
+			case .lingerie: [
+				.bras,
+				.sportsBras,
+				.bralettes,
+				.panties,
+				.thongs,
+				.boxerShorts,
+				.boxerBriefs,
+				.briefs,
+				.socks,
+				.tights,
+				.stockings,
+				.pajamas,
+				.nightgowns,
+				.robes,
+				.bodysuitsLingerie,
+				.shapewear
+			]
+			
+			case .other: [ .none ]
+		}
     }
 }
 
@@ -110,7 +131,7 @@ enum GarmentSubCategory: String, Codable, CaseIterable, Identifiable {
     case trousers   = "Trousers"
     case shorts     = "Shorts"
     case skirts     = "Skirts"
-    case leggings    = "Leggings"
+    case leggings   = "Leggings"
     case sweatpants = "Sweatpants"
     
     
@@ -145,6 +166,32 @@ enum GarmentSubCategory: String, Codable, CaseIterable, Identifiable {
     case jewelry    = "Jewelry"
     case eyewear    = "Eyewear"
     case watches    = "Watches"
+	
+	// MARK: - Underwear & Lingerie (Specifici)
+	case bras           = "Bras"
+	case sportsBras     = "Sports Bras"
+	case bralettes      = "Bralettes"
+	case panties        = "Panties"
+	case thongs         = "Thongs & Tangas"
+	
+	// Men's Underwear
+	case boxerShorts    = "Boxer Shorts"
+	case boxerBriefs    = "Boxer Briefs"
+	case briefs         = "Briefs"
+	
+	// Legwear
+	case socks          = "Socks"
+	case tights         = "Tights / Collant"
+	case stockings      = "Stockings"
+	
+	// Nightwear & Lounge
+	case pajamas        = "Pajamas"
+	case nightgowns     = "Nightgowns"
+	case robes          = "Robes & Dressing Gowns"
+	
+	// Functional/Other
+	case bodysuitsLingerie = "Lingerie Bodysuits"
+	case shapewear      = "Shapewear"
     
     case none       = "None"
     
@@ -383,4 +430,232 @@ enum LaundrySymbol: String, Codable, SelectableItem {
     }
     
     var title: String { label }
+	
+	// MARK: - 1. Temperatura Massima di Lavaggio (Vincolo Sicurezza)
+	/// Restituisce la temperatura in °C. Restituisce nil se il simbolo non riguarda la temperatura.
+	var maxWashingTemperature: Int? {
+		switch self {
+		case .machineWashCold, .handWash:
+			return 30
+		case .machineWashWarm, .machineWashPermanentPress:
+			return 40 // Permanent Press di solito è max 40°C se non specificato
+		case .machineWashHot:
+			return 50 // A volte 50 o 60, meglio 50 per sicurezza se "Hot" è generico
+		case .machineWashVeryHot:
+			return 95
+		case .machineWashNormal, .machineWashDelicate:
+			// Questi simboli indicano il ciclo, non la temperatura esplicita.
+			// Tuttavia, per un algoritmo, serve un default sicuro.
+			// Se c'è solo "Normal", si assume 40 solitamente, "Delicate" 30.
+			return self == .machineWashDelicate ? 30 : 40
+			
+		case .doNotMachineWash:
+			return 0 // Caso speciale per dire "Niente acqua"
+			
+		default:
+			return nil // Simboli di asciugatura/stiro non hanno temp di lavaggio
+		}
+	}
+	
+	// MARK: - 2. Intensità del Ciclo (Azione Meccanica)
+	
+	var agitationLevel: WashingAgitation {
+		switch self {
+			// Ciclo Normale
+		case .machineWashNormal, .machineWashCold, .machineWashWarm, .machineWashHot, .machineWashVeryHot:
+			return .normal
+			
+			// Ciclo Ridotto (Sintetici)
+		case .machineWashPermanentPress:
+			return .reduced
+			
+			// Ciclo Delicato (Lana/Seta)
+		case .machineWashDelicate, .handWash, .doNotWring:
+			return .gentle
+			
+		case .doNotMachineWash:
+			return .none
+			
+		default:
+			// Se il simbolo non è di lavaggio, non influenza l'agitazione (neutro)
+			return .normal
+		}
+	}
+	
+	// MARK: - 3. Logica Asciugatrice (Drying)
+	/// Se il capo può andare in asciugatrice e a che temperatura
+	var canTumbleDry: Bool {
+		switch self {
+		case .tumbleDryNormal,
+			 .tumbleDryLow,
+			 .tumbleDryMedium,
+			 .tumbleDryHigh,
+			 .tumbleDryNoHeat,
+			 .tumbleDryDelicate,
+			 .tumbleDryPermanentPress:
+			return true
+		default:
+			return false
+		}
+	}
+	
+	var dryingTemperatureLimit: Int? {
+		switch self {
+		case .tumbleDryLow, .tumbleDryDelicate:
+			return 60 // Bassa
+		case .tumbleDryMedium, .tumbleDryPermanentPress:
+			return 70 // Media
+		case .tumbleDryHigh, .tumbleDryNormal:
+			return 80 // Alta
+		case .tumbleDryNoHeat:
+			return 20 // Solo aria
+		default:
+			return nil
+		}
+	}
+	
+	// MARK: - 4. Temperatura Stiratura (Ironing)
+	/// Restituisce la temperatura massima della piastra del ferro in °C
+	var maxIroningTemperature: Int? {
+		switch self {
+		case .ironLow:
+			return 110 // 1 pallino
+		case .ironMedium:
+			return 150 // 2 pallini
+		case .ironHigh:
+			return 200 // 3 pallini
+		case .ironNoSteam:
+			return 110 // Prudenza senza vapore
+		case .doNotIron:
+			return 0
+		default:
+			return nil
+		}
+	}
+	
+	// MARK: - 5. Metodi di Helper per l'Algoritmo
+	
+	/// Restituisce TRUE se il simbolo richiede un trattamento "Speciale" (Cesto C)
+	var isDelicate: Bool {
+		switch self {
+		case .machineWashDelicate, .handWash, .doNotWring, .doNotMachineWash,
+			 .doNotBleach,
+			 .dryFlat, .dripDry, .dryInShade,
+			 .ironLow, .doNotIron,
+			 .dryClean, .dryCleanAnySolvent, .dryCleanHydrocarbon, .dryCleanPCE, .professionalWetCleaning:
+			return true
+		default:
+			return false
+		}
+	}
+}
+
+enum LaundryBin: String, Codable, CaseIterable, Identifiable {
+	case heavyDuty = "White & Hot"
+	case daily     = "Daily Dark"
+	case delicate  = "Delicate"
+	
+	var id: String { rawValue }
+	
+	var description: String {
+		switch self {
+		case .heavyDuty: return "Bianchi, asciugamani, intimo cotone"
+		case .daily: return "Jeans, t-shirt colorate, sintetici"
+		case .delicate: return "Lana, seta, tecnici, ricami"
+		}
+	}
+}
+
+// Serve per il "Vincolo 1: Colore"
+enum WashingColorGroup: String, Codable, CaseIterable {
+	case whites      = "Whites"
+	case darks       = "Darks"
+	case lights      = "Lights/Colors"
+	
+	/// Restituisce la categoria di lavaggio basata sul codice Hex
+	static func classify(_ hex: String) -> WashingColorGroup {
+		let rgb = hexToRGB(hex)
+		let (_, s, b) = rgbToHSB(r: rgb.r, g: rgb.g, b: rgb.b)
+		
+		// --- LOGICA DI CLASSIFICAZIONE ---
+		
+		// 1. Categoria BIANCHI (Whites)
+		// Alta luminosità (> 85%) e bassissima saturazione (< 15%)
+		// Esempio: Bianco puro, panna, grigio chiarissimo
+		if b > 0.85 && s < 0.15 {
+			return .whites
+		}
+		
+		// 2. Categoria SCURI (Darks)
+		// Bassa luminosità (< 30%), indipendentemente dalla saturazione
+		// Esempio: Nero, Blu Notte, Marrone scuro, Bordeaux profondo
+		if b < 0.30 {
+			return .darks
+		}
+		
+		// 3. Categoria COLORATI / MEDI (Lights/Colors)
+		// Tutto il resto: Colori accesi, pastelli, grigi medi
+		return .lights
+	}
+	
+	// MARK: - Helpers Matematici
+	
+	/// Converte stringa Hex (es. "#FF0000" o "FF0000") in valori R, G, B da 0 a 1
+	static func hexToRGB(_ hex: String) -> (r: CGFloat, g: CGFloat, b: CGFloat) {
+		var cString: String = hex.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
+		
+		if (cString.hasPrefix("#")) {
+			cString.remove(at: cString.startIndex)
+		}
+		
+		if ((cString.count) != 6) {
+			return (0.5, 0.5, 0.5) // Fallback grigio se codice errato
+		}
+		
+		var rgbValue: UInt64 = 0
+		Scanner(string: cString).scanHexInt64(&rgbValue)
+		
+		return (
+			CGFloat((rgbValue & 0xFF0000) >> 16) / 255.0,
+			CGFloat((rgbValue & 0x00FF00) >> 8) / 255.0,
+			CGFloat(rgbValue & 0x0000FF) / 255.0
+		)
+	}
+	
+	/// Converte RGB in HSB (Hue, Saturation, Brightness)
+	/// H: 0-360, S: 0-1, B: 0-1
+	static func rgbToHSB(r: CGFloat, g: CGFloat, b: CGFloat) -> (h: CGFloat, s: CGFloat, b: CGFloat) {
+		let minV = min(r, g, b)
+		let maxV = max(r, g, b)
+		let delta = maxV - minV
+		
+		var hue: CGFloat = 0
+		if delta != 0 {
+			if maxV == r {
+				hue = (g - b) / delta
+			} else if maxV == g {
+				hue = 2 + (b - r) / delta
+			} else {
+				hue = 4 + (r - g) / delta
+			}
+			hue *= 60
+			if hue < 0 { hue += 360 }
+		}
+		
+		let saturation = maxV == 0 ? 0 : (delta / maxV)
+		let brightness = maxV
+		
+		return (hue, saturation, brightness)
+	}
+	
+	static func from(hex: String) -> WashingColorGroup {
+		return self.classify(hex)
+	}
+}
+
+enum WashingAgitation: String, Sendable, Equatable {
+	case normal
+	case reduced     // "Synthetics" / "Permanent Press"
+	case gentle      // "Delicates" / "Wool"
+	case none        // Non lavare / Non centrifugare
 }
