@@ -5,8 +5,8 @@
 //  Created by Eliomar Alejandro Rodriguez Ferrer on 16/02/26.
 //
 
+import Observation
 import SwiftData
-import Foundation
 
 @Observable
 @MainActor
