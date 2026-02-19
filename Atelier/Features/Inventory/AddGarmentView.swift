@@ -200,8 +200,10 @@ struct AddGarmentView: View {
             ColorPicker("Color", selection: self.$color)
             
             NavigationLink {
-                GenericSelectionView<GarmentFabric>(selection: self.$selectedFabrics)
-                    .navigationTitle("Fabrics")
+                GenericSelectionView<GarmentFabric>(
+                    selection: self.$selectedFabrics
+                )
+                .navigationTitle("Fabrics")
                 
             } label: {
                 HStack {
@@ -375,7 +377,6 @@ struct AddGarmentView: View {
                 if let savedResult = ImageStorage.saveImage(uiImage) {
                     let filename = (savedResult as NSString).lastPathComponent
                     self.imagePath = filename
-                    print("Save file name for DB: \(filename)")
                 }
             }
         }

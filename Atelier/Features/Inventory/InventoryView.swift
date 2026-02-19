@@ -44,6 +44,9 @@ struct InventoryView: View {
     
     @State
     private var showFilterSheet: Bool = false
+    
+    @State
+    private var availableBrands: [String] = []
         
     var visibleGarments: [Garment] {
         return FilterGarmentConfig.filterGarments(
@@ -87,6 +90,11 @@ struct InventoryView: View {
             if self.garmentManager == nil {
                 self.garmentManager = GarmentManager(context: self.context)
             }
+            
+            self.updateBrands()
+        }
+        .onChange(of: self.garments) {
+            self.updateBrands()
         }
         .searchable(
             text     : self.$searchText,
@@ -149,7 +157,7 @@ struct InventoryView: View {
         .sheet(isPresented: self.$showFilterSheet) {
             FilterSheetView(
                 filters: self.$filter,
-                brands : Array(Set(self.garments.lazy.compactMap { $0.brand }))
+                brands : self.$availableBrands
             )
         }
     }
@@ -231,5 +239,19 @@ struct InventoryView: View {
                 .buttonStyle(.plain)
             }
         }
+    }
+    
+    // MARK: - Handlers
+    
+    @inline(__always)
+    private func updateBrands() {
+        let rawBrands = self.garments.lazy.compactMap { $0.brand }
+        let newBrands = Array(Set(rawBrands)).sorted()
+        
+        if self.availableBrands != newBrands {
+            print("Diff found: Updating brands pointer")
+            self.availableBrands = newBrands
+            
+        } else { print("No changes in brands, skipping update to save cycles") }
     }
 }

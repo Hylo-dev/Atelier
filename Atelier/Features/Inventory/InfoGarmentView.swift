@@ -6,6 +6,8 @@
 //
 
 import SwiftUI
+import NukeUI
+import Nuke
 
 struct InfoGarmentView: View {
     
@@ -130,26 +132,50 @@ struct InfoGarmentView: View {
     private var headerImageView: some View {
         let itemColor = Color(hex: self.item.color)
         
+        let screenWidth = UIScreen.main.bounds.width - 32
+        let targetSize = CGSize(width: screenWidth, height: screenWidth / 0.75)
+        
+        let imageURL: URL? = {
+            guard let path   = self.item.imagePath, !path.isEmpty else { return nil }
+            guard let docURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else { return nil }
+            let fileURL      = docURL.appendingPathComponent(path)
+           
+            return FileManager.default.fileExists(atPath: fileURL.path) ? fileURL : nil
+        }()
+        
         ZStack(alignment: .bottomTrailing) {
-            if let path = self.item.imagePath, let image = ImageStorage.loadImage(from: path) {
-                Image(uiImage: image)
-                    .resizable()
-                    .scaledToFill()
-                    .frame(maxWidth: .infinity)
-                    .aspectRatio(3/4, contentMode: .fit)
-                    .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
-                    .shadow(color: Color.black.opacity(0.15), radius: 10, x: 0, y: 5)
-                
-            } else {
-                RoundedRectangle(cornerRadius: 22, style: .continuous)
-                    .fill(itemColor.gradient)
-                    .aspectRatio(3/4, contentMode: .fit)
-                    .overlay(
-                        Image(systemName: "hanger")
-                            .font(.system(size: 80))
-                            .foregroundStyle(.white.opacity(0.5))
-                    )
+            
+            LazyImage(url: imageURL) { state in
+                if let image = state.image {
+                    image
+                        .resizable()
+                        .scaledToFill()
+                        .frame(maxWidth: .infinity)
+                        .transition(.opacity.animation(.easeOut(duration: 0.3)))
+                    
+                } else {
+                    RoundedRectangle(cornerRadius: 22, style: .continuous)
+                        .fill(itemColor.gradient)
+                        .overlay(
+                            Image(systemName: "hanger")
+                                .font(.system(size: 80))
+                                .foregroundStyle(.white.opacity(0.5))
+                        )
+                }
             }
+            .processors([
+                .resize(size: targetSize, unit: .points, contentMode: .aspectFill, crop: true)
+            ])
+            .priority(.veryHigh)
+            .pipeline(
+                ImagePipeline {
+                    $0.imageCache = ImageCache.shared
+                    $0.dataCache  = nil
+                }
+            )
+            .aspectRatio(3/4, contentMode: .fit)
+            .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+            .shadow(color: Color.black.opacity(0.15), radius: 10, x: 0, y: 5)
             
             Button(action: {
                 

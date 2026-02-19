@@ -6,114 +6,80 @@
 //
 
 import SwiftUI
-
-fileprivate class ImageCache {
-    static let shared = NSCache<NSString, UIImage>()
-}
+import Nuke
+import NukeUI
 
 struct CachedImageView: View {
     let imagePath: String?
-    let size     : CGSize
+    let size: CGSize
     
-    @State
-    private var image: UIImage? = nil
-    
-    @State
-    private var isLoading = true
+    private var imageURL: URL? {
+        guard let filename = self.imagePath, !filename.isEmpty else { return nil }
+        guard let documentsURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else {
+            return nil
+        }
+        
+        let fileURL = documentsURL.appendingPathComponent(filename)
+        if FileManager.default.fileExists(atPath: fileURL.path) {
+            return fileURL
+        }
+        
+        return nil
+    }
     
     var body: some View {
-        
         if self.size.width <= 0 || self.size.height <= 0 {
             Color.clear
             
         } else {
-            ZStack {
-                if let image = self.image {
-                    Image(uiImage: image)
+            let scaleFactor: CGFloat = 1.5
+            let pixelSize = CGSize(
+                width : size.width  * scaleFactor,
+                height: size.height * scaleFactor
+            )
+            
+            LazyImage(url: self.imageURL) { state in
+                if let image = state.image {
+                    image
                         .resizable()
                         .scaledToFill()
-                        .frame(width: self.size.width, height: self.size.height)
-                        .contentShape(Rectangle())
+                        .frame(width: size.width, height: size.height)
                         .clipped()
+                        .contentShape(Rectangle())
+                        .transition(.opacity.animation(.easeIn(duration: 0.2)))
+                    
+                } else if state.error != nil {
+                    self.placeholderView(isError: true)
                     
                 } else {
-                    Rectangle()
-                        .fill(Color.gray.opacity(0.1))
-                        .frame(width: self.size.width, height: self.size.height)
-                        .overlay {
-                            if self.isLoading {
-                                ProgressView()
-                                
-                            } else {
-                                Image(systemName: "photo.badge.exclamationmark")
-                                    .foregroundStyle(.secondary)
-                            }
-                        }
+                    self.placeholderView(isError: false)
                 }
             }
-            .task(id: imagePath) {
-                await loadImage()
-            }
+            .processors([
+                .resize(size: pixelSize, unit: .pixels, contentMode: .aspectFill, crop: true)
+            ])
+            .priority(.high)
+            .pipeline(
+                ImagePipeline {
+                    $0.imageCache = ImageCache.shared
+                    $0.dataCache = nil
+                }
+            )
         }
     }
     
-    private func loadImage() async {
-        guard let filename = imagePath, !filename.isEmpty else {
-            print("Filename is empty or nil")
-            await MainActor.run { isLoading = false }
-            return
-        }
-        
-        let cacheKey = filename as NSString
-        if let cachedImage = ImageCache.shared.object(forKey: cacheKey) {
-            await MainActor.run {
-                self.image     = cachedImage
-                self.isLoading = false
-            }
-            
-            return
-        }
-        
-        let loadedImage = await Task.detached(
-            priority: .userInitiated
-        ) { () -> UIImage? in
-            
-            guard let documentsURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else {
-                return nil
-            }
-            let fileURL = documentsURL.appendingPathComponent(filename)
-            
-            do {
-                if !FileManager.default.fileExists(atPath: fileURL.path) {
-                    print("File not found (Dynamic path): \(fileURL.path)")
-                    return nil
-                }
-                
-                let data = try Data(contentsOf: fileURL)
-                guard let uiImage = UIImage(data: data) else {
-                    return nil
-                }
-                
-                _ = uiImage.cgImage
-                
-                return uiImage
-                
-            } catch {
-                print("Error load image\(error.localizedDescription)")
-                return nil
-            }
-            
-        }.value
-        
-        await MainActor.run {
-            if let loadedImage {
-                ImageCache.shared.setObject(loadedImage, forKey: cacheKey)
-                
-                withAnimation(.easeIn(duration: 0.2)) {
-                    self.image = loadedImage
+    @ViewBuilder
+    private func placeholderView(isError: Bool) -> some View {
+        Rectangle()
+            .fill(Color.gray.opacity(0.1))
+            .frame(width: size.width, height: size.height)
+            .overlay {
+                if isError {
+                    Image(systemName: "photo.badge.exclamationmark")
+                        .foregroundStyle(.secondary)
+                } else {
+                    ProgressView()
                 }
             }
-            self.isLoading = false
-        }
     }
 }

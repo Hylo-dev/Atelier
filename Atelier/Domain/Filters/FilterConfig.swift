@@ -6,14 +6,14 @@
 //
 
 struct FilterGarmentConfig {
-    var selectedBrand      : String? = nil
-    var selectedCategory   : GarmentCategory? = nil
-    var selectedSubCategory: GarmentSubCategory? = nil
-    var selectedSeason     : Season? = nil
-    var selectedStyle      : GarmentStyle? = nil
-    var selectedColor      : String? = nil
-    var selectedState      : GarmentState? = nil
-    var onlyClean          : Bool = false
+    var selectedBrand      : Set<String>?             = nil
+    var selectedCategory   : Set<GarmentCategory>?    = nil
+    var selectedSubCategory: Set<GarmentSubCategory>? = nil
+    var selectedSeason     : Set<Season>?             = nil
+    var selectedStyle      : Set<GarmentStyle>?       = nil
+    var selectedColor      : Set<String>?             = nil
+    var selectedState      : Set<GarmentState>?       = nil
+    var onlyClean          : Bool                     = false
     
     var isFiltering: Bool {
         return self.selectedBrand       != nil ||
@@ -45,32 +45,32 @@ struct FilterGarmentConfig {
         return allGarments.filter { garment in
 
             if let brandToFind = config.selectedBrand,
-                   garment.brand != brandToFind {
+                    garment.brand == nil || !brandToFind.contains(garment.brand!) {
                 return false
             }
             
             if let categoryToFind = config.selectedCategory,
-                   garment.category != categoryToFind {
+                   !categoryToFind.contains(garment.category)  {
                 return false
             }
             
             if let subCategoryToFind = config.selectedSubCategory,
-               garment.subCategory != subCategoryToFind {
+                   !subCategoryToFind.contains(garment.subCategory) {
                 return false
             }
             
             if let seasonToFind = config.selectedSeason,
-                   garment.season != seasonToFind {
+                   !seasonToFind.contains(garment.season) {
                 return false
             }
             
             if let styleToFind = config.selectedStyle,
-               garment.style != styleToFind {
+                   !styleToFind.contains(garment.style) {
                 return false
             }
             
             if let stateToFind = config.selectedState,
-               garment.state != stateToFind {
+                   !stateToFind.contains(garment.state) {
                 return false
             }
             

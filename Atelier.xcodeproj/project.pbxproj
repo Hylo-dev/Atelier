@@ -6,6 +6,11 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		1FDB2D752F4669E800D02704 /* Nuke in Frameworks */ = {isa = PBXBuildFile; productRef = 1FDB2D742F4669E800D02704 /* Nuke */; };
+		1FDB2D772F4669E800D02704 /* NukeUI in Frameworks */ = {isa = PBXBuildFile; productRef = 1FDB2D762F4669E800D02704 /* NukeUI */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXCopyFilesBuildPhase section */
 		1F8318662F42635900713CCA /* Embed Frameworks */ = {
 			isa = PBXCopyFilesBuildPhase;
@@ -49,6 +54,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1FDB2D752F4669E800D02704 /* Nuke in Frameworks */,
+				1FDB2D772F4669E800D02704 /* NukeUI in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -100,6 +107,8 @@
 			);
 			name = Atelier;
 			packageProductDependencies = (
+				1FDB2D742F4669E800D02704 /* Nuke */,
+				1FDB2D762F4669E800D02704 /* NukeUI */,
 			);
 			productName = Atelier;
 			productReference = 1F8318342F422D3B00713CCA /* Atelier.app */;
@@ -130,6 +139,7 @@
 			mainGroup = 1F83182B2F422D3B00713CCA;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
+				1FDB2D732F4669E800D02704 /* XCRemoteSwiftPackageReference "Nuke" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 1F8318352F422D3B00713CCA /* Products */;
@@ -417,6 +427,30 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		1FDB2D732F4669E800D02704 /* XCRemoteSwiftPackageReference "Nuke" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/kean/Nuke";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 12.8.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		1FDB2D742F4669E800D02704 /* Nuke */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 1FDB2D732F4669E800D02704 /* XCRemoteSwiftPackageReference "Nuke" */;
+			productName = Nuke;
+		};
+		1FDB2D762F4669E800D02704 /* NukeUI */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 1FDB2D732F4669E800D02704 /* XCRemoteSwiftPackageReference "Nuke" */;
+			productName = NukeUI;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 1F83182C2F422D3B00713CCA /* Project object */;
 }

@@ -15,55 +15,119 @@ struct FilterSheetView: View {
     @Binding
     var filters: FilterGarmentConfig
     
-    let brands: [String]
+    @Binding
+    var brands: [String]
     
     var body: some View {
         NavigationStack {
             Form {
                 
-                Section("Categoria") {
-                    
-                    
-                    
-                    Picker(
-                        "Seleziona",
-                        selection: self.$filters.selectedCategory
-                    ) {
+                // MARK: - Section 1
+                if !self.brands.isEmpty {
+                                        
+                    Section("Details Garment") {
+                        let selected = Binding<Set<String>>(
+                            get: { self.filters.selectedBrand ?? [] },
+                            set: { newSet in
+                                self.filters.selectedBrand = newSet.isEmpty ? nil : newSet
+                            }
+                        )
                         
-                        Text("Tutte").tag(nil as GarmentCategory?)
                         
-                        ForEach(GarmentCategory.allCases) { cat in
-                            Text(cat.rawValue).tag(cat as GarmentCategory?)
+                        NavigationLink {
+                            StringSelectionView(
+                                title    : "Brand",
+                                items    : self.brands,
+                                selection: selected
+                            )
+                            .navigationTitle("Brand")
+                            
+                        } label: {
+                            HStack {
+                                Text("Brand")
+                                
+                                Spacer()
+                                
+                                if selected.wrappedValue.isEmpty {
+                                    Text("All")
+                                        .foregroundStyle(.secondary)
+                                    
+                                } else {
+                                    Text("\(selected.wrappedValue.count) selected")
+                                        .foregroundStyle(Color.accentColor)
+                                        .fontWeight(.medium)
+                                }
+                            }
                         }
                     }
                 }
                 
-                Section("Dettagli") {
-                    Picker(
-                        "Stagione",
-                        selection: $filters.selectedSeason
-                    ) {
-                        
-                        Text("Qualsiasi").tag(nil as Season?)
-                        
-                        ForEach(Season.allCases) { s in
-                            Text(s.rawValue).tag(s as Season?)
-                        }
-                    }
-
+                // MARK: - Section 2
+                Section("Style & Category") {
+                    
+                    self.filterNavigationLink(
+                        title      : "Type",
+                        selection  : setBinding(for: \.selectedCategory),
+                        destination: GenericSelectionView<GarmentCategory>(
+                            selection: setBinding(for: \.selectedCategory)
+                        )
+                    )
+                    
+                    self.filterNavigationLink(
+                        title      : "Model",
+                        selection  : self.setBinding(for: \.selectedSubCategory),
+                        destination: GenericSelectionView<GarmentSubCategory>(
+                            selection: self.setBinding(for: \.selectedSubCategory)
+                        )
+                    )
+                    
+                    self.filterNavigationLink(
+                        title      : "Season",
+                        selection  : self.setBinding(for: \.selectedSeason),
+                        destination: GenericSelectionView<Season>(
+                            selection    : self.setBinding(for: \.selectedSeason),
+                            useSystemIcon: true
+                        )
+                    )
+                    
+                    self.filterNavigationLink(
+                        title      : "Style",
+                        selection  : self.setBinding(for: \.selectedStyle),
+                        destination: GenericSelectionView<GarmentStyle>(
+                            selection: self.setBinding(for: \.selectedStyle)
+                        )
+                    )
                 }
                 
-                Section("Stato") {
-                    Toggle("Solo capi puliti", isOn: $filters.onlyClean)
+                // MARK: - Stato
+                Section("Care") {
+                    Toggle("Only garment clean", isOn: self.$filters.onlyClean)
+                    
+                    self.filterNavigationLink(
+                        title      : "State",
+                        selection  : self.setBinding(for: \.selectedState),
+                        destination: GenericSelectionView<GarmentState>(
+                            selection: self.setBinding(for: \.selectedState)
+                        )
+                    )
                 }
-                
             }
             .navigationTitle("Filters")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel", systemImage: "xmark") {
+                    Button("Close", systemImage: "xmark") {
                         dismiss()
+                    }
+                }
+                
+                if filters.isFiltering {
+                    ToolbarItem {
+                        Button("Reset", systemImage: "arrow.counterclockwise") {
+                            withAnimation {
+                                self.filters.reset()
+                            }
+                        }
                     }
                 }
                 
@@ -71,6 +135,54 @@ struct FilterSheetView: View {
                     Button("Done", systemImage: "checkmark") {
                         dismiss()
                     }
+                    .fontWeight(.bold)
+                }
+            }
+            .onChange(of: self.filters.selectedState) { _, newStates in
+                if let states = newStates, !states.isEmpty && self.filters.onlyClean{
+                    self.filters.onlyClean = false
+                }
+            }
+        }
+    }
+    
+    // MARK: - Helpers
+    
+    private func setBinding<T>(
+        for keyPath: WritableKeyPath<FilterGarmentConfig,
+        Set<T>?>
+    ) -> Binding<Set<T>> {
+        Binding {
+            self.filters[keyPath: keyPath] ?? []
+        } set: { newValue in
+            self.filters[keyPath: keyPath] = newValue.isEmpty ? nil : newValue
+        }
+    }
+    
+    @ViewBuilder
+    private func filterNavigationLink<T, Destination: View>(
+        title      : String,
+        selection  : Binding<Set<T>>,
+        destination: Destination
+    ) -> some View {
+        
+        NavigationLink {
+            destination
+                .navigationTitle(title)
+        } label: {
+            HStack {
+                Text(title)
+                
+                Spacer()
+                
+                if selection.wrappedValue.isEmpty {
+                    Text("All")
+                        .foregroundStyle(.secondary)
+                    
+                } else {
+                    Text("\(selection.wrappedValue.count) selected")
+                        .foregroundStyle(Color.accentColor)
+                        .fontWeight(.medium)
                 }
             }
         }
