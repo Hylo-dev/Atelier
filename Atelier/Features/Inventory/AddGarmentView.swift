@@ -382,8 +382,15 @@ struct AddGarmentView: View {
     @ViewBuilder
     private func sheetScanHandler() -> some View {
         CameraView(
-            onImageCaptured: { _, _ in },
-            mode           : .recognizeSymbols
+            onImageCaptured  : { _, _ in },
+            onSymbolsCaptured: { symbols in
+                for symbol in symbols {
+                    if let icon = LaundrySymbol(createMLLabel: symbol) {
+                        self.washingSymbols.insert(icon)
+                    }
+                }
+            },
+            mode             : .recognizeSymbols
         )
         .ignoresSafeArea()
     }

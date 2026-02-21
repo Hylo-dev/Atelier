@@ -309,10 +309,12 @@ enum LaundrySymbol: String, Codable, SelectableItem {
     
     // MARK: - Washing
     case machineWashNormal         = "machine_wash_normal"
+    
     case machineWashCold           = "machine_wash_cold"
     case machineWashWarm           = "machine_wash_warm"
     case machineWashHot            = "machine_wash_hot"
     case machineWashVeryHot        = "machine_wash_very_hot"
+    
     case machineWashDelicate       = "machine_wash_delicate"
     case machineWashPermanentPress = "machine_wash_permanent_press"
     case handWash                  = "hand_wash"
@@ -353,6 +355,54 @@ enum LaundrySymbol: String, Codable, SelectableItem {
     case dryCleanPCE               = "dry_clean_tetrachloroethylene_solvent_only"
     case doNotDryClean             = "do_not_dry_clean"
     case professionalWetCleaning   = "professional_wet_cleaning_only"
+    
+    init?(createMLLabel: String) {
+        // 1. Tenta prima il match diretto (se l'etichetta è identica al rawValue)
+        if let directMatch = LaundrySymbol(rawValue: createMLLabel) {
+            self = directMatch
+            return
+        }
+        
+        // 2. Mappa le etichette specifiche di CreateML ai tuoi casi
+        switch createMLLabel {
+                
+                // MARK: - Temperature
+                // Mappiamo i gradi alle tue costanti (basandoci sulla tua logica di maxWashingTemperature)
+            case "30C": self = .machineWashCold
+            case "40C": self = .machineWashWarm
+            case "50C", "60C": self = .machineWashHot // 60C lo consideriamo Hot
+            case "70C", "95C": self = .machineWashVeryHot
+                
+                // MARK: - Do Not (DN_...)
+            case "DN_bleach": self = .doNotBleach
+            case "DN_dry", "DN_tumble_dry": self = .doNotTumbleDry
+            case "DN_dry_clean": self = .doNotDryClean
+            case "DN_iron": self = .doNotIron
+            case "DN_steam": self = .ironNoSteam
+            case "DN_wash": self = .doNotMachineWash
+            case "DN_wring": self = .doNotWring
+                
+                // MARK: - Bleaching
+            case "chlorine_bleach": self = .bleach
+            case "non_chlorine_bleach": self = .bleachNonChlorine
+                
+                // MARK: - Drying
+            case "line_dry", "natural_dry": self = .hangDry
+            case "line_dry_in_shade", "shade_dry": self = .dryInShade
+                
+                // MARK: - Professional / Dry Clean
+            case "dry_clean_any_solvent_except_trichloroethylene": self = .dryCleanPCE
+            case "dry_clean_petrol_only": self = .dryCleanHydrocarbon
+            case "wet_clean": self = .professionalWetCleaning
+                
+                // MARK: - Etichette extra di CreateML da ignorare o gestire
+                // Es. "iron" generico, "steam", "wring", "dry_clean_low_heat", ecc.
+                // Se non hai un corrispettivo esatto e non sono vitali, restituisci nil.
+            default:
+                print("⚠️ Etichetta CreateML non mappata: \(createMLLabel)")
+                return nil
+        }
+    }
     
     
     var id: String { rawValue }

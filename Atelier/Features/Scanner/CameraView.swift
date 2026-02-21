@@ -9,10 +9,11 @@ struct CameraView: UIViewControllerRepresentable {
     @Environment(\.dismiss)
     var dismiss
     
-    var onImageCaptured: ((String, UIImage) -> Void)
-    var captureManager : CaptureManager = CaptureManager()
+    var onImageCaptured  : ((String, UIImage) -> Void)
+    var onSymbolsCaptured: (([String]) -> Void)?
     
-    var mode: CameraMode
+    var captureManager: CaptureManager = CaptureManager()
+    var mode          : CameraMode
     
     func makeUIViewController(context: Context) -> CameraViewController {
         let controller         = CameraViewController()
@@ -50,11 +51,18 @@ struct CameraView: UIViewControllerRepresentable {
                 self.parent.dismiss()
             }
         }
+        
+        func didFindSymbols(_ symbols: [String]) {
+            self.parent.onSymbolsCaptured?(symbols)
+            
+            self.parent.dismiss()
+        }
     }
 }
 
 protocol CameraViewControllerDelegate: AnyObject {
-    func didTakePhoto(_ photoData: Data)
+    func didTakePhoto  (_ photoData: Data)
+    func didFindSymbols(_ symbols  : [String])
 }
 
 class CameraViewController: UIViewController, AVCapturePhotoCaptureDelegate, AVCaptureVideoDataOutputSampleBufferDelegate {
@@ -71,6 +79,9 @@ class CameraViewController: UIViewController, AVCapturePhotoCaptureDelegate, AVC
     private let captureButton  = UIButton()
 
     private var previewLayer: AVCaptureVideoPreviewLayer!
+    
+    private var symbolsFounded: Set<String> = []
+    private var isTimerStarted: Bool        = false
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -203,16 +214,12 @@ class CameraViewController: UIViewController, AVCapturePhotoCaptureDelegate, AVC
     
     @objc
     private func takePhoto() {
-        
-        // 3. SETTINGS PER LO SCATTO (HEIC + DEPTH)
         var settings = AVCapturePhotoSettings()
         
-        // Usa HEIC se disponibile (gestisce meglio i layer di profondità)
         if photoOutput.availablePhotoCodecTypes.contains(.hevc) {
             settings = AVCapturePhotoSettings(format: [AVVideoCodecKey: AVVideoCodecType.hevc])
         }
         
-        // Incorpora la profondità NEL file immagine
         if photoOutput.isDepthDataDeliverySupported {
             settings.isDepthDataDeliveryEnabled            = true
             settings.embedsDepthDataInPhoto                = true
@@ -245,7 +252,7 @@ class CameraViewController: UIViewController, AVCapturePhotoCaptureDelegate, AVC
         guard let pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer)
         else { return }
         
-        analizeImage(pixelBuffer) { results in
+        self.analizeImage(pixelBuffer) { results in
             if let symbols = results, !symbols.isEmpty {
                 Task { @MainActor in self.drawRectangle(symbols) }
             }
@@ -307,6 +314,7 @@ class CameraViewController: UIViewController, AVCapturePhotoCaptureDelegate, AVC
                   label.confidence > 0.90
             else { continue }
             
+            self.symbolsFounded.insert(label.identifier)
             let visionRect = item.boundingBox
             
             let rectRaddrizzato = CGRect(
@@ -326,6 +334,17 @@ class CameraViewController: UIViewController, AVCapturePhotoCaptureDelegate, AVC
             boxLayer.cornerRadius    = 8
             
             self.overlayLayer.addSublayer(boxLayer)
+            
+            if !self.symbolsFounded.isEmpty && !self.isTimerStarted {
+                self.isTimerStarted = true
+                
+                Task { @MainActor in
+                    try? await Task.sleep(for: .seconds(2))
+                    
+                    self.captureSession.stopRunning()
+                    self.delegate?.didFindSymbols(Array(self.symbolsFounded))
+                }
+            }
         }
     }
 }
