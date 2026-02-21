@@ -412,11 +412,14 @@ struct ModifyGarmentView: View {
     
     @ViewBuilder
     private func sheetHandler() -> some View {
-        CameraView(onImageCaptured: { filename, image in
-            self.selectedImage = Image(uiImage: image)
-            self.uiImageToSave = image
-            self.imagePath     = filename
-        })
+        CameraView(
+            onImageCaptured: { filename, image in
+                self.selectedImage = Image(uiImage: image)
+                self.uiImageToSave = image
+                self.imagePath     = filename
+            },
+            mode: .photo
+        )
         .ignoresSafeArea()
     }
     

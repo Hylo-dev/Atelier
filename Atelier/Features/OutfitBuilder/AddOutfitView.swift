@@ -186,11 +186,14 @@ struct AddOutfitView: View {
     
     @ViewBuilder
     private func sheetHandler() -> some View {
-        CameraView(onImageCaptured: { filename, image in
-            self.selectedImage     = Image(uiImage: image)
-            self.uiImageToSave     = image
-            self.fullLookImagePath = filename
-        })
+        CameraView(
+            onImageCaptured: { filename, image in
+                self.selectedImage     = Image(uiImage: image)
+                self.uiImageToSave     = image
+                self.fullLookImagePath = filename
+            },
+            mode: .photo
+        )
         .ignoresSafeArea()
     }
     

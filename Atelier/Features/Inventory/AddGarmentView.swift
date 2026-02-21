@@ -79,6 +79,9 @@ struct AddGarmentView: View {
     private var showCamera = false
     
     @State
+    private var showScan = false
+    
+    @State
     private var showGalleryPicker = false
     
     @State
@@ -142,6 +145,13 @@ struct AddGarmentView: View {
                 Button("Cancel", systemImage: "xmark") { dismiss() }
             }
             
+            ToolbarItem(placement: .topBarTrailing) {
+                Button("Scan", systemImage: "document.viewfinder") {
+                    self.showScan = true
+                }
+                .fontWeight(.bold)
+            }
+            
             ToolbarItem(placement: .confirmationAction) {
                 Button("Finish", systemImage: "checkmark") {
                     saveGarment()
@@ -158,7 +168,11 @@ struct AddGarmentView: View {
         )
         .sheet(
             isPresented: self.$showCamera,
-            content    : sheetHandler
+            content    : sheetPhotoHandler
+        )
+        .sheet(
+            isPresented: self.$showScan,
+            content    : self.sheetScanHandler
         )
         .photosPicker(
             isPresented: $showGalleryPicker,
@@ -352,13 +366,25 @@ struct AddGarmentView: View {
     }
     
     @ViewBuilder
-    private func sheetHandler() -> some View {
-        CameraView(onImageCaptured: { filename, image in
-            self.selectedImage = Image(uiImage: image)
-            self.uiImageToSave = image
-            
-            self.imagePath = (filename as NSString).lastPathComponent
-        })
+    private func sheetPhotoHandler() -> some View {
+        CameraView(
+            onImageCaptured: { filename, image in
+                self.selectedImage = Image(uiImage: image)
+                self.uiImageToSave = image
+                
+                self.imagePath = (filename as NSString).lastPathComponent
+            },
+            mode: .photo
+        )
+        .ignoresSafeArea()
+    }
+    
+    @ViewBuilder
+    private func sheetScanHandler() -> some View {
+        CameraView(
+            onImageCaptured: { _, _ in },
+            mode           : .recognizeSymbols
+        )
         .ignoresSafeArea()
     }
     
