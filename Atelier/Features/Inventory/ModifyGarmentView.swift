@@ -89,6 +89,9 @@ struct ModifyGarmentView: View {
     @State
     private var showImageSourceDialog = false
     
+    @State
+    private var showScan = false
+    
     private var currentTotalComposition: Int {
         Int(selectedComposition.reduce(0) { $0 + $1.percentual })
     }
@@ -189,6 +192,10 @@ struct ModifyGarmentView: View {
             isPresented: self.$showCamera,
             content    : self.sheetHandler
         )
+        .sheet(
+            isPresented: self.$showScan,
+            content    : self.sheetScanHandler
+        )
         .photosPicker(
             isPresented: self.$showGalleryPicker,
             selection  : self.$selectedItem,
@@ -275,8 +282,18 @@ struct ModifyGarmentView: View {
     var sectionCare: some View {
         Section("Care") {
             NavigationLink {
-                GenericSelectionView<LaundrySymbol>(selection: self.$washingSymbols)
-                    .navigationTitle("Care Symbols")
+                GenericSelectionView<LaundrySymbol>(
+                    selection: self.$washingSymbols
+                )
+                .navigationTitle("Care Symbols")
+                .toolbar {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button("Scan", systemImage: "camera.on.rectangle.fill") {
+                            self.showScan = true
+                        }
+                        .fontWeight(.bold)
+                    }
+                }
                 
             } label: {
                 HStack {
@@ -419,6 +436,22 @@ struct ModifyGarmentView: View {
                 self.imagePath     = filename
             },
             mode: .photo
+        )
+        .ignoresSafeArea()
+    }
+    
+    @ViewBuilder
+    private func sheetScanHandler() -> some View {
+        CameraView(
+            onImageCaptured  : { _, _ in },
+            onSymbolsCaptured: { symbols in
+                for symbol in symbols {
+                    if let icon = LaundrySymbol(createMLLabel: symbol) {
+                        self.washingSymbols.insert(icon)
+                    }
+                }
+            },
+            mode: .recognizeSymbols
         )
         .ignoresSafeArea()
     }

@@ -145,13 +145,6 @@ struct AddGarmentView: View {
                 Button("Cancel", systemImage: "xmark") { dismiss() }
             }
             
-            ToolbarItem(placement: .topBarTrailing) {
-                Button("Scan", systemImage: "document.viewfinder") {
-                    self.showScan = true
-                }
-                .fontWeight(.bold)
-            }
-            
             ToolbarItem(placement: .confirmationAction) {
                 Button("Finish", systemImage: "checkmark") {
                     saveGarment()
@@ -237,8 +230,18 @@ struct AddGarmentView: View {
     var sectionCare: some View {
         Section("Care") {
             NavigationLink {
-                GenericSelectionView<LaundrySymbol>(selection: self.$washingSymbols)
-                    .navigationTitle("Care Symbols")
+                GenericSelectionView<LaundrySymbol>(
+                    selection: self.$washingSymbols
+                )
+                .navigationTitle("Care Symbols")
+                .toolbar {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button("Scan", systemImage: "camera.on.rectangle.fill") {
+                            self.showScan = true
+                        }
+                        .fontWeight(.bold)
+                    }
+                }
                 
             } label: {
                 HStack {
@@ -250,6 +253,7 @@ struct AddGarmentView: View {
                         .foregroundStyle(.secondary)
                 }
             }
+            
         }
     }
     
@@ -390,7 +394,7 @@ struct AddGarmentView: View {
                     }
                 }
             },
-            mode             : .recognizeSymbols
+            mode: .recognizeSymbols
         )
         .ignoresSafeArea()
     }

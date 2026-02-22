@@ -66,17 +66,6 @@ struct InventoryView: View {
         )
     }
     
-    var filteredModels: [Garment] {
-        return if self.searchText.isEmpty {
-            self.visibleGarments
-            
-        } else {
-            self.visibleGarments.filter {
-                $0.name.localizedCaseInsensitiveContains(searchText)
-            }
-        }
-    }
-    
     // MARK: - Static property
     
     static private let columns = [
@@ -260,9 +249,10 @@ struct InventoryView: View {
     
     private func items(for category: String) -> [Garment] {
         return if category == "All" {
-            self.filteredModels
+            self.visibleGarments
+            
         } else {
-            self.filteredModels.filter { $0.category.label == category }
+            self.visibleGarments.filter { $0.category.label == category }
         }
     }
     
@@ -270,8 +260,8 @@ struct InventoryView: View {
     
     @inline(__always)
     private func updateBrands() {
-        let rawBrands = self.garments.lazy.compactMap { $0.brand }
-        let newBrands = Array(Set(rawBrands)).sorted()
+        let rawBrands = Set(self.garments.compactMap { $0.brand })
+        let newBrands = rawBrands.sorted()
         
         if self.availableBrands != newBrands {
             print("Diff found: Updating brands pointer")
@@ -285,7 +275,6 @@ struct InventoryView: View {
         let uniqueCategories = Set(garments.lazy.map {
             $0.category.title
         })
-        
         let newCategories = ["All"] + uniqueCategories.sorted()
         
         if self.availableCategories != newCategories {

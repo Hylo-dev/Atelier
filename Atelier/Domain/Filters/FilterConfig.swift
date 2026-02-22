@@ -7,7 +7,6 @@
 
 struct FilterGarmentConfig {
     var selectedBrand      : Set<String>?             = nil
-    var selectedCategory   : Set<GarmentCategory>?    = nil
     var selectedSubCategory: Set<GarmentSubCategory>? = nil
     var selectedSeason     : Set<Season>?             = nil
     var selectedStyle      : Set<GarmentStyle>?       = nil
@@ -17,7 +16,6 @@ struct FilterGarmentConfig {
     
     var isFiltering: Bool {
         return self.selectedBrand       != nil ||
-               self.selectedCategory    != nil ||
                self.selectedSubCategory != nil ||
                self.selectedSeason      != nil ||
                self.selectedStyle       != nil ||
@@ -28,7 +26,6 @@ struct FilterGarmentConfig {
     
     mutating func reset() {
         self.selectedBrand       = nil
-        self.selectedCategory    = nil
         self.selectedSubCategory = nil
         self.selectedSeason      = nil
         self.selectedStyle       = nil
@@ -46,11 +43,6 @@ struct FilterGarmentConfig {
 
             if let brandToFind = config.selectedBrand,
                     garment.brand == nil || !brandToFind.contains(garment.brand!) {
-                return false
-            }
-            
-            if let categoryToFind = config.selectedCategory,
-                   !categoryToFind.contains(garment.category)  {
                 return false
             }
             

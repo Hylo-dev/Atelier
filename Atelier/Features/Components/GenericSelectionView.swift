@@ -40,7 +40,6 @@ struct GenericSelectionView<Item: SelectableItem>: View {
     
     var body: some View {
         List {
-
             ForEach(Array(Item.CategoryType.allCases), id: \.id) { category in
                 Section(header: Text(category.rawValue)) {
                     LazyVGrid(columns: columns, spacing: 20) {
