@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import SwiftData
 
 struct HomeView: View {
     @Environment(\.horizontalSizeClass)
@@ -16,6 +17,16 @@ struct HomeView: View {
     
     @State
     private var manager = CaptureManager()
+    
+    @State
+    private var categories: [String] = ["All"]
+    
+    @State
+    private var selectedCategory: String? = "All"
+    
+    @State
+    private var tabProgress: CGFloat = 0
+    
     
     var body: some View {
         if sizeClass == .regular {
@@ -36,15 +47,23 @@ struct HomeView: View {
                     role       : tab.role
                 ) {
                     NavigationStack {
-                        self.destinationView(for: tab)
-                            .toolbarTitleDisplayMode(.large)
-                            .navigationTitle(tab.title)
+                        self.destinationView(
+                            for: tab,
+                            tab.title
+                        )
                     }
                     
                 }
             }
         }
-        // .tint(.teal) Color the UI
+        .tabViewBottomAccessory {
+            LiquidCategoryBarView(
+                selection    : self.$selectedCategory,
+                tabProgress  : self.$tabProgress,
+                items        : self.categories,
+                titleProvider: { $0 ?? "" }
+            )
+        }
     }
     
     private var sidebarLayout: some View {
@@ -57,14 +76,16 @@ struct HomeView: View {
                     }
                 }
             }
-            .navigationTitle("Atelier")
             #if os(macOS)
             .navigationSplitViewColumnWidth(min: 200, ideal: 250)
             #endif
             
         } detail: {
             if let selectedTab {
-                destinationView(for: selectedTab)
+                self.destinationView(
+                    for: selectedTab,
+                    "Atelier"
+                )
                 
             } else {
                 ContentUnavailableView("Select view", systemImage: "arrow.left")
@@ -73,16 +94,29 @@ struct HomeView: View {
     }
     
     @ViewBuilder
-    private func destinationView(for tab: AppTab) -> some View {
+    private func destinationView(
+        for tab  : AppTab,
+        _   title: String
+    ) -> some View {
         switch tab {
             case .wardrobe:
-                InventoryView(manager: self.manager)
+                InventoryView(
+                    manager            : self.manager,
+                    title              : title,
+                    selectedCategory   : self.$selectedCategory,
+                    tabProgress        : self.$tabProgress,
+                    availableCategories: self.$categories
+                
+                )
             
             case .outfitBuilder:
                 OutfitView(manager: self.manager)
             
             case .maintenance:
-                Text("Schermata Manutenzione")
+                Text("Maintenance Screen")
+                
+            case .search:
+                EmptyView()
         }
     }
 }

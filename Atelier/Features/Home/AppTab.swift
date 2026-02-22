@@ -11,27 +11,31 @@ enum AppTab: String, CaseIterable, Identifiable {
     case wardrobe
     case outfitBuilder
     case maintenance
+    case search
     
     var id: String { rawValue }
     
     var title: String {
-        switch self {
-        case .wardrobe     : return "Wardrobe"
-        case .outfitBuilder: return "Outfit"
-        case .maintenance  : return "Cure"
+        return switch self {
+            case .wardrobe     : "Wardrobe"
+            case .outfitBuilder: "Outfit"
+            case .maintenance  : "Cure"
+            case .search       : "Search"
         }
     }
     
     var icon: String {
-        switch self {
-        case .wardrobe     : return "cabinet"
-        case .outfitBuilder: return "tshirt"
-        case .maintenance  : return "sparkles.2"
+        return switch self {
+            case .wardrobe     : "cabinet"
+            case .outfitBuilder: "tshirt"
+            case .maintenance  : "sparkles.2"
+            case .search       : "magnifyingglass"
         }
     }
     
     var role: TabRole? {
         return switch self {
+            case .search: .search
             default:  nil
         }
     }
