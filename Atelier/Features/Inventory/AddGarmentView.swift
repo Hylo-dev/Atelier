@@ -147,7 +147,10 @@ struct AddGarmentView: View {
             
             ToolbarItem(placement: .confirmationAction) {
                 Button("Finish", systemImage: "checkmark") {
-                    saveGarment()
+                    
+                    withAnimation {
+                        saveGarment()
+                    }
                 }
                 .fontWeight(.bold)
                 .disabled(self.name.isEmpty)

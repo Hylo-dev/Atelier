@@ -9,6 +9,10 @@ import SwiftUI
 import SwiftData
 
 struct HomeView: View {
+    
+    
+    // MARK: - Screen values
+    
     @Environment(\.horizontalSizeClass)
     private var sizeClass
     
@@ -18,14 +22,17 @@ struct HomeView: View {
     @State
     private var manager = CaptureManager()
     
-    @State
-    private var categories: [String] = ["All"]
+    
+    // MARK: - Categories app bar state
     
     @State
-    private var selectedCategory: String? = "All"
+    private var categoryState: TabFilterState = TabFilterState()
+    
+    
+    // MARK: - Season app bar state
     
     @State
-    private var tabProgress: CGFloat = 0
+    private var seasonState: TabFilterState = TabFilterState()
     
     
     var body: some View {
@@ -51,20 +58,40 @@ struct HomeView: View {
                             for: tab,
                             tab.title
                         )
+                        .onAppear {
+                            self.selectedTab = tab
+                        }
                     }
                     
                 }
             }
         }
-        .tabViewBottomAccessory {
-            LiquidCategoryBarView(
-                selection    : self.$selectedCategory,
-                tabProgress  : self.$tabProgress,
-                items        : self.categories,
-                titleProvider: { $0 ?? "" }
-            )
+        .tabViewBottomAccessory(isEnabled: self.isTopAppBarVisible(self.selectedTab)) {
+            
+            switch self.selectedTab {
+                case .wardrobe:
+                    LiquidCategoryBarView(
+                        selection    : self.$categoryState.selection,
+                        tabProgress  : self.$categoryState.progress,
+                        items        : self.categoryState.items,
+                        titleProvider: { $0 ?? "" }
+                    )
+                    
+                case .outfitBuilder:
+                    LiquidCategoryBarView(
+                        selection    : self.$seasonState.selection,
+                        tabProgress  : self.$seasonState.progress,
+                        items        : self.seasonState.items,
+                        titleProvider: { $0 ?? "" }
+                    )
+                    
+                default: EmptyView()
+            }
+            
         }
     }
+    
+    // MARK: - SubViews
     
     private var sidebarLayout: some View {
         NavigationSplitView {
@@ -101,16 +128,17 @@ struct HomeView: View {
         switch tab {
             case .wardrobe:
                 InventoryView(
-                    manager            : self.manager,
-                    title              : title,
-                    selectedCategory   : self.$selectedCategory,
-                    tabProgress        : self.$tabProgress,
-                    availableCategories: self.$categories
-                
+                    manager      : self.manager,
+                    categoryState: self.$categoryState,
+                    title        : title
                 )
             
             case .outfitBuilder:
-                OutfitView(manager: self.manager)
+                OutfitView(
+                    manager     : self.manager,
+                    seasonsState: self.$seasonState,
+                    title       : title
+                )
             
             case .maintenance:
                 Text("Maintenance Screen")
@@ -118,5 +146,21 @@ struct HomeView: View {
             case .search:
                 EmptyView()
         }
+    }
+    
+    // MARK: - Handlers
+    
+    private func isTopAppBarVisible(_ tab: AppTab?) -> Bool {
+        
+        switch tab {
+            case .wardrobe:
+                self.categoryState.isVisible
+                
+            case .outfitBuilder:
+                self.seasonState.isVisible
+            
+            default: false
+        }
+        
     }
 }

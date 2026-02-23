@@ -10,15 +10,35 @@ import SwiftData
 
 struct OutfitView: View {
     
+    
+    
+    // MARK: - Param values
+    
     @Bindable
     var manager: CaptureManager
+        
+    @Binding
+    var seasonsState: TabFilterState
+    
+    var title: String
+    
+    
+    
+    // MARK: - Edit Sheet value
+    
+    @State
+    private var selectedItem: Outfit?
+    
+    
+    
+    // MARK: - Private Attributes values
     
     @Environment(\.modelContext)
     private var context
     
     @Query(
         sort : \Outfit.lastWornDate,
-        order: .forward
+        order: .reverse
     )
     private var outfits: [Outfit]
     
@@ -26,15 +46,36 @@ struct OutfitView: View {
     private var outfitManager: OutfitManager?
     
     
-    @State
-    private var searchText: String = ""
+    
+    // MARK: - Computed values
+    
+    private var visibleOutfits: [Outfit] {
+        return FilterOutfitConfig.filterOutfits(
+            allOutfits : self.outfits,
+            config     : self.filter
+        )
+    }
     
     
-    // MARK: - Sheet property
+    
+    // MARK: - Add Outfit Sheet values
     
     @State
     private var isAddOutfitSheetVisible: Bool = false
     
+    
+    
+    // MARK: - Filter Outfit Sheet values
+    
+    @State
+    private var filter = FilterOutfitConfig()
+    
+    @State
+    private var showFilterSheet: Bool = false
+    
+    
+    
+    // MARK: - Static properties
     
     static private let columns = [
         GridItem(.adaptive(minimum: 150), spacing: 20)
@@ -42,7 +83,7 @@ struct OutfitView: View {
     
     var body: some View {
         
-        ScrollView {
+        Group {
             if self.outfits.isEmpty {
                 ContentUnavailableView(
                     "Outfits Empty",
@@ -51,19 +92,44 @@ struct OutfitView: View {
                 )
                 .containerRelativeFrame(.vertical)
                 
-            } else { self.modelGridView }
+            } else {
+                LiquidPagingView(
+                    selection  : self.$seasonsState.selection,
+                    tabProgress: self.$seasonsState.progress,
+                    items      : self.seasonsState.items,
+                    isEnabled  : self.seasonsState.isVisible,
+                ) { season in
+                    self.scrollableGrid(for: season)
+                }
+                .ignoresSafeArea(.container, edges: .top)
+            }
         }
         .contentMargins(.horizontal, 16, for: .scrollContent)
         .onAppear {
             if self.outfitManager == nil {
                 self.outfitManager = OutfitManager(context: self.context)
             }
+            
+            self.updateSeason()
         }
-        .searchable(
-            text  : self.$searchText,
-            prompt: "Search outfit"
-        )
+        .onChange(of: self.outfits) {
+            self.updateSeason()
+        }
         .toolbar {
+            
+            ToolbarItem(placement: .title) {
+                Text(String(repeating: " ", count: 50))
+                    .overlay(alignment: .leading) {
+                        Text(self.title)
+                            .font(.title)
+                            .fontWeight(.bold)
+                    }
+            }
+            
+            ToolbarItem(placement: .topBarTrailing) {
+                Button("Filter", systemImage: "line.3.horizontal.decrease") {  }
+            }
+            
             ToolbarItem(placement: .topBarTrailing) {
                 Button("Add", systemImage: "plus") { self.isAddOutfitSheetVisible = true }
             }
@@ -95,53 +161,80 @@ struct OutfitView: View {
         
     }
     
+    
+    
     // MARK: - Views
     
-    private var modelGridView: some View {
-        LazyVGrid(columns: Self.columns, spacing: 20) {
-            
-            ForEach(self.filteredModels, id: \.id) { item in
+    @ViewBuilder
+    private func scrollableGrid(for season: String) -> some View {
+        ScrollView(.vertical) {
+            LazyVGrid(columns: Self.columns, spacing: 20) {
                 
-                NavigationLink(value: item) {
-                    ModelCardView(
-                        title      : item.name,
-                        subheadline: item.style.rawValue,
-                        imagePath  : item.fullLookImagePath
-                    )
-                    .contextMenu {
-                        
-                        Button {
-                            // self.selectedItem = item
+                ForEach(self.items(for: season)) { item in
+                    
+                    NavigationLink(value: item) {
+                        ModelCardView(
+                            title      : item.name,
+                            subheadline: nil,
+                            imagePath  : item.fullLookImagePath
+                        )
+                        .id(item.id)
+                        .contextMenu {
                             
-                        } label: {
-                            Label("Edit Details", systemImage: "pencil")
-                        }
-                        
-                        Button {
-                            withAnimation {
-                                self.outfitManager?.deleteOutfit(item)
+                            Button {
+                                self.selectedItem = item
+                                
+                            } label: {
+                                Label("Edit Details", systemImage: "pencil")
                             }
                             
-                        } label: {
-                            Label("Delete", systemImage: "trash")
+                            Button(role: .destructive) {
+                                self.outfitManager?.deleteOutfit(item)
+                                
+                            } label: {
+                                Label("Delete", systemImage: "trash")
+                            }
                         }
                     }
+                    .buttonStyle(.plain)
                 }
-                .buttonStyle(.plain)
             }
+            .padding(.horizontal, 16)
+        }
+        .contentMargins(.top, 150, for: .scrollContent)
+        .scrollIndicators(.hidden)
+        .scrollClipDisabled()
+        
+    }
+        
+    
+    
+    // MARK: - Handlers
+    
+    private func items(for season: String) -> [Outfit] {
+        return if season == "All" {
+            self.visibleOutfits
+            
+        } else {
+            self.visibleOutfits.filter { $0.season.title == season }
         }
     }
     
-    // MARK: - Logic
     
-    var filteredModels: [Outfit] {
-        return if self.searchText.isEmpty {
-            self.outfits
+    
+    @inline(__always)
+    private func updateSeason() {
+        let uniqueSeasons = Set(self.outfits.lazy.map {
+            $0.season.title
+        })
+        let newSeasons = ["All"] + uniqueSeasons.sorted()
+        
+        if self.seasonsState.items != newSeasons {
+            print("Diff found: Updating season pointer")
+            self.seasonsState.items = newSeasons
             
         } else {
-            self.outfits.filter {
-                $0.name.localizedCaseInsensitiveContains(self.searchText)
-            }
+            print("No changes season, skipping update to save cycles")
         }
     }
 }

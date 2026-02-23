@@ -5,6 +5,8 @@
 //  Created by Eliomar Alejandro Rodriguez Ferrer on 18/02/26.
 //
 
+import Foundation
+
 struct FilterGarmentConfig {
     var selectedBrand      : Set<String>?             = nil
     var selectedSubCategory: Set<GarmentSubCategory>? = nil
@@ -72,5 +74,69 @@ struct FilterGarmentConfig {
             
             return true
         }
+    }
+}
+
+struct FilterOutfitConfig {
+    var onlyRecentWorn     : Bool               = false
+    var selectedStyle      : Set<GarmentStyle>? = nil
+    var onlyClean          : Bool               = false
+    
+    /*
+     var lastWornDate     : Date?
+     var wearCount        : Int
+     var fullLookImagePath: String
+     var season           : Season
+     var style            : GarmentStyle
+     
+     var isReadyToWear: Bool {
+     guard !self.garments.isEmpty else { return false }
+     
+     return self.garments.allSatisfy { $0.state == .available }
+     }
+     */
+    
+    var isFiltering: Bool {
+        return self.onlyRecentWorn ||
+        self.selectedStyle  != nil ||
+        self.onlyClean
+    }
+    
+    mutating func reset() {
+        self.onlyRecentWorn = false
+        self.selectedStyle  = nil
+        self.onlyClean      = false
+    }
+    
+    static func filterOutfits(
+        allOutfits: [Outfit],
+        config    : Self
+    ) -> [Outfit] {
+        
+        var outfits = allOutfits.filter { outfit in
+            
+            if let styleToFind = config.selectedStyle,
+               !styleToFind.contains(outfit.style) {
+                return false
+            }
+            
+            if config.onlyClean && outfit.isReadyToWear {
+                return false
+            }
+            
+            return true
+        }
+        
+        if config.onlyRecentWorn {
+            outfits.sort {
+                let date0 = $0.lastWornDate ?? Date.distantPast
+                let date1 = $1.lastWornDate ?? Date.distantPast
+                
+                return date0 > date1
+            }
+        }
+        
+        
+        return outfits
     }
 }

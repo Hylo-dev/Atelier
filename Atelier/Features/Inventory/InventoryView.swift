@@ -10,13 +10,26 @@ import SwiftData
 
 struct InventoryView: View {
     
+    
+    
+    @Environment(\.modelContext)
+    private var context
+    
+    
+    
+    // MARK: - Parameters Val
+    
     @Bindable
     var manager: CaptureManager
     
+    @Binding
+    var categoryState: TabFilterState
+    
     var title: String
-        
-    @Environment(\.modelContext)
-    private var context
+    
+    
+    
+    // MARK: - Screen values
     
     @Query(
         sort : \Garment.name,
@@ -27,37 +40,36 @@ struct InventoryView: View {
     @State
     private var garmentManager: GarmentManager?
     
-    @State
-    private var searchText: String = ""
     
     
-    // MARK: - Garment Sheet property
+    // MARK: - Add Garment Sheet values
     
     @State
-    private var showGarmentSheet: Bool = false
+    private var isAddGarmentSheetVisible: Bool = false
+    
+    
+    
+    // MARK: - Modify Garment Sheet values
     
     @State
     private var selectedItem: Garment?
     
-    // MARK: - Filter Sheet property
+    
+    
+    // MARK: - Filter Garment Sheet values
     
     @State
     private var filter = FilterGarmentConfig()
     
     @State
-    private var showFilterSheet: Bool = false
+    private var isFilterSheetVisible: Bool = false
     
     @State
     private var availableBrands: [String] = []
     
-    @Binding
-    var selectedCategory: String?
     
-    @Binding
-    var tabProgress: CGFloat
     
-    @Binding
-    var availableCategories: [String]
+    // MARK: - Computed variables
         
     var visibleGarments: [Garment] {
         return FilterGarmentConfig.filterGarments(
@@ -74,7 +86,7 @@ struct InventoryView: View {
     
     var body: some View {
         
-        ZStack {
+        Group {
             if self.garments.isEmpty {
                 ContentUnavailableView(
                     "Closet Empty",
@@ -85,9 +97,10 @@ struct InventoryView: View {
                 
             } else {
                 LiquidPagingView(
-                    selection  : self.$selectedCategory,
-                    tabProgress: self.$tabProgress,
-                    items      : self.availableCategories
+                    selection  : self.$categoryState.selection,
+                    tabProgress: self.$categoryState.progress,
+                    items      : self.categoryState.items,
+                    isEnabled  : self.categoryState.isVisible
                 ) { category in
                     self.scrollableGrid(for: category)
                 }
@@ -99,13 +112,16 @@ struct InventoryView: View {
             if self.garmentManager == nil {
                 self.garmentManager = GarmentManager(context: self.context)
             }
-            
+                        
             self.updateBrands()
             self.updateCategories()
         }
         .onChange(of: self.garments) {
-            self.updateBrands()
-            self.updateCategories()
+            
+            withAnimation {
+                self.updateBrands()
+                self.updateCategories()
+            }
         }
         .toolbar {
             ToolbarItem(placement: .title) {
@@ -119,13 +135,13 @@ struct InventoryView: View {
                         
             ToolbarItem(placement: .topBarTrailing) {
                 Button("Filter", systemImage: "line.3.horizontal.decrease") {
-                    self.showFilterSheet = true
+                    self.isFilterSheetVisible = true
                 }
             }
             
             ToolbarItem(placement: .topBarTrailing) {
                 Button("Add", systemImage: "plus") {
-                    self.showGarmentSheet = true
+                    self.isAddGarmentSheetVisible = true
                 }
             }
         }
@@ -137,8 +153,8 @@ struct InventoryView: View {
             
         }
         .sheet(
-            isPresented:   self.$showGarmentSheet,
-            onDismiss  : { self.showGarmentSheet = false }
+            isPresented:   self.$isAddGarmentSheetVisible,
+            onDismiss  : { self.isAddGarmentSheetVisible = false }
         ) {
             NavigationStack {
                 AddGarmentView(garmentManager: self.$garmentManager)
@@ -153,7 +169,7 @@ struct InventoryView: View {
                 )
             }
         }
-        .sheet(isPresented: self.$showFilterSheet) {
+        .sheet(isPresented: self.$isFilterSheetVisible) {
             FilterSheetView(
                 filters: self.$filter,
                 brands : self.$availableBrands
@@ -166,8 +182,8 @@ struct InventoryView: View {
     @ViewBuilder
     private func scrollableGrid(for category: String) -> some View {
         ScrollView(.vertical) {
+            
             LazyVGrid(columns: Self.columns, spacing: 20) {
-                
                 ForEach(self.items(for: category), id: \.id) { item in
                     
                     NavigationLink(value: item) {
@@ -178,62 +194,7 @@ struct InventoryView: View {
                         )
                         .id(item.id)
                         .contextMenu {
-                            let washingState = item.state == .toWash
-                            let loanState    = item.state == .onLoan
-                            
-                            Button {
-                                item.state = washingState ? .drying : .toWash
-                                self.garmentManager?.updateGarment()
-                                
-                            } label: {
-                                Label(
-                                    washingState ? "Mark as Clean" : "Move to Wash",
-                                    systemImage: washingState ? "sparkle" : "washer.fill"
-                                )
-                            }
-                            .disabled(!item.state.readyToWash())
-                            
-                            Button {
-                                item.state = loanState ? .available : .onLoan
-                                self.garmentManager?.updateGarment()
-                                
-                            } label: {
-                                Label(
-                                    loanState ? "Mark as Returned" : "Mark as Lent",
-                                    systemImage: loanState ? "arrow.uturn.backward" : "person.2"
-                                )
-                            }
-                            .disabled(!item.state.readyToLent())
-                            
-                            
-                            Divider()
-                            
-                            
-                            Button {
-                                
-                            } label: {
-                                Label("Add to Outfit", systemImage: "tshirt.fill")
-                            }
-                            
-                            
-                            Divider()
-                            
-                            
-                            Button {
-                                self.selectedItem = item
-                                
-                            } label: {
-                                Label("Edit Details", systemImage: "pencil")
-                            }
-                            
-                            Button(role: .destructive) {
-                                withAnimation {
-                                    self.garmentManager?.deleteGarment(item)
-                                }
-                                
-                            } label: {
-                                Label("Delete", systemImage: "trash")
-                            }
+                            self.contextMenuButtons(for: item)
                         }
                     }
                     .buttonStyle(.plain)
@@ -247,6 +208,68 @@ struct InventoryView: View {
 
     }
     
+    @ViewBuilder
+    private func contextMenuButtons(for item: Garment) -> some View {
+        let washingState = item.state == .toWash
+        let loanState    = item.state == .onLoan
+        
+        Button {
+            item.state = washingState ? .drying : .toWash
+            self.garmentManager?.updateGarment()
+            
+        } label: {
+            Label(
+                washingState ? "Mark as Clean" : "Move to Wash",
+                systemImage: washingState ? "sparkle" : "washer.fill"
+            )
+        }
+        .disabled(!item.state.readyToWash())
+        
+        Button {
+            item.state = loanState ? .available : .onLoan
+            self.garmentManager?.updateGarment()
+            
+        } label: {
+            Label(
+                loanState ? "Mark as Returned" : "Mark as Lent",
+                systemImage: loanState ? "arrow.uturn.backward" : "person.2"
+            )
+        }
+        .disabled(!item.state.readyToLent())
+        
+        
+        Divider()
+        
+        
+        Button {
+            
+        } label: {
+            Label("Add to Outfit", systemImage: "tshirt.fill")
+        }
+        
+        
+        Divider()
+        
+        
+        Button {
+            self.selectedItem = item
+            
+        } label: {
+            Label("Edit Details", systemImage: "pencil")
+        }
+        
+        Button(role: .destructive) {
+            self.garmentManager?.deleteGarment(item)
+            
+        } label: {
+            Label("Delete", systemImage: "trash")
+        }
+    }
+    
+    
+    
+    // MARK: - Handlers
+    
     private func items(for category: String) -> [Garment] {
         return if category == "All" {
             self.visibleGarments
@@ -256,7 +279,7 @@ struct InventoryView: View {
         }
     }
     
-    // MARK: - Handlers
+    
     
     @inline(__always)
     private func updateBrands() {
@@ -270,6 +293,8 @@ struct InventoryView: View {
         } else { print("No changes in brands, skipping update to save cycles") }
     }
     
+    
+    
     @inline(__always)
     private func updateCategories() {
         let uniqueCategories = Set(garments.lazy.map {
@@ -277,9 +302,9 @@ struct InventoryView: View {
         })
         let newCategories = ["All"] + uniqueCategories.sorted()
         
-        if self.availableCategories != newCategories {
+        if self.categoryState.items != newCategories {
             print("Diff found: Updating categories pointer")
-            self.availableCategories = newCategories
+            self.categoryState.items = newCategories
             
         } else {
             print("No changes in categories, skipping update to save cycles")

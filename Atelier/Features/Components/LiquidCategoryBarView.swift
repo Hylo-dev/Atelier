@@ -65,19 +65,47 @@ struct LiquidPagingView<T: Hashable, Content: View>: View {
     @Binding
     var tabProgress: CGFloat
     
-    let items: [T]
-    @ViewBuilder let content: (T) -> Content
+    var items: [T]
+    
+    var isEnabled: Bool
+    
+    @ViewBuilder
+    var content: (T) -> Content
+    
+    init(
+        selection  : Binding<T?>,
+        tabProgress: Binding<CGFloat>,
+        items      : [T],
+        isEnabled  : Bool = true,
+        content    : @escaping (T) -> Content
+    ) {
+        
+        self._selection   = selection
+        self._tabProgress = tabProgress
+        self.items        = items
+        self.isEnabled    = isEnabled
+        self.content      = content
+    }
     
     var body: some View {
         let itemsCount = max(1, self.items.count - 1)
         
         ScrollView(.horizontal) {
             LazyHStack(spacing: 0) {
-                ForEach(self.items, id: \.self) { item in
-                    self.content(item)
-                        .containerRelativeFrame(.horizontal)
-                        .id(item)
+                
+                Group {
+                    if self.isEnabled {
+                        ForEach(self.items, id: \.self) { item in
+                            self.content(item)
+                                .id(item)
+                        }
+                        
+                    } else if let first = self.items.first {
+                        self.content(first)
+                            .id(first)
+                    }
                 }
+                .containerRelativeFrame(.horizontal)
             }
             .scrollTargetLayout()
         }
