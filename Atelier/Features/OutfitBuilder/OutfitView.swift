@@ -82,6 +82,7 @@ struct OutfitView: View {
     ]
     
     var body: some View {
+//        let _ = Self._printChanges()
         
         Group {
             if self.outfits.isEmpty {
@@ -95,7 +96,11 @@ struct OutfitView: View {
             } else {
                 LiquidPagingView(
                     selection  : self.$seasonsState.selection,
-                    tabProgress: self.$seasonsState.progress,
+                    onProgressChange: { newVal in
+                        if self.seasonsState.progress != newVal {
+                            self.seasonsState.progress = newVal
+                        }
+                    },
                     items      : self.seasonsState.items,
                     isEnabled  : self.seasonsState.isVisible,
                 ) { season in
@@ -178,6 +183,7 @@ struct OutfitView: View {
                             subheadline: nil,
                             imagePath  : item.fullLookImagePath
                         )
+                        .equatable()
                         .id(item.id)
                         .contextMenu {
                             
@@ -203,7 +209,7 @@ struct OutfitView: View {
         }
         .contentMargins(.top, 150, for: .scrollContent)
         .scrollIndicators(.hidden)
-        .scrollClipDisabled()
+        
         
     }
         

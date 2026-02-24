@@ -1,56 +1,57 @@
 import SwiftUI
 
 // MARK: - Generic Liquid Category Bar
-struct LiquidCategoryBarView<T: Hashable>: View {
-    @Binding var selection: T
-    @Binding var tabProgress: CGFloat
+struct LiquidCategoryBarView: View {
     
-    let items: [T]
-    let titleProvider: (T) -> String
+    @Bindable
+    var state: TabFilterState
+    
+    @Namespace
+    private var categoryNamespace
     
     var body: some View {
         ScrollViewReader { scrollProxy in
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 0) {
-                    ForEach(self.items, id: \.self) { item in
+                    ForEach(self.state.items, id: \.self) { item in
                         Button {
-                            withAnimation(.snappy) {
-                                self.selection = item
+                            withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
+                                self.state.selection = item
                             }
                             
                         } label: {
-                            Text(self.titleProvider(item))
+                            Text(item)
                                 .font(.callout)
-                                .fontWeight(self.selection == item ? .semibold : .regular)
+                                .fontWeight(self.state.selection == item ? .semibold : .regular)
                                 .frame(width: 120)
                                 .padding(.vertical, 10)
                                 .contentShape(Rectangle())
-                                
                         }
                         .buttonStyle(.plain)
+                        .id(item)
                     }
                 }
-                .background {
+                .background(alignment: .leading) {
                     GeometryReader { proxy in
                         let size = proxy.size
-                        
-                        let capsuleWidth = items.isEmpty ? 0 : (size.width / CGFloat(items.count))
-                        
-                        let safeProgress = tabProgress.isNaN ? 0 : tabProgress
+                        let count = CGFloat(self.state.items.count)
+                        let capsuleWidth = count > 0 ? size.width / count : 0
                         
                         Capsule()
-                            .padding(3)
-                            .frame(width: capsuleWidth)
                             .glassEffect(.clear)
-                            .offset(x: items.isEmpty ? 0 : safeProgress * (size.width - capsuleWidth))
+                            .padding(4)
+                            .frame(width: capsuleWidth)
+                            .offset(x: self.state.progress * (size.width - capsuleWidth))
                     }
                 }
                 .padding(.horizontal, 5)
             }
             .fixedSize(horizontal: false, vertical: true)
-            .onChange(of: selection) { _, newSelection in
-                withAnimation(.snappy) {
-                    scrollProxy.scrollTo(newSelection, anchor: .center)
+            .onChange(of: self.state.selection) { _, newValue in
+                if let newValue {
+                    withAnimation(.snappy) {
+                        scrollProxy.scrollTo(newValue, anchor: .center)
+                    }
                 }
             }
         }
@@ -59,39 +60,39 @@ struct LiquidCategoryBarView<T: Hashable>: View {
 
 // MARK: - Generic Paging View
 struct LiquidPagingView<T: Hashable, Content: View>: View {
+    
+    
+    
     @Binding
     var selection: T?
     
-    @Binding
-    var tabProgress: CGFloat
+    var onProgressChange: (CGFloat) -> Void
     
     var items: [T]
-    
     var isEnabled: Bool
     
     @ViewBuilder
     var content: (T) -> Content
     
     init(
-        selection  : Binding<T?>,
-        tabProgress: Binding<CGFloat>,
-        items      : [T],
-        isEnabled  : Bool = true,
-        content    : @escaping (T) -> Content
+        selection           : Binding<T?>,
+        onProgressChange    : @escaping (CGFloat) -> Void,
+        items               : [T],
+        isEnabled           : Bool = true,
+        @ViewBuilder content: @escaping (T) -> Content
     ) {
-        
-        self._selection   = selection
-        self._tabProgress = tabProgress
-        self.items        = items
-        self.isEnabled    = isEnabled
-        self.content      = content
+        self._selection       = selection
+        self.onProgressChange = onProgressChange
+        self.items            = items
+        self.isEnabled        = isEnabled
+        self.content          = content
     }
     
     var body: some View {
         let itemsCount = max(1, self.items.count - 1)
         
         ScrollView(.horizontal) {
-            LazyHStack(spacing: 0) {
+            HStack(spacing: 0) {
                 
                 Group {
                     if self.isEnabled {
@@ -116,10 +117,53 @@ struct LiquidPagingView<T: Hashable, Content: View>: View {
         .onScrollGeometryChange(for: CGFloat.self) { geometry in
             let width = geometry.containerSize.width
             guard width > 0 else { return 0 }
+                        
+            let rawProgress = geometry.contentOffset.x / (width * CGFloat(itemsCount))
+            return (rawProgress * 1000).rounded() / 1000
             
-            return geometry.contentOffset.x / (width * CGFloat(itemsCount))
         } action: { oldValue, newValue in
-            self.tabProgress = max(min(newValue, 1), 0)
+            let clamped = max(min(newValue, 1), 0)
+            
+            self.onProgressChange(clamped)
         }
     }
+}
+
+#Preview {
+    
+    @Previewable
+    @State
+    var selection: String? = ""
+    
+    @Previewable
+    @State
+    var progress: CGFloat = .zero
+    
+    let items = ["pisnello", "culo", "palle", "Gratta"]
+    
+    ZStack {
+        
+        LiquidPagingView(
+            selection: $selection,
+            onProgressChange: { val in
+                if progress != val {
+                    progress = val
+                }
+            },
+            items: items
+        ) { item in
+            ScrollView {
+                LazyVStack {
+                    
+                    ForEach(0...10, id: \.self) { _ in
+                        Text("Si ")
+                    }
+                    
+                }
+            }
+        }
+        
+//        LiquidCategoryBarView(selection: $selection, tabProgress: $progress, items: items, titleProvider: { $0 })
+    }
+    
 }

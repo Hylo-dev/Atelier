@@ -28,6 +28,12 @@ struct HomeView: View {
     @State
     private var categoryState: TabFilterState = TabFilterState()
     
+    @State
+    private var selection : String?  = "All"
+    
+    @State
+    private var progress : CGFloat  = .zero
+    
     
     // MARK: - Season app bar state
     
@@ -36,6 +42,8 @@ struct HomeView: View {
     
     
     var body: some View {
+//        let _ = Self._printChanges()
+        
         if sizeClass == .regular {
             self.sidebarLayout
             
@@ -70,20 +78,10 @@ struct HomeView: View {
             
             switch self.selectedTab {
                 case .wardrobe:
-                    LiquidCategoryBarView(
-                        selection    : self.$categoryState.selection,
-                        tabProgress  : self.$categoryState.progress,
-                        items        : self.categoryState.items,
-                        titleProvider: { $0 ?? "" }
-                    )
+                    LiquidCategoryBarView(state: categoryState)
                     
                 case .outfitBuilder:
-                    LiquidCategoryBarView(
-                        selection    : self.$seasonState.selection,
-                        tabProgress  : self.$seasonState.progress,
-                        items        : self.seasonState.items,
-                        titleProvider: { $0 ?? "" }
-                    )
+                    LiquidCategoryBarView(state: seasonState)
                     
                 default: EmptyView()
             }
@@ -129,7 +127,7 @@ struct HomeView: View {
             case .wardrobe:
                 InventoryView(
                     manager      : self.manager,
-                    categoryState: self.$categoryState,
+                    categoryState: self.categoryState,
                     title        : title
                 )
             

@@ -11,68 +11,51 @@ import NukeUI
 
 struct CachedImageView: View {
     let imagePath: String?
-    let size: CGSize
     
     private var imageURL: URL? {
         guard let filename = self.imagePath, !filename.isEmpty else { return nil }
         guard let documentsURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else {
             return nil
         }
-        
-        let fileURL = documentsURL.appendingPathComponent(filename)
-        if FileManager.default.fileExists(atPath: fileURL.path) {
-            return fileURL
-        }
-        
-        return nil
+
+        return documentsURL.appendingPathComponent(filename)
     }
     
     var body: some View {
-        if self.size.width <= 0 || self.size.height <= 0 {
-            Color.clear
-            
-        } else {
-            let scaleFactor: CGFloat = 1.5
-            let pixelSize = CGSize(
-                width : size.width  * scaleFactor,
-                height: size.height * scaleFactor
-            )
-            
-            LazyImage(url: self.imageURL) { state in
-                if let image = state.image {
-                    image
-                        .resizable()
-                        .scaledToFill()
-                        .frame(width: size.width, height: size.height)
-                        .clipped()
-                        .contentShape(Rectangle())
-                        .transition(.opacity.animation(.easeIn(duration: 0.2)))
-                    
-                } else if state.error != nil {
-                    self.placeholderView(isError: true)
-                    
-                } else {
-                    self.placeholderView(isError: false)
-                }
+        let thumbnailSize = CGSize(width: 300 * 1.5, height: 300 * 1.5)
+        
+        LazyImage(url: self.imageURL) { state in
+            if let image = state.image {
+                image
+                    .resizable()
+                    .scaledToFill()
+                    .clipped()
+                    .contentShape(Rectangle())
+                    .transition(.opacity.animation(.easeIn(duration: 0.2)))
+                
+            } else if state.error != nil {
+                self.placeholderView(isError: true)
+                
+            } else {
+                self.placeholderView(isError: false)
             }
-            .processors([
-                .resize(size: pixelSize, unit: .pixels, contentMode: .aspectFill, crop: true)
-            ])
-            .priority(.high)
-            .pipeline(
-                ImagePipeline {
-                    $0.imageCache = ImageCache.shared
-                    $0.dataCache = nil
-                }
-            )
         }
+        .processors([
+            .resize(size: thumbnailSize, unit: .pixels, contentMode: .aspectFill, crop: true)
+        ])
+        .priority(.high)
+        .pipeline(
+            ImagePipeline {
+                $0.imageCache = ImageCache.shared
+                $0.dataCache = nil
+            }
+        )
     }
     
     @ViewBuilder
     private func placeholderView(isError: Bool) -> some View {
         Rectangle()
             .fill(Color.gray.opacity(0.1))
-            .frame(width: size.width, height: size.height)
             .overlay {
                 if isError {
                     Image(systemName: "photo.badge.exclamationmark")

@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct ModelCardView: View {
+struct ModelCardView: Equatable, View {
     let title      : String
     let subheadline: String?
     let imagePath  : String?
@@ -26,38 +26,35 @@ struct ModelCardView: View {
         ZStack(alignment: .bottomLeading) {
             
             Color.secondary.opacity(0.1)
-                .aspectRatio(4/4, contentMode: .fit)
+                .aspectRatio(1, contentMode: .fit) // 4/4 è 1
                 .overlay {
-                    GeometryReader { proxy in
+                    if let path = self.imagePath {
+                        CachedImageView(imagePath: path) // Niente proxy.size!
                         
-                        if let path = self.imagePath {
-                            CachedImageView(imagePath: path, size: proxy.size)
-                            
-                        } else {
-                            Image(systemName: "hanger")
-                                .font(.largeTitle)
-                                .foregroundStyle(.secondary.opacity(0.3))
-                                .frame(width: proxy.size.width, height: proxy.size.height)
-                        }
+                    } else {
+                        Image(systemName: "hanger")
+                            .font(.largeTitle)
+                            .foregroundStyle(.secondary.opacity(0.3))
                     }
                 }
                 .clipShape(Rectangle())
             
-            // --- IL TUO BLUR CUSTOM, FIXATO ---
-            TransparentBlurView()
-                .frame(height: 80)
-                .blur(radius: 6, opaque: true)
-                .mask {
-                    LinearGradient(
-                        stops: [
-                            .init(color: .clear, location: 0.0),
-                            .init(color: .black, location: 0.3),
-                            .init(color: .black, location: 1.0)
-                        ],
-                        startPoint: .top,
-                        endPoint: .bottom
-                    )
-                }
+            if self.imagePath != nil {
+                Rectangle()
+                    .fill(.ultraThinMaterial)
+                    .frame(height: 80)
+                    .mask {
+                        LinearGradient(
+                            stops: [
+                                .init(color: .clear, location: 0.0),
+                                .init(color: .black, location: 0.3),
+                                .init(color: .black, location: 1.0)
+                            ],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                    }
+            }            
             
             VStack(alignment: .leading, spacing: 4) {
                 Text(self.title)
@@ -66,7 +63,6 @@ struct ModelCardView: View {
                     .fontWeight(.semibold)
                     .lineLimit(1)
                     .foregroundStyle(.primary)
-                    .shadow(color: .black, radius: 5)
                 
                 if let subhead = self.subheadline {
                     Text(subhead)
@@ -75,7 +71,6 @@ struct ModelCardView: View {
                         .fontWeight(.regular)
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
-                        .shadow(color: .black, radius: 5)
                 }
             }
             .padding(12)
@@ -90,23 +85,5 @@ struct ModelCardView: View {
 #if os(macOS)
         .shadow(color: .black.opacity(0.1), radius: 2, x: 0, y: 1)
 #endif
-    }
-}
-
-fileprivate struct TransparentBlurView: UIViewRepresentable {
-    func makeUIView(context: Context) -> UIVisualEffectView {
-        let view = UIVisualEffectView(
-            effect: UIBlurEffect(style: .systemThickMaterial)
-        )
-        
-        return view
-    }
-    
-    func updateUIView(_ uiView: UIVisualEffectView, context: Context) {
-        Task {
-            if let backdropLayer = uiView.layer.sublayers?.first {
-                backdropLayer.filters = []
-            }
-        }
     }
 }

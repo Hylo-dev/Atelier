@@ -136,11 +136,12 @@ struct InfoGarmentView: View {
         let targetSize = CGSize(width: screenWidth, height: screenWidth / 0.75)
         
         let imageURL: URL? = {
-            guard let path   = self.item.imagePath, !path.isEmpty else { return nil }
-            guard let docURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else { return nil }
-            let fileURL      = docURL.appendingPathComponent(path)
-           
-            return FileManager.default.fileExists(atPath: fileURL.path) ? fileURL : nil
+            guard let filename = self.item.imagePath, !filename.isEmpty else { return nil }
+            guard let documentsURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else {
+                return nil
+            }
+            
+            return documentsURL.appendingPathComponent(filename)
         }()
         
         ZStack(alignment: .bottomTrailing) {

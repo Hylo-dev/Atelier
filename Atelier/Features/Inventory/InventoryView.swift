@@ -22,7 +22,7 @@ struct InventoryView: View {
     @Bindable
     var manager: CaptureManager
     
-    @Binding
+    @Bindable
     var categoryState: TabFilterState
     
     var title: String
@@ -69,14 +69,12 @@ struct InventoryView: View {
     
     
     
-    // MARK: - Computed variables
+    // MARK: - Variables private
         
-    var visibleGarments: [Garment] {
-        return FilterGarmentConfig.filterGarments(
-            allGarments: self.garments,
-            config     : self.filter
-        )
-    }
+    @State
+    private var visibleGarments: [Garment] = []
+    
+    
     
     // MARK: - Static property
     
@@ -85,6 +83,7 @@ struct InventoryView: View {
     ]
     
     var body: some View {
+        let _ = Self._printChanges()
         
         Group {
             if self.garments.isEmpty {
@@ -98,7 +97,11 @@ struct InventoryView: View {
             } else {
                 LiquidPagingView(
                     selection  : self.$categoryState.selection,
-                    tabProgress: self.$categoryState.progress,
+                    onProgressChange: { newVal in
+                        if self.categoryState.progress != newVal {
+                            self.categoryState.progress = newVal
+                        }
+                    },
                     items      : self.categoryState.items,
                     isEnabled  : self.categoryState.isVisible
                 ) { category in
@@ -115,13 +118,19 @@ struct InventoryView: View {
                         
             self.updateBrands()
             self.updateCategories()
+            self.updateFilteredGarments()
         }
         .onChange(of: self.garments) {
             
             withAnimation {
-                self.updateBrands()
                 self.updateCategories()
             }
+            
+            self.updateBrands()
+            self.updateFilteredGarments()
+        }
+        .onChange(of: self.filter) {
+            self.updateFilteredGarments()
         }
         .toolbar {
             ToolbarItem(placement: .title) {
@@ -192,6 +201,7 @@ struct InventoryView: View {
                             subheadline: item.brand,
                             imagePath  : item.imagePath
                         )
+                        .equatable()
                         .id(item.id)
                         .contextMenu {
                             self.contextMenuButtons(for: item)
@@ -204,7 +214,6 @@ struct InventoryView: View {
         }
         .contentMargins(.top, 150, for: .scrollContent)
         .scrollIndicators(.hidden)
-        .scrollClipDisabled()
 
     }
     
@@ -309,5 +318,14 @@ struct InventoryView: View {
         } else {
             print("No changes in categories, skipping update to save cycles")
         }
+    }
+    
+    
+    @inline(__always)
+    private func updateFilteredGarments() {
+        self.visibleGarments = FilterGarmentConfig.filterGarments(
+            allGarments: self.garments,
+            config     : self.filter
+        )
     }
 }
