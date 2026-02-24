@@ -12,7 +12,7 @@ struct LiquidCategoryBarView: View {
     var body: some View {
         ScrollViewReader { scrollProxy in
             ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 0) {
+                LazyHStack(spacing: 0) {
                     ForEach(self.state.items, id: \.self) { item in
                         Button {
                             withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {

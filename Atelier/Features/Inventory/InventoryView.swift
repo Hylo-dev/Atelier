@@ -40,6 +40,9 @@ struct InventoryView: View {
     @State
     private var garmentManager: GarmentManager?
     
+    @State
+    private var groupedGarments: [String: [Garment]] = [:]
+    
     
     
     // MARK: - Add Garment Sheet values
@@ -193,21 +196,14 @@ struct InventoryView: View {
         ScrollView(.vertical) {
             
             LazyVGrid(columns: Self.columns, spacing: 20) {
-                ForEach(self.items(for: category), id: \.id) { item in
+                ForEach(self.groupedGarments[category] ?? [], id: \.id) { item in
                     
-                    NavigationLink(value: item) {
-                        ModelCardView(
-                            title      : item.name,
-                            subheadline: item.brand,
-                            imagePath  : item.imagePath
-                        )
-                        .equatable()
-                        .id(item.id)
-                        .contextMenu {
-                            self.contextMenuButtons(for: item)
-                        }
-                    }
-                    .buttonStyle(.plain)
+                    GarmentContextCard(
+                        item        : item,
+                        manager     : self.garmentManager,
+                        selectedItem: self.$selectedItem
+                        
+                    )
                 }
             }
             .padding(.horizontal, 16)
@@ -215,64 +211,6 @@ struct InventoryView: View {
         .contentMargins(.top, 150, for: .scrollContent)
         .scrollIndicators(.hidden)
 
-    }
-    
-    @ViewBuilder
-    private func contextMenuButtons(for item: Garment) -> some View {
-        let washingState = item.state == .toWash
-        let loanState    = item.state == .onLoan
-        
-        Button {
-            item.state = washingState ? .drying : .toWash
-            self.garmentManager?.updateGarment()
-            
-        } label: {
-            Label(
-                washingState ? "Mark as Clean" : "Move to Wash",
-                systemImage: washingState ? "sparkle" : "washer.fill"
-            )
-        }
-        .disabled(!item.state.readyToWash())
-        
-        Button {
-            item.state = loanState ? .available : .onLoan
-            self.garmentManager?.updateGarment()
-            
-        } label: {
-            Label(
-                loanState ? "Mark as Returned" : "Mark as Lent",
-                systemImage: loanState ? "arrow.uturn.backward" : "person.2"
-            )
-        }
-        .disabled(!item.state.readyToLent())
-        
-        
-        Divider()
-        
-        
-        Button {
-            
-        } label: {
-            Label("Add to Outfit", systemImage: "tshirt.fill")
-        }
-        
-        
-        Divider()
-        
-        
-        Button {
-            self.selectedItem = item
-            
-        } label: {
-            Label("Edit Details", systemImage: "pencil")
-        }
-        
-        Button(role: .destructive) {
-            self.garmentManager?.deleteGarment(item)
-            
-        } label: {
-            Label("Delete", systemImage: "trash")
-        }
     }
     
     
@@ -306,7 +244,7 @@ struct InventoryView: View {
     
     @inline(__always)
     private func updateCategories() {
-        let uniqueCategories = Set(garments.lazy.map {
+        let uniqueCategories = Set(self.garments.lazy.map {
             $0.category.title
         })
         let newCategories = ["All"] + uniqueCategories.sorted()
@@ -327,5 +265,104 @@ struct InventoryView: View {
             allGarments: self.garments,
             config     : self.filter
         )
+        
+        var newGrouped: [String: [Garment]] = [:]
+        newGrouped["All"] = self.visibleGarments
+        
+        let groupedByCategory = Dictionary(
+            grouping: self.visibleGarments,
+            by: { $0.category.title }
+        )
+        
+        for (category, items) in groupedByCategory {
+            newGrouped[category] = items
+        }
+        
+        self.groupedGarments = newGrouped
+    }
+}
+
+fileprivate
+struct GarmentContextCard: View {
+    let item   : Garment
+    let manager: GarmentManager?
+    
+    @Binding
+    var selectedItem: Garment?
+    
+    var body: some View {
+        NavigationLink(value: item) {
+            ModelCardView(
+                title      : item.name,
+                subheadline: item.brand,
+                imagePath  : item.imagePath
+            )
+            .equatable()
+            .id(item.id)
+            .contextMenu {
+                self.contextMenuButtons(for: item)
+            }
+        }
+        .buttonStyle(.plain)
+    }
+    
+    
+    
+    @ViewBuilder
+    private func contextMenuButtons(for item: Garment) -> some View {
+        let washingState = item.state == .toWash
+        let loanState    = item.state == .onLoan
+        
+        Button {
+            item.state = washingState ? .drying : .toWash
+            self.manager?.updateGarment()
+            
+        } label: {
+            Label(
+                washingState ? "Mark as Clean" : "Move to Wash",
+                systemImage: washingState ? "sparkle" : "washer.fill"
+            )
+        }
+        .disabled(!item.state.readyToWash())
+        
+        Button {
+            item.state = loanState ? .available : .onLoan
+            self.manager?.updateGarment()
+            
+        } label: {
+            Label(
+                loanState ? "Mark as Returned" : "Mark as Lent",
+                systemImage: loanState ? "arrow.uturn.backward" : "person.2"
+            )
+        }
+        .disabled(!item.state.readyToLent())
+        
+        
+        Divider()
+        
+        
+        Button {
+            
+        } label: {
+            Label("Add to Outfit", systemImage: "tshirt.fill")
+        }
+        
+        
+        Divider()
+        
+        
+        Button {
+            self.selectedItem = item
+            
+        } label: {
+            Label("Edit Details", systemImage: "pencil")
+        }
+        
+        Button(role: .destructive) {
+            self.manager?.deleteGarment(item)
+            
+        } label: {
+            Label("Delete", systemImage: "trash")
+        }
     }
 }
