@@ -109,7 +109,6 @@ struct OutfitView: View {
                 .ignoresSafeArea(.container, edges: .top)
             }
         }
-        .contentMargins(.horizontal, 16, for: .scrollContent)
         .onAppear {
             if self.outfitManager == nil {
                 self.outfitManager = OutfitManager(context: self.context)

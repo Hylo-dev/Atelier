@@ -33,21 +33,26 @@ struct CachedImageView: View {
                     .contentShape(Rectangle())
                     .transition(.opacity.animation(.easeIn(duration: 0.2)))
                 
-            } else if state.error != nil {
-                self.placeholderView(isError: true)
-                
             } else {
-                self.placeholderView(isError: false)
+                self.placeholderView(isError: state.error != nil)
             }
         }
         .processors([
-            .resize(size: thumbnailSize, unit: .pixels, contentMode: .aspectFill, crop: true)
+            .resize(
+                size: thumbnailSize,
+                unit: .points,
+                contentMode: .aspectFill,
+                crop: true
+            )
         ])
         .priority(.high)
         .pipeline(
             ImagePipeline {
                 $0.imageCache = ImageCache.shared
-                $0.dataCache = nil
+                $0.dataCache = try? DataCache(
+                    name: "com.atelier.thumbnails"
+                )
+                $0.dataCachePolicy = .storeEncodedImages
             }
         )
     }

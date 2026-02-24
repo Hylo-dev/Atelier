@@ -147,10 +147,8 @@ struct AddGarmentView: View {
             
             ToolbarItem(placement: .confirmationAction) {
                 Button("Finish", systemImage: "checkmark") {
+                    self.saveGarment()
                     
-                    withAnimation {
-                        saveGarment()
-                    }
                 }
                 .fontWeight(.bold)
                 .disabled(self.name.isEmpty)
@@ -174,10 +172,6 @@ struct AddGarmentView: View {
             isPresented: $showGalleryPicker,
             selection  : $selectedItem,
             matching   : .images
-        )
-        .onChange(
-            of: self.selectedItem,
-            selectedItemChanged
         )
         .onChange(
             of: self.selectedFabrics,
@@ -401,26 +395,7 @@ struct AddGarmentView: View {
         )
         .ignoresSafeArea()
     }
-    
-    private func selectedItemChanged(
-        _ oldValue: PhotosPickerItem?,
-        _ newValue: PhotosPickerItem?
-    ) {
-        Task {
-            if let data = try? await selectedItem?.loadTransferable(type: Data.self),
-               let uiImage = UIImage(data: data) {
-                
-                self.uiImageToSave = uiImage
-                self.selectedImage = Image(uiImage: uiImage)
-                
-               
-                if let savedResult = ImageStorage.saveImage(uiImage) {
-                    let filename = (savedResult as NSString).lastPathComponent
-                    self.imagePath = filename
-                }
-            }
-        }
-    }
+
     
     private func selectedFabricsChanged(_ oldValue: Set<GarmentFabric>, _ newValue: Set<GarmentFabric>) {
         var newCompositionList: [GarmentComposition] = []
@@ -437,6 +412,8 @@ struct AddGarmentView: View {
         self.selectedComposition = newCompositionList
     }
     
+    
+    
     // MARK: - Tools
     
     private var isFormValid: Bool {
@@ -444,6 +421,11 @@ struct AddGarmentView: View {
     }
     
     private func saveGarment() {
+        
+        if let imageToSave = self.uiImageToSave,
+           let filename = ImageStorage.saveImage(imageToSave) {
+            self.imagePath = (filename as NSString).lastPathComponent
+        }
         
         let newGarment = Garment(
             name          : self.name,

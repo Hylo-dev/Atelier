@@ -40,21 +40,17 @@ struct ModelCardView: Equatable, View {
                 .clipShape(Rectangle())
             
             if self.imagePath != nil {
-                Rectangle()
-                    .fill(.ultraThinMaterial)
-                    .frame(height: 80)
-                    .mask {
-                        LinearGradient(
-                            stops: [
-                                .init(color: .clear, location: 0.0),
-                                .init(color: .black, location: 0.3),
-                                .init(color: .black, location: 1.0)
-                            ],
-                            startPoint: .top,
-                            endPoint: .bottom
-                        )
-                    }
-            }            
+                LinearGradient(
+                    stops: [
+                        .init(color: .clear, location: 0.0),
+                        .init(color: .black.opacity(0.6), location: 0.5),
+                        .init(color: .black.opacity(0.8), location: 1.0)
+                    ],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+                .frame(height: 80)
+            }
             
             VStack(alignment: .leading, spacing: 4) {
                 Text(self.title)
