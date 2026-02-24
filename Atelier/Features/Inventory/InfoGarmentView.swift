@@ -136,8 +136,8 @@ struct InfoGarmentView: View {
         let targetSize = CGSize(width: screenWidth, height: screenWidth / 0.75)
         
         let imageURL: URL? = {
-            guard let filename = self.item.imagePath, !filename.isEmpty else { return nil }
-            guard let documentsURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else {
+            guard let filename = self.item.imagePath, !filename.isEmpty,
+                  let documentsURL = AtelierEnvironment.documentsDirectory else {
                 return nil
             }
             
@@ -168,12 +168,7 @@ struct InfoGarmentView: View {
                 .resize(size: targetSize, unit: .points, contentMode: .aspectFill, crop: true)
             ])
             .priority(.veryHigh)
-            .pipeline(
-                ImagePipeline {
-                    $0.imageCache = ImageCache.shared
-                    $0.dataCache  = nil
-                }
-            )
+            .pipeline(AtelierEnvironment.imagePipeline)
             .aspectRatio(3/4, contentMode: .fit)
             .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
             .shadow(color: Color.black.opacity(0.15), radius: 10, x: 0, y: 5)

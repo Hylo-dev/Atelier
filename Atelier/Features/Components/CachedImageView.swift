@@ -13,11 +13,10 @@ struct CachedImageView: View {
     let imagePath: String?
     
     private var imageURL: URL? {
-        guard let filename = self.imagePath, !filename.isEmpty else { return nil }
-        guard let documentsURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else {
+        guard let filename = self.imagePath, !filename.isEmpty,
+              let documentsURL = AtelierEnvironment.documentsDirectory else {
             return nil
         }
-
         return documentsURL.appendingPathComponent(filename)
     }
     
@@ -46,15 +45,7 @@ struct CachedImageView: View {
             )
         ])
         .priority(.high)
-        .pipeline(
-            ImagePipeline {
-                $0.imageCache = ImageCache.shared
-                $0.dataCache = try? DataCache(
-                    name: "com.atelier.thumbnails"
-                )
-                $0.dataCachePolicy = .storeEncodedImages
-            }
-        )
+        .pipeline(AtelierEnvironment.imagePipeline)
     }
     
     @ViewBuilder
