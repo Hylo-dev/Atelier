@@ -14,7 +14,7 @@ struct ModelCardView: Equatable, View {
     
     init(
         title      : String,
-        subheadline: String?,
+        subheadline: String? = nil,
         imagePath  : String?
     ) {
         self.title       = title
@@ -26,10 +26,12 @@ struct ModelCardView: Equatable, View {
         ZStack(alignment: .bottomLeading) {
             
             Color.secondary.opacity(0.1)
-                .aspectRatio(1, contentMode: .fit) // 4/4 è 1
+                .aspectRatio(1, contentMode: .fit)
                 .overlay {
+                    
+                    
                     if let path = self.imagePath {
-                        CachedImageView(imagePath: path) // Niente proxy.size!
+                        CachedImageView(imagePath: path)
                         
                     } else {
                         Image(systemName: "hanger")

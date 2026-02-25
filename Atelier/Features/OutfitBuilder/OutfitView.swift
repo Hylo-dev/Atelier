@@ -17,7 +17,7 @@ struct OutfitView: View {
     @Bindable
     var manager: CaptureManager
         
-    @Binding
+    @Bindable
     var seasonsState: TabFilterState
     
     var title: String
@@ -47,14 +47,13 @@ struct OutfitView: View {
     
     
     
-    // MARK: - Computed values
+    // MARK: - Visibles Outfits
     
-    private var visibleOutfits: [Outfit] {
-        return FilterOutfitConfig.filterOutfits(
-            allOutfits : self.outfits,
-            config     : self.filter
-        )
-    }
+    @State
+    private var visibleOutfits: [Outfit] = []
+    
+    @State
+    private var groupedOutfits: [String : [Outfit]] = [:]
     
     
     
@@ -71,7 +70,7 @@ struct OutfitView: View {
     private var filter = FilterOutfitConfig()
     
     @State
-    private var showFilterSheet: Bool = false
+    private var isFilterSheetVisible: Bool = false
     
     
     
@@ -115,9 +114,14 @@ struct OutfitView: View {
             }
             
             self.updateSeason()
+            self.updateFilteredOutfits()
         }
         .onChange(of: self.outfits) {
             self.updateSeason()
+            self.updateFilteredOutfits()
+        }
+        .onChange(of: self.filter) {
+            self.updateFilteredOutfits()
         }
         .toolbar {
             
@@ -129,39 +133,41 @@ struct OutfitView: View {
                             .fontWeight(.bold)
                     }
             }
-            
+                        
             ToolbarItem(placement: .topBarTrailing) {
-                Button("Filter", systemImage: "line.3.horizontal.decrease") {  }
+                Button("Filter", systemImage: "line.3.horizontal.decrease") {
+                    self.isFilterSheetVisible = true
+                }
             }
             
             ToolbarItem(placement: .topBarTrailing) {
                 Button("Add", systemImage: "plus") { self.isAddOutfitSheetVisible = true }
             }
         }
-//        .navigationDestination(for: Garment.self) { selectedItem in
-//            InfoGarmentView(
-//                garmentManager: self.$outfitManager,
-//                item          : selectedItem
-//            )
-//            
-//        }
-        .sheet(
-            isPresented:   self.$isAddOutfitSheetVisible,
-            onDismiss  : { self.isAddOutfitSheetVisible = false }
-        ) {
+        .navigationDestination(for: Outfit.self) { selectedItem in
+            InfoOutfitView(
+                manager: self.$outfitManager,
+                outfit : selectedItem
+            )
+            
+        }
+        .sheet(isPresented: self.$isAddOutfitSheetVisible) {
             NavigationStack {
                 AddOutfitView(outfitManager: self.$outfitManager)
             }
         }
-//        .sheet(item: self.$selectedItem) { germent in
-//            
-//            NavigationStack {
-//                ModifyGarmentView(
-//                    garmentManager: self.$garmentManager,
-//                    garment       : germent
-//                )
-//            }
-//        }
+        .sheet(item: self.$selectedItem) { outfit in
+            
+            NavigationStack {
+                ModifyOutfitView(
+                    manager: self.$outfitManager,
+                    outfit  : outfit
+                )
+            }
+        }
+        .sheet(isPresented: self.$isFilterSheetVisible) {
+            FilterOutfitView(filter: self.$filter)
+        }
         
     }
     
@@ -174,34 +180,13 @@ struct OutfitView: View {
         ScrollView(.vertical) {
             LazyVGrid(columns: Self.columns, spacing: 20) {
                 
-                ForEach(self.items(for: season)) { item in
+                ForEach(self.groupedOutfits[season] ?? []) { item in
                     
-                    NavigationLink(value: item) {
-                        ModelCardView(
-                            title      : item.name,
-                            subheadline: nil,
-                            imagePath  : item.fullLookImagePath
-                        )
-                        .equatable()
-                        .id(item.id)
-                        .contextMenu {
-                            
-                            Button {
-                                self.selectedItem = item
-                                
-                            } label: {
-                                Label("Edit Details", systemImage: "pencil")
-                            }
-                            
-                            Button(role: .destructive) {
-                                self.outfitManager?.deleteOutfit(item)
-                                
-                            } label: {
-                                Label("Delete", systemImage: "trash")
-                            }
-                        }
-                    }
-                    .buttonStyle(.plain)
+                    OutfitContextCard(
+                        outfit      : item,
+                        manager     : self.outfitManager,
+                        selectedItem: self.$selectedItem
+                    )
                 }
             }
             .padding(.horizontal, 16)
@@ -215,16 +200,6 @@ struct OutfitView: View {
     
     
     // MARK: - Handlers
-    
-    private func items(for season: String) -> [Outfit] {
-        return if season == "All" {
-            self.visibleOutfits
-            
-        } else {
-            self.visibleOutfits.filter { $0.season.title == season }
-        }
-    }
-    
     
     
     @inline(__always)
@@ -240,6 +215,71 @@ struct OutfitView: View {
             
         } else {
             print("No changes season, skipping update to save cycles")
+        }
+    }
+    
+    @inline(__always)
+    private func updateFilteredOutfits() {
+        self.visibleOutfits = FilterOutfitConfig.filterOutfits(
+            allOutfits : self.outfits,
+            config     : self.filter
+        )
+        
+        var newGrouped: [String: [Outfit]] = [:]
+        newGrouped["All"] = self.visibleOutfits
+        
+        let groupedByCategory = Dictionary(
+            grouping: self.visibleOutfits,
+            by: { $0.season.title }
+        )
+        
+        for (category, items) in groupedByCategory {
+            newGrouped[category] = items
+        }
+        
+        self.groupedOutfits = newGrouped
+    }
+}
+
+fileprivate
+struct OutfitContextCard: View {
+    let outfit : Outfit
+    let manager: OutfitManager?
+    
+    @Binding
+    var selectedItem: Outfit?
+    
+    var body: some View {
+        NavigationLink(value: self.outfit) {
+            ModelCardView(
+                title      : self.outfit.name,
+                imagePath  : self.outfit.fullLookImagePath
+            )
+            .equatable()
+            .id(self.outfit.id)
+            .contextMenu {
+                self.contextMenuButtons(for: self.outfit)
+            }
+        }
+        .buttonStyle(.plain)
+    }
+    
+    
+    
+    @ViewBuilder
+    private func contextMenuButtons(for item: Outfit) -> some View {
+        Button {
+            self.selectedItem = item
+            
+        } label: {
+            Label("Edit Details", systemImage: "pencil")
+        }
+        
+        Button(role: .destructive) {
+            self.manager?.deleteOutfit(item)
+            
+        } label: {
+            Label("Delete", systemImage: "trash")
         }
     }
 }

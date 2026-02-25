@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct FilterSheetView: View {
+struct FilterGarmentView: View {
     
     @Environment(\.dismiss)
     var dismiss

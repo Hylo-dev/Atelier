@@ -69,9 +69,10 @@ struct AddOutfitView: View {
                         
                     } label: {
                         AvatarView(
-                            self.fullLookImagePath ?? "",
-                            color: .accentColor,
-                            icon : "tshirt"
+                            self.fullLookImagePath,
+                            color  : .accentColor,
+                            icon   : "tshirt",
+                            uiImage: self.uiImageToSave
                         )
                     }
                     .buttonStyle(.plain)
@@ -113,20 +114,33 @@ struct AddOutfitView: View {
         )
         .sheet(
             isPresented: self.$showCamera,
-            content    : sheetHandler
+            content    : sheetPhotoHandler
         )
         .photosPicker(
             isPresented: $showGalleryPicker,
             selection  : $selectedItem,
             matching   : .images
         )
-        .onChange(
-            of: self.selectedItem,
-            self.selectedItemChanged
-        )
+        .onChange(of: self.selectedItem) { _, newValue in
+            Task {
+                
+                if let data = try await newValue?.loadTransferable(type: Data.self),
+                   let uiImage = UIImage(data: data) {
+                    
+                    await MainActor.run {
+                        self.uiImageToSave = uiImage
+                        self.selectedImage = Image(uiImage: uiImage)
+                    }
+                }                
+            }
+        }
     }
     
+    
+    
     // MARK: - Views
+    
+    
     
     @ViewBuilder
     var sectionStyleAndCategory: some View {
@@ -162,8 +176,12 @@ struct AddOutfitView: View {
             }
         }
     }
+    
+    
 
     // MARK: - Handlers
+    
+    
     
     @ViewBuilder
     private func confirmationDialogHandler() -> some View {
@@ -184,39 +202,30 @@ struct AddOutfitView: View {
         }
     }
     
+    
+    
     @ViewBuilder
-    private func sheetHandler() -> some View {
+    private func sheetPhotoHandler() -> some View {
         CameraView(
             onImageCaptured: { filename, image in
-                self.selectedImage     = Image(uiImage: image)
-                self.uiImageToSave     = image
-                self.fullLookImagePath = filename
+                self.selectedImage = Image(uiImage: image)
+                self.uiImageToSave = image
+                self.fullLookImagePath = (filename as NSString).lastPathComponent
             },
             mode: .photo
         )
         .ignoresSafeArea()
     }
     
-    private func selectedItemChanged(
-        _ oldValue: PhotosPickerItem?,
-        _ newValue: PhotosPickerItem?
-    ) {
-        Task {
-            if let data = try? await selectedItem?.loadTransferable(type: Data.self),
-               let uiImage = UIImage(data: data) {
-                
-                self.uiImageToSave = uiImage
-                self.selectedImage = Image(uiImage: uiImage)
-                
-                if let filename = ImageStorage.saveImage(uiImage) {
-                    self.fullLookImagePath = filename
-                }
-            }
-        }
-    }
+    
     
     private func saveOutfit() {
         
+        if let imageToSave = self.uiImageToSave,
+           let filename = ImageStorage.saveImage(imageToSave) {
+            self.fullLookImagePath = (filename as NSString).lastPathComponent
+        }
+                
         let newOutfit = Outfit(
             name             : self.name,
             garments         : Array(self.garments),

@@ -17,6 +17,16 @@ enum AtelierEnvironment {
         config.imageCache = ImageCache.shared
         config.dataCache = try? DataCache(name: "com.atelier.thumbnails")
         config.dataCachePolicy = .storeEncodedImages
+        
+        return ImagePipeline(configuration: config)
+    }()
+    
+    static let ephemeralPipeline: ImagePipeline = {
+        var config = ImagePipeline.Configuration()
+        
+        config.imageCache = nil
+        config.dataCache  = nil
+        
         return ImagePipeline(configuration: config)
     }()
 }

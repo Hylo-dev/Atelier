@@ -86,7 +86,7 @@ struct InventoryView: View {
     ]
     
     var body: some View {
-        let _ = Self._printChanges()
+//        let _ = Self._printChanges()
         
         Group {
             if self.garments.isEmpty {
@@ -164,10 +164,7 @@ struct InventoryView: View {
             )
             
         }
-        .sheet(
-            isPresented:   self.$isAddGarmentSheetVisible,
-            onDismiss  : { self.isAddGarmentSheetVisible = false }
-        ) {
+        .sheet(isPresented: self.$isAddGarmentSheetVisible) {
             NavigationStack {
                 AddGarmentView(garmentManager: self.$garmentManager)
             }
@@ -182,7 +179,7 @@ struct InventoryView: View {
             }
         }
         .sheet(isPresented: self.$isFilterSheetVisible) {
-            FilterSheetView(
+            FilterGarmentView(
                 filters: self.$filter,
                 brands : self.$availableBrands
             )
@@ -216,16 +213,6 @@ struct InventoryView: View {
     
     
     // MARK: - Handlers
-    
-    private func items(for category: String) -> [Garment] {
-        return if category == "All" {
-            self.visibleGarments
-            
-        } else {
-            self.visibleGarments.filter { $0.category.label == category }
-        }
-    }
-    
     
     
     @inline(__always)

@@ -17,6 +17,7 @@ struct CachedImageView: View {
               let documentsURL = AtelierEnvironment.documentsDirectory else {
             return nil
         }
+        
         return documentsURL.appendingPathComponent(filename)
     }
     
@@ -30,7 +31,12 @@ struct CachedImageView: View {
                     .scaledToFill()
                     .clipped()
                     .contentShape(Rectangle())
-                    .transition(.opacity.animation(.easeIn(duration: 0.2)))
+                    .transition(
+                        .opacity
+                        .animation(
+                            .easeIn(duration: 0.2)
+                        )
+                    )
                 
             } else {
                 self.placeholderView(isError: state.error != nil)

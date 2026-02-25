@@ -77,33 +77,19 @@ struct FilterGarmentConfig: Equatable {
     }
 }
 
-struct FilterOutfitConfig {
-    var onlyRecentWorn     : Bool               = false
+struct FilterOutfitConfig: Equatable {
+    var recentWorn     : Bool               = false
     var selectedStyle      : Set<GarmentStyle>? = nil
     var onlyClean          : Bool               = false
     
-    /*
-     var lastWornDate     : Date?
-     var wearCount        : Int
-     var fullLookImagePath: String
-     var season           : Season
-     var style            : GarmentStyle
-     
-     var isReadyToWear: Bool {
-     guard !self.garments.isEmpty else { return false }
-     
-     return self.garments.allSatisfy { $0.state == .available }
-     }
-     */
-    
     var isFiltering: Bool {
-        return self.onlyRecentWorn ||
+        self.recentWorn        ||
         self.selectedStyle  != nil ||
         self.onlyClean
     }
     
     mutating func reset() {
-        self.onlyRecentWorn = false
+        self.recentWorn = false
         self.selectedStyle  = nil
         self.onlyClean      = false
     }
@@ -120,14 +106,14 @@ struct FilterOutfitConfig {
                 return false
             }
             
-            if config.onlyClean && outfit.isReadyToWear {
+            if config.onlyClean && !outfit.isReadyToWear {
                 return false
             }
             
             return true
         }
         
-        if config.onlyRecentWorn {
+        if config.recentWorn {
             outfits.sort {
                 let date0 = $0.lastWornDate ?? Date.distantPast
                 let date1 = $1.lastWornDate ?? Date.distantPast

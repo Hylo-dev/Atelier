@@ -94,7 +94,7 @@ struct AddGarmentView: View {
     var body: some View {
         
         Form {
-
+            
             Section {
                 HStack {
                     
@@ -107,7 +107,8 @@ struct AddGarmentView: View {
                         AvatarView(
                             self.imagePath ?? "",
                             color: self.color,
-                            icon : "hanger"
+                            icon : "hanger",
+                            uiImage: self.uiImageToSave
                         )
                     }
                     .buttonStyle(.plain)
@@ -132,7 +133,7 @@ struct AddGarmentView: View {
             
             // Section 4: Style & Category
             self.sectionStyleAndCategory
-                        
+            
             // Section 5: Composition Garment
             self.sectionComposition
             
@@ -169,8 +170,8 @@ struct AddGarmentView: View {
             content    : self.sheetScanHandler
         )
         .photosPicker(
-            isPresented: $showGalleryPicker,
-            selection  : $selectedItem,
+            isPresented: self.$showGalleryPicker,
+            selection  : self.$selectedItem,
             matching   : .images
         )
         .onChange(
@@ -179,6 +180,21 @@ struct AddGarmentView: View {
         )
         .onChange(of: self.selectedCategory) { _, newValue in
             self.selectedSubCategory = newValue.subCategory.first ?? GarmentSubCategory.top
+        }
+        .onChange(of: self.selectedItem) { _, newValue in
+            Task {
+                
+                if let data = try await newValue?.loadTransferable(type: Data.self),
+                   let uiImage = UIImage(data: data) {
+                    
+                    await MainActor.run {
+                        self.uiImageToSave = uiImage
+                        self.selectedImage = Image(uiImage: uiImage)
+                    }
+                }
+                
+            }
+            
         }
     }
     
@@ -197,6 +213,8 @@ struct AddGarmentView: View {
             )
         }
     }
+    
+    
     
     @ViewBuilder
     var sectionPhysicalDetails: some View {
@@ -222,6 +240,8 @@ struct AddGarmentView: View {
             }
         }
     }
+    
+    
     
     @ViewBuilder
     var sectionCare: some View {
@@ -254,6 +274,8 @@ struct AddGarmentView: View {
         }
     }
     
+    
+    
     @ViewBuilder
     var sectionStyleAndCategory: some View {
         Section("Style & Category") {
@@ -285,6 +307,8 @@ struct AddGarmentView: View {
             }
         }
     }
+    
+    
     
     @ViewBuilder
     var sectionComposition: some View {
@@ -372,7 +396,6 @@ struct AddGarmentView: View {
             onImageCaptured: { filename, image in
                 self.selectedImage = Image(uiImage: image)
                 self.uiImageToSave = image
-                
                 self.imagePath = (filename as NSString).lastPathComponent
             },
             mode: .photo

@@ -134,7 +134,7 @@ struct HomeView: View {
             case .outfitBuilder:
                 OutfitView(
                     manager     : self.manager,
-                    seasonsState: self.$seasonState,
+                    seasonsState: self.seasonState,
                     title       : title
                 )
             

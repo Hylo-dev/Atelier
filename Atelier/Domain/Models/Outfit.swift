@@ -20,7 +20,7 @@ final class Outfit {
     
     var lastWornDate     : Date?
     var wearCount        : Int
-    var fullLookImagePath: String
+    var fullLookImagePath: String?
     var season           : Season
     var style            : GarmentStyle
     
@@ -28,6 +28,10 @@ final class Outfit {
         guard !self.garments.isEmpty else { return false }
         
         return self.garments.allSatisfy { $0.state == .available }
+    }
+    
+    var stateWear: String {
+        self.isReadyToWear ? "Yes" : "No"
     }
     
     var missingItemsCount: Int { self.garments.filter { $0.state != .available }.count }
@@ -46,6 +50,6 @@ final class Outfit {
         self.style             = style
         self.lastWornDate      = nil
         self.wearCount         = 0
-        self.fullLookImagePath = fullLookImagePath ?? ""
+        self.fullLookImagePath = fullLookImagePath
     }
 }

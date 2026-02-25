@@ -17,17 +17,25 @@ final class OutfitManager {
         self.context = context
     }
     
+    @inline(__always)
     func createOutfit(_ outfit: Outfit) {
         context.insert(outfit)
         
         save()
     }
     
+    @inline(__always)
+    func updateOutfit() {
+        save()
+    }
+    
+    @inline(__always)
     func deleteOutfit(_ outfit: Outfit) {
         self.context.delete(outfit)
         save()
     }
     
+    @inline(__always)
     private func save() {
         try? context.save()
     }

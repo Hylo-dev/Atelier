@@ -6,16 +6,24 @@
 //
 
 import SwiftUI
-import NukeUI
-import Nuke
 
 struct InfoGarmentView: View {
     
-    @Environment(\.dismiss)
-    private var dismiss
     
+    
+    // MARK: - Parameters Variables
+        
     @Binding
     var garmentManager: GarmentManager?
+    
+    let item: Garment
+    
+    
+    
+    // MARK: - Private State Variables
+    
+    @Environment(\.dismiss)
+    private var dismiss
     
     @State
     private var isModifySheetVisible: Bool = false
@@ -23,7 +31,7 @@ struct InfoGarmentView: View {
     @State
     private var deleteItem: Bool = false
     
-    let item: Garment
+    
     
     var body: some View {
         
@@ -91,12 +99,16 @@ struct InfoGarmentView: View {
         }
     }
     
+    
+    
     // MARK: - Views
+    
+    
     
     @ViewBuilder
     private var headerSection: some View {
         Section {
-            VStack(spacing: 16) {
+            VStack(spacing: 5) {
                 self.headerImageView
                 
                 VStack(spacing: 3) {
@@ -128,51 +140,18 @@ struct InfoGarmentView: View {
         .listRowBackground(Color.clear)
     }
     
+    
+    
     @ViewBuilder
     private var headerImageView: some View {
         let itemColor = Color(hex: self.item.color)
         
-        let screenWidth = UIScreen.main.bounds.width - 32
-        let targetSize = CGSize(width: screenWidth, height: screenWidth / 0.75)
-        
-        let imageURL: URL? = {
-            guard let filename = self.item.imagePath, !filename.isEmpty,
-                  let documentsURL = AtelierEnvironment.documentsDirectory else {
-                return nil
-            }
-            
-            return documentsURL.appendingPathComponent(filename)
-        }()
-        
-        ZStack(alignment: .bottomTrailing) {
-            
-            LazyImage(url: imageURL) { state in
-                if let image = state.image {
-                    image
-                        .resizable()
-                        .scaledToFill()
-                        .frame(maxWidth: .infinity)
-                        .transition(.opacity.animation(.easeOut(duration: 0.3)))
-                    
-                } else {
-                    RoundedRectangle(cornerRadius: 22, style: .continuous)
-                        .fill(itemColor.gradient)
-                        .overlay(
-                            Image(systemName: "hanger")
-                                .font(.system(size: 80))
-                                .foregroundStyle(.white.opacity(0.5))
-                        )
-                }
-            }
-            .processors([
-                .resize(size: targetSize, unit: .points, contentMode: .aspectFill, crop: true)
-            ])
-            .priority(.veryHigh)
-            .pipeline(AtelierEnvironment.imagePipeline)
-            .aspectRatio(3/4, contentMode: .fit)
-            .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
-            .shadow(color: Color.black.opacity(0.15), radius: 10, x: 0, y: 5)
-            
+        AvatarView(
+            self.item.imagePath ?? "",
+            color: itemColor,
+            icon: "hanger"
+        )
+        .overlay(alignment: .bottomTrailing) {
             Button(action: {
                 
             }) {
@@ -189,12 +168,14 @@ struct InfoGarmentView: View {
             }
             .padding(16)
         }
-        .padding(.horizontal, 16)
-        .padding(.top, 10)
+        
+        
     }
     
+    
+    
     @ViewBuilder
-    var sectionStyleAndCategory: some View {
+    private var sectionStyleAndCategory: some View {
         Section("Details") {
             
             RowInfo(title: "Type", value: self.item.category.label)
@@ -206,8 +187,10 @@ struct InfoGarmentView: View {
         }
     }
     
+    
+    
     @ViewBuilder
-    var sectionComposition: some View {
+    private var sectionComposition: some View {
         Section("Composition") {
             
             ForEach(self.item.composition, id: \.id) { item in
@@ -219,6 +202,8 @@ struct InfoGarmentView: View {
             }
         }
     }
+    
+    
     
     @ViewBuilder
     var sectionCare: some View {
@@ -268,64 +253,4 @@ struct InfoGarmentView: View {
         }
     }
 
-}
-
-struct RowInfo: View {
-    
-    let title: String
-    let value: String
-    
-    var body: some View {
-        HStack {
-            Text(title)
-                .fontWeight(.medium)
-                .fontDesign(.rounded)
-                .foregroundStyle(.secondary)
-            
-            Spacer()
-            
-            Text(value)
-                .fontWeight(.medium)
-                .fontDesign(.rounded)
-                .foregroundStyle(.primary)
-        }
-    }
-}
-
-struct CompositionRow: View {
-    
-    let fabricName: String
-    let percentage: Double
-    let color: Color
-    
-    var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack {
-                Text(self.fabricName)
-                    .fontWeight(.medium)
-                    .fontDesign(.rounded)
-                
-                Spacer()
-                
-                Text("\(Int(self.percentage))%")
-                    .fontWeight(.bold)
-                    .fontDesign(.rounded)
-                    .foregroundStyle(.secondary)
-            }
-            
-            GeometryReader { geo in
-                ZStack(alignment: .leading) {
-                    Capsule()
-                        .fill(Color.gray.opacity(0.2))
-                        .frame(height: 6)
-                    
-                    Capsule()
-                        .fill(self.color)
-                        .frame(width: geo.size.width * (self.percentage / 100), height: 6)
-                }
-            }
-            .frame(height: 6)
-        }
-        .padding(.vertical, 4)
-    }
 }
