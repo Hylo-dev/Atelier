@@ -138,8 +138,8 @@ struct HomeView: View {
                     title       : title
                 )
             
-            case .maintenance:
-                Text("Maintenance Screen")
+            case .care:
+                CareView()
                 
             case .search:
                 EmptyView()

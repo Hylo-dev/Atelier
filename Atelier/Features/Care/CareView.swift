@@ -6,10 +6,39 @@
 //
 
 import SwiftUI
+import CoreLocation
 
 struct CareView: View {
+    
+    let service = WeatherService()
+    
+    @State
+    private var weather: WeatherState?
+    
     var body: some View {
-        Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
+        
+        ScrollView {
+            LazyVStack {
+                
+                WeatherView(currentWeather: weather)
+                
+                
+            }
+            
+        }
+        .onAppear {
+            Task { @MainActor in
+                
+                self.weather = try await service.fetchWeather(
+                    for: CLLocation(
+                        latitude: .zero,
+                        longitude: .zero
+                    )
+                )
+                
+            }
+        }
+        
     }
 }
 

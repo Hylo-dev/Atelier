@@ -10,7 +10,7 @@ import SwiftUI
 enum AppTab: String, CaseIterable, Identifiable {
     case wardrobe
     case outfitBuilder
-    case maintenance
+    case care
     case search
     
     var id: String { rawValue }
@@ -19,7 +19,7 @@ enum AppTab: String, CaseIterable, Identifiable {
         return switch self {
             case .wardrobe     : "Wardrobe"
             case .outfitBuilder: "Outfit"
-            case .maintenance  : "Cure"
+            case .care  : "Cure"
             case .search       : "Search"
         }
     }
@@ -28,7 +28,7 @@ enum AppTab: String, CaseIterable, Identifiable {
         return switch self {
             case .wardrobe     : "cabinet"
             case .outfitBuilder: "tshirt"
-            case .maintenance  : "sparkles.2"
+            case .care  : "sparkles.2"
             case .search       : "magnifyingglass"
         }
     }
