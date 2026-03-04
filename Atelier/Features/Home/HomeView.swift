@@ -139,7 +139,7 @@ struct HomeView: View {
                 )
             
             case .care:
-                CareView()
+                CareView(title: title)
                 
             case .search:
                 EmptyView()

@@ -41,10 +41,10 @@ struct InfoOutfitView: View {
             // MARK: - Sections
             
             self.headerSection
-                        
-            self.sectionStyleAndCategory
             
             self.sectionCare
+                        
+            self.sectionStyleAndCategory
                         
         }
         .toolbar {
@@ -172,9 +172,39 @@ struct InfoOutfitView: View {
             RowInfo(title: "Season", value: self.outfit.season.rawValue)
             RowInfo(title: "Style", value: self.outfit.style.rawValue)
             
+            self.garmentsLazyRow
         }
     }
     
+    
+    
+    @ViewBuilder
+    private var garmentsLazyRow: some View {
+        VStack(alignment: .leading) {
+            
+            Text("Garments")
+                .fontWeight(.medium)
+                .fontDesign(.rounded)
+                .foregroundStyle(.secondary)
+            
+            
+            ScrollView(.horizontal) {
+                LazyHStack {
+                    ForEach(self.outfit.garments, id: \.id) { garment in
+                        
+                        ModelCardView(
+                            title    : garment.name,
+                            imagePath: garment.imagePath
+                        )
+                        .equatable()
+                        .id(garment.id)
+                        .frame(width: 150, height: 150)
+                        
+                    }
+                }
+            }
+        }
+    }
     
     
     @ViewBuilder
