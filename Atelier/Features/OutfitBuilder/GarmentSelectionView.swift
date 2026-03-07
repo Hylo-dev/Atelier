@@ -49,7 +49,7 @@ struct GarmentSelectionView: View {
                 ZStack {
                     ModelCardView(
                         title      : item.name,
-                        subheadline: item.brand ?? " ",
+                        subheadline: item.brand,
                         imagePath  : item.imagePath
                     )
                     

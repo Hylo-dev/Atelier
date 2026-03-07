@@ -25,7 +25,7 @@ struct ModelCardView: Equatable, View {
     var body: some View {
         ZStack(alignment: .bottomLeading) {
             
-            Color.secondary.opacity(0.1)
+            Color.secondary.opacity(0.15)
                 .aspectRatio(1, contentMode: .fit)
                 .overlay {
                     
@@ -36,7 +36,7 @@ struct ModelCardView: Equatable, View {
                     } else {
                         Image(systemName: "hanger")
                             .font(.largeTitle)
-                            .foregroundStyle(.secondary.opacity(0.3))
+                            .foregroundStyle(.secondary.opacity(0.4))
                     }
                 }
                 .clipShape(Rectangle())
@@ -64,7 +64,7 @@ struct ModelCardView: Equatable, View {
                 
                 if let subhead = self.subheadline {
                     Text(subhead)
-                        .font(.subheadline)
+                        .font(.caption)
                         .fontDesign(.rounded)
                         .fontWeight(.regular)
                         .foregroundStyle(.secondary)

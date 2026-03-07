@@ -119,7 +119,7 @@ struct InfoOutfitView: View {
                     if let date = self.outfit.lastWornDate {
                         Text("Last worn date \(date.formatted(date: .abbreviated, time: .omitted))")
                             .font(.caption)
-                            .foregroundStyle(.tertiary)
+                            .foregroundStyle(.secondary)
                             .padding(.top, 4)
                     }
                     

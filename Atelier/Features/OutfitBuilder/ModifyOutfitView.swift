@@ -313,8 +313,9 @@ struct ModifyOutfitView: View {
         self.outfit.season            = self.selectedSeason
         self.outfit.style             = self.selectedStyle
         self.outfit.lastWornDate      = self.lastWornDate
-        self.outfit.fullLookImagePath = self.imagePath ?? ""
+        self.outfit.fullLookImagePath = self.imagePath
         self.outfit.wearCount         = self.wearCount
+        self.outfit.garments          = Array(self.selectedGarments)
         
         
         if let manager = self.manager {

@@ -504,7 +504,7 @@ struct ModifyGarmentView: View {
         
         self.item.washingSymbols = Array(self.washingSymbols)
         self.item.purchaseDate   = self.purchaseDate
-        self.item.imagePath      = self.imagePath ?? ""
+        self.item.imagePath      = self.imagePath
         
         
         if let manager = self.garmentManager {
