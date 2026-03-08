@@ -9,7 +9,7 @@ import SwiftUI
 import PhotosUI
 import UIKit
 
-struct AddGarmentView: View {
+struct GarmentEditorView: View {
     @Environment(\.dismiss)
     var dismiss
     
@@ -19,45 +19,50 @@ struct AddGarmentView: View {
     @Binding
     var garmentManager: GarmentManager?
     
+    private let item: Garment?
+    
     
     // MARK: - Garment Attributes
     
     @State
-    private var name: String = ""
+    private var name: String
     
     @State
-    private var brand: String = ""
+    private var brand: String
     
     @State
-    private var color: Color = Color.accentColor
-    
-    
-    
-    @State
-    private var selectedFabrics: Set<GarmentFabric> = []
-    
-    @State
-    private var selectedComposition: [GarmentComposition] = []
-    
-    @State
-    private var selectedCategory: GarmentCategory = .top
-    
-    @State
-    private var selectedSubCategory: GarmentSubCategory = .top
-    
-    @State
-    private var selectedSeason: Season = .summer
-    
-    @State
-    private var selectedStyle: GarmentStyle = .elegant
+    private var color: Color
     
     
     
     @State
-    private var washingSymbols: Set<LaundrySymbol> = []
+    private var selectedFabrics: Set<GarmentFabric>
     
     @State
-    private var purchaseDate: Date = .now
+    private var selectedComposition: [GarmentComposition]
+    
+    @State
+    private var selectedCategory: GarmentCategory
+    
+    @State
+    private var selectedSubCategory: GarmentSubCategory
+    
+    @State
+    private var selectedSeason: Season
+    
+    @State
+    private var selectedStyle: GarmentStyle
+    
+    @State
+    private var selectedState: GarmentState?
+    
+    
+    
+    @State
+    private var washingSymbols: Set<LaundrySymbol>
+    
+    @State
+    private var purchaseDate: Date
     
     
     
@@ -89,6 +94,46 @@ struct AddGarmentView: View {
     
     private var currentTotalComposition: Int {
         Int(selectedComposition.reduce(0) { $0 + $1.percentual })
+    }
+    
+    init(
+        garmentManager: Binding<GarmentManager?>,
+        garment       : Garment? = nil
+    ) {
+        self.item            = garment
+        
+        _name                = State(initialValue: garment?.name ?? "")
+        _brand               = State(initialValue: garment?.brand ?? "")
+        
+        var initialColor: Color
+        if let hexString = garment?.color {
+            initialColor = Color(hex: hexString)
+            
+        } else {
+            initialColor = .accentColor
+        }
+        
+        _color               = State(initialValue: initialColor)
+        _selectedComposition = State(initialValue: garment?.composition ?? [])
+        _selectedFabrics     = State(initialValue: Set(garment?.composition.map { $0.fabric } ?? []))
+        
+        _selectedCategory    = State(initialValue: garment?.category ?? .top)
+        _selectedSubCategory = State(initialValue: garment?.subCategory ?? .top)
+        _selectedSeason      = State(initialValue: garment?.season ?? .winter)
+        _selectedStyle       = State(initialValue: garment?.style ?? .casual)
+        _selectedState       = State(initialValue: garment?.state ?? nil)
+        
+        _washingSymbols      = State(initialValue: Set(garment?.washingSymbols ?? []))
+        _purchaseDate        = State(initialValue: garment?.purchaseDate ?? .now)
+        _imagePath           = State(initialValue: garment?.imagePath)
+        
+        if let garment = garment,
+           let path = garment.imagePath,
+           let image = ImageStorage.loadImage(from: path) {
+            _selectedImage = State(initialValue: Image(uiImage: image))
+        }
+        
+        self._garmentManager = garmentManager
     }
     
     var body: some View {
@@ -131,7 +176,7 @@ struct AddGarmentView: View {
             
             ToolbarItem(placement: .confirmationAction) {
                 Button("Finish", systemImage: "checkmark") {
-                    self.saveGarment()
+                    self.item == nil ? self.saveGarment() : self.updateGarment()
                     
                 }
                 .fontWeight(.bold)
@@ -164,21 +209,10 @@ struct AddGarmentView: View {
         .onChange(of: self.selectedCategory) { _, newValue in
             self.selectedSubCategory = newValue.subCategory.first ?? GarmentSubCategory.top
         }
-        .onChange(of: self.selectedItem) { _, newValue in
-            Task {
-                
-                if let data = try await newValue?.loadTransferable(type: Data.self),
-                   let uiImage = UIImage(data: data) {
-                    
-                    await MainActor.run {
-                        self.uiImageToSave = uiImage
-                        self.selectedImage = Image(uiImage: uiImage)
-                    }
-                }
-                
-            }
-            
-        }
+        .onChange(
+            of: self.selectedItem,
+            self.selectedPhotoChanged
+        )
     }
     
     // MARK: - Views
@@ -263,11 +297,12 @@ struct AddGarmentView: View {
                     
                     HStack {
                         Text(self.selectedFabrics.isEmpty ? "None" : "\(self.selectedFabrics.count) selected")
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(.tertiary)
                         
                         Image(systemName: "chevron.forward")
                             .font(.subheadline)
-                            .foregroundStyle(.secondary)
+                            .fontWeight(.semibold)
+                            .foregroundStyle(.tertiary)
                     }
                     
                 }
@@ -304,17 +339,24 @@ struct AddGarmentView: View {
                     
                     HStack {
                         Text(self.washingSymbols.isEmpty ? "None" : "\(self.washingSymbols.count) selected")
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(.tertiary)
                         
                         Image(systemName: "chevron.forward")
                             .font(.subheadline)
-                            .foregroundStyle(.secondary)
+                            .fontWeight(.semibold)
+                            .foregroundStyle(.tertiary)
                     }
                 }
             }
             .tint(.primary)
             
-            
+            if self.selectedState != nil {
+                PickerList("State", selection: self.$selectedState) {
+                    ForEach(GarmentState.allCases, id: \.id) { state in
+                        Text(state.rawValue).tag(state)
+                    }
+                }
+            }
         }
     }
     
@@ -482,6 +524,23 @@ struct AddGarmentView: View {
         self.selectedComposition = newCompositionList
     }
     
+    private func selectedPhotoChanged(
+        _ oldValue: PhotosPickerItem?,
+        _ newValue: PhotosPickerItem?
+    ) {
+        Task {
+            if let data = try? await self.selectedItem?.loadTransferable(type: Data.self),
+               let uiImage = UIImage(data: data) {
+                
+                self.uiImageToSave = uiImage
+                self.selectedImage = Image(uiImage: uiImage)
+                
+                if let filename = ImageStorage.saveImage(uiImage) {
+                    self.imagePath = filename
+                }
+            }
+        }
+    }
     
     
     // MARK: - Tools
@@ -520,6 +579,36 @@ struct AddGarmentView: View {
         
         dismiss()
     }
+    
+    func updateGarment() {
+        
+        if let imageToSave = self.uiImageToSave,
+           let filename = ImageStorage.saveImage(imageToSave) {
+            self.imagePath = (filename as NSString).lastPathComponent
+        }
+        
+        self.item!.name           = self.name
+        self.item!.brand          = self.brand.isEmpty ? nil : self.brand
+        self.item!.color          = self.color.toHex() ?? "nil"
+        
+        // Updated properties
+        self.item!.composition    = Array(self.selectedComposition)
+        self.item!.category       = self.selectedCategory
+        self.item!.subCategory    = self.selectedSubCategory
+        self.item!.season         = self.selectedSeason
+        self.item!.style          = self.selectedStyle
+        
+        self.item!.washingSymbols = Array(self.washingSymbols)
+        self.item!.purchaseDate   = self.purchaseDate
+        self.item!.imagePath      = self.imagePath
+        
+        if let manager = self.garmentManager {
+            manager.updateGarment()
+            
+        } else { print("Manager is nil") }
+        
+        dismiss()
+    }
 }
 
 #Preview {
@@ -527,7 +616,7 @@ struct AddGarmentView: View {
     @State
     var manager: GarmentManager? = nil
     
-    AddGarmentView(
+    GarmentEditorView(
         garmentManager: $manager
     )
 }

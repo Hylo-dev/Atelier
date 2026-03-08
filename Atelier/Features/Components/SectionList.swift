@@ -33,7 +33,7 @@ struct SectionList<Content: View>: View {
                         let view = subViews[index]
                         
                         view
-                            .padding(.vertical, 12)
+                            .frame(minHeight: 44)
                             .id(view.id)
                         
                         if index < count - 1 {

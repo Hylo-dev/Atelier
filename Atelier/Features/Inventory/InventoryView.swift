@@ -166,13 +166,13 @@ struct InventoryView: View {
         }
         .sheet(isPresented: self.$isAddGarmentSheetVisible) {
             NavigationStack {
-                AddGarmentView(garmentManager: self.$garmentManager)
+                GarmentEditorView(garmentManager: self.$garmentManager)
             }
         }
         .sheet(item: self.$selectedItem) { germent in
             
             NavigationStack {
-                ModifyGarmentView(
+                GarmentEditorView(
                     garmentManager: self.$garmentManager,
                     garment       : germent
                 )
@@ -278,16 +278,16 @@ struct GarmentContextCard: View {
     var selectedItem: Garment?
     
     var body: some View {
-        NavigationLink(value: item) {
+        NavigationLink(value: self.item) {
             ModelCardView(
-                title      : item.name,
-                subheadline: item.brand,
-                imagePath  : item.imagePath
+                title      : self.item.name,
+                subheadline: self.item.brand,
+                imagePath  : self.item.imagePath
             )
             .equatable()
-            .id(item.id)
+            .id(self.item.id)
             .contextMenu {
-                self.contextMenuButtons(for: item)
+                self.contextMenuButtons(for: self.item)
             }
         }
         .buttonStyle(.plain)

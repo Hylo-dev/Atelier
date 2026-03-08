@@ -18,6 +18,9 @@ protocol SelectableItem: CaseIterable, Hashable, Identifiable {
 
 struct GenericSelectionView<Item: SelectableItem>: View {
     
+    @State
+    private var isSelected: Bool = false
+    
     @Binding
     var selection: Set<Item>
     
@@ -50,7 +53,8 @@ struct GenericSelectionView<Item: SelectableItem>: View {
                                 
                             }
                             .onTapGesture {
-                                toggleSelection(item)
+                                self.toggleSelection(item)
+                                self.isSelected.toggle()
                             }
                         }
                     }
@@ -58,20 +62,21 @@ struct GenericSelectionView<Item: SelectableItem>: View {
                 }
             }
         }
+        .sensoryFeedback(.selection, trigger: self.isSelected)
         .navigationTitle("Select Options")
     }
     
     @ViewBuilder
     private func selectionCell(for item: Item) -> some View {
-        let isSelected = selection.contains(item)
+        let isSelected = self.selection.contains(item)
         
         VStack {
             ZStack {
-                RoundedRectangle(cornerRadius: 10)
+                RoundedRectangle(cornerRadius: 16)
                     .fill(isSelected ? Color.accentColor.opacity(0.15) : Color(uiColor: .secondarySystemFill))
                     .frame(height: 60)
                     .overlay(
-                        RoundedRectangle(cornerRadius: 10)
+                        RoundedRectangle(cornerRadius: 16)
                             .stroke(isSelected ? Color.accentColor : Color.clear, lineWidth: 2)
                     )
                 

@@ -78,7 +78,7 @@ struct InfoGarmentView: View {
             onDismiss: { self.isModifySheetVisible = false }
         ) {
             NavigationStack {
-                ModifyGarmentView(
+                GarmentEditorView(
                     garmentManager: self.$garmentManager,
                     garment       : self.item
                 )
@@ -212,6 +212,7 @@ struct InfoGarmentView: View {
                     percentage: item.percentual,
                     color     : Color(hex: self.item.color)
                 )
+                .padding(.vertical, 10)
             }
         }
     }

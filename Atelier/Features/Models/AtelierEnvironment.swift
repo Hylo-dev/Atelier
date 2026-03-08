@@ -13,10 +13,14 @@ enum AtelierEnvironment {
     static let documentsDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first
     
     static let imagePipeline: ImagePipeline = {
-        var config = ImagePipeline.Configuration()
-        config.imageCache = ImageCache.shared
-        config.dataCache = try? DataCache(name: "com.atelier.thumbnails")
-        config.dataCachePolicy = .storeEncodedImages
+        
+        var config  = ImagePipeline.Configuration()
+        let encoder = ImageEncoders.Default(compressionQuality: 0.60)
+        
+        config.makeImageEncoder = { _ in encoder }
+        config.imageCache       = ImageCache.shared
+        config.dataCache        = try? DataCache(name: "com.atelier.thumbnails")
+        config.dataCachePolicy  = .storeEncodedImages
         
         return ImagePipeline(configuration: config)
     }()

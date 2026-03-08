@@ -50,7 +50,7 @@ struct CachedImageView: View {
                 crop: true
             )
         ])
-        .priority(.high)
+        .priority(.normal)
         .pipeline(AtelierEnvironment.imagePipeline)
     }
     

@@ -36,6 +36,8 @@ struct PickerList<T: Hashable, Content: View>: View {
             Picker(self.title, selection: self.$selection) {
                 self.content
             }
+            .labelsHidden()
+            .padding(.trailing, -8)
             .tint(.secondary)
             .pickerStyle(.menu)
         }
