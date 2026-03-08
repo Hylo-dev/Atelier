@@ -24,8 +24,9 @@ enum AtelierEnvironment {
     static let ephemeralPipeline: ImagePipeline = {
         var config = ImagePipeline.Configuration()
         
-        config.imageCache = nil
-        config.dataCache  = nil
+        config.imageCache      = ImageCache.shared
+        config.dataCache       = nil
+        config.dataCachePolicy = .automatic
         
         return ImagePipeline(configuration: config)
     }()

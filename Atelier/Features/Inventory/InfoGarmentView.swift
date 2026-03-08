@@ -35,21 +35,24 @@ struct InfoGarmentView: View {
     
     var body: some View {
         
-        Form {
-            
-            // MARK: - Sections
-            
-            self.headerSection
-                        
-            self.sectionStyleAndCategory
-            
-            if !self.item.composition.isEmpty {
-                self.sectionComposition
+        ScrollView {
+            VStack(spacing: 0) {
+                self.heroImageSection
+                
+                LazyVStack(spacing: 24) {
+                    self.sectionStyleAndCategory
+                    
+                    if !self.item.composition.isEmpty {
+                        self.sectionComposition
+                    }
+                    
+                    self.sectionCare
+                }
+                .padding(.horizontal)
+                .padding(.bottom, 40)
             }
-            
-            self.sectionCare
-                        
         }
+        .ignoresSafeArea(edges: .top)
         .toolbar {
             
             ToolbarItem {
@@ -106,84 +109,94 @@ struct InfoGarmentView: View {
     
     
     @ViewBuilder
-    private var headerSection: some View {
-        Section {
-            VStack(spacing: 5) {
-                self.headerImageView
-                
-                VStack(spacing: 3) {
-                    Text(self.item.name)
-                        .font(.title)
-                        .fontWeight(.bold)
-                        .fontDesign(.rounded)
-                        .foregroundStyle(.primary)
-                        .multilineTextAlignment(.center)
-                    
-                    if let brand = self.item.brand {
-                        Text(brand)
-                            .font(.title3)
-                            .fontWeight(.medium)
-                            .foregroundStyle(.secondary)
-                            .fontDesign(.rounded)
-                    }
-                    
-                    Text("Purchased on \(self.item.purchaseDate.formatted(date: .abbreviated, time: .omitted))")
-                        .font(.caption)
-                        .foregroundStyle(.tertiary)
-                        .padding(.top, 4)
-                }
-            }
-            .frame(maxWidth: .infinity)
-            .padding(.bottom, 10)
+    private var heroImageSection: some View {
+        let itemColor = Color(hex: self.item.color)
+        
+        GeometryReader { proxy in
+            let minY = proxy.frame(in: .global).minY
+            let isScrollingDown = minY > 0
+                        
+            AvatarView(
+                self.item.imagePath,
+                color: itemColor,
+                icon: "hanger"
+            )
+            .frame(
+                width: proxy.size.width,
+                height: proxy.size.height + (isScrollingDown ? minY : 0)
+            )
+            .offset(y: isScrollingDown ? -minY : 0)
         }
-        .listRowInsets(EdgeInsets())
-        .listRowBackground(Color.clear)
+        .frame(height: 560)
+        .overlay(alignment: .bottom) {
+            LinearGradient(
+                stops: [
+                    .init(color: Color(uiColor: .systemBackground), location: 0),
+                    .init(color: Color(uiColor: .systemBackground).opacity(0.9), location: 0.2),
+                    .init(color: Color(uiColor: .systemBackground).opacity(0.5), location: 0.5),
+                    .init(color: Color(uiColor: .systemBackground).opacity(0.2), location: 0.8),
+                    .init(color: .clear, location: 1.0)
+                ],
+                startPoint: .bottom,
+                endPoint  : .top
+            )
+            .frame(height: 300)
+            .allowsHitTesting(false)
+        }
+        .overlay(alignment: .bottom) {
+            self.titleSection
+                .offset(y: -43)
+        }
+//        .overlay(alignment: .bottomTrailing) {
+//            Button(action: {}) {
+//                Image(systemName: "view.3d")
+//                    .font(.system(size: 18, weight: .semibold))
+//                    .foregroundStyle(.white)
+//                    .padding(12)
+//                    .background(.ultraThinMaterial)
+//                    .clipShape(Circle())
+//            }
+//            .padding(20)
+//        }
     }
-    
     
     
     @ViewBuilder
-    private var headerImageView: some View {
-        let itemColor = Color(hex: self.item.color)
-        
-        AvatarView(
-            self.item.imagePath ?? "",
-            color: itemColor,
-            icon: "hanger"
-        )
-        .overlay(alignment: .bottomTrailing) {
-            Button(action: {
+    private var titleSection: some View {
+        VStack(spacing: 3) {
+            Text(self.item.name)
+                .font(.system(size: 65))
+                .fontWeight(.bold)
+                .fontDesign(.default)
+                .foregroundStyle(.primary)
+                .multilineTextAlignment(.center)
+            
+            HStack {
+                if let brand = self.item.brand {
+                    Text(brand)
+                        .font(.headline)
+                        .fontWeight(.medium)
+                        .foregroundStyle(.secondary)
+                        .fontDesign(.rounded)
+                }
                 
-            }) {
-                Image(systemName: "view.3d")
-                    .font(.system(size: 18, weight: .semibold))
-                    .foregroundStyle(.white)
-                    .padding(12)
-                    .background(.ultraThinMaterial)
-                    .clipShape(Circle())
-                    .overlay(
-                        Circle()
-                            .stroke(.white.opacity(0.3), lineWidth: 1)
-                    )
+                Text("- \(self.item.purchaseDate.formatted(date: .abbreviated, time: .omitted))")
+                    .font(.headline)
+                    .fontWeight(.medium)
+                    .foregroundStyle(.secondary)
+                    .fontDesign(.rounded)
             }
-            .padding(16)
         }
-        
-        
+        .frame(maxWidth: .infinity)
     }
-    
-    
     
     @ViewBuilder
     private var sectionStyleAndCategory: some View {
-        Section("Details") {
-            
+        
+        SectionList(titleKey: "Details") {
             RowInfo(title: "Type", value: self.item.category.label)
             RowInfo(title: "Model", value: self.item.subCategory.rawValue)
             RowInfo(title: "Season", value: self.item.season.rawValue)
-            RowInfo(title: "Style", value: self.item.style.rawValue)
-            RowInfo(title: "State", value: self.item.state.rawValue)
-            
         }
     }
     
@@ -191,7 +204,7 @@ struct InfoGarmentView: View {
     
     @ViewBuilder
     private var sectionComposition: some View {
-        Section("Composition") {
+        SectionList(titleKey: "Composition") {
             
             ForEach(self.item.composition, id: \.id) { item in
                 CompositionRow(
@@ -207,7 +220,7 @@ struct InfoGarmentView: View {
     
     @ViewBuilder
     var sectionCare: some View {
-        Section("Care & Usage") {
+        SectionList(titleKey: "Care & Usage") {
             if !self.item.washingSymbols.isEmpty {
                 ScrollView(.horizontal, showsIndicators: false) {
                     
@@ -248,9 +261,33 @@ struct InfoGarmentView: View {
             
             RowInfo(
                 title: "Wear Count",
-                value: "\(self.item.wearCount) times"
+                value: self.item.wearCount == 0 ? "Unworn" : "\(self.item.wearCount) times"
             )
         }
     }
 
+}
+
+#Preview {
+    
+    @Previewable
+    @State
+    var manager: GarmentManager? = nil
+    
+    
+    let garment = Garment(
+        name: "Maglia",
+        brand: "Levi`s",
+        color: "2570ba",
+        composition: [],
+        category: .top,
+        subCategory: .blazers,
+        season: .summer,
+        style: .casual
+    )
+    
+    InfoGarmentView(
+        garmentManager: $manager,
+        item: garment
+    )
 }

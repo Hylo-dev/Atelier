@@ -93,51 +93,34 @@ struct AddGarmentView: View {
     
     var body: some View {
         
-        Form {
+        ScrollView {
             
-            Section {
-                HStack {
+            VStack {
+                self.heroImageSection
+                
+                // MARK: - Sections
+                
+                LazyVStack(spacing: 26) {
+                    // Section 1: Info
+                    self.sectionGeneralInfo
                     
-                    Spacer()
+                    // Section 2: Physical details
+                    self.sectionPhysicalDetails
                     
-                    Button {
-                        self.showImageSourceDialog = true
-                        
-                    } label: {
-                        AvatarView(
-                            self.imagePath ?? "",
-                            color: self.color,
-                            icon : "hanger",
-                            uiImage: self.uiImageToSave
-                        )
-                    }
-                    .buttonStyle(.plain)
+                    // Section 3: Care
+                    self.sectionCare
                     
-                    Spacer()
+                    // Section 4: Style & Category
+                    self.sectionStyleAndCategory
                     
+                    // Section 5: Composition Garment
+                    self.sectionComposition
                 }
-                .padding(.vertical, 10)
+                .padding(.horizontal)
+                .padding(.bottom, 40)
             }
-            .listRowBackground(Color.clear)
-            
-            // MARK: - Sections
-            
-            // Section 1: Info
-            self.sectionGeneralInfo
-            
-            // Section 2: Physical details
-            self.sectionPhysicalDetails
-            
-            // Section 3: Care
-            self.sectionCare
-            
-            // Section 4: Style & Category
-            self.sectionStyleAndCategory
-            
-            // Section 5: Composition Garment
-            self.sectionComposition
-            
         }
+        .ignoresSafeArea()
         .navigationTitle("New garment")
         .navigationBarTitleDisplayMode(.inline)
         .scrollDismissesKeyboard(.interactively)
@@ -200,9 +183,53 @@ struct AddGarmentView: View {
     
     // MARK: - Views
     
+    
+    @ViewBuilder
+    private var heroImageSection: some View {
+        
+        GeometryReader { proxy in
+            let minY = proxy.frame(in: .global).minY
+            let isScrollingDown = minY > 0
+
+            AvatarView(
+                self.imagePath ?? "",
+                color: self.color,
+                icon : "hanger",
+                uiImage: self.uiImageToSave
+            )
+            .frame(
+                width: proxy.size.width,
+                height: proxy.size.height + (isScrollingDown ? minY : 0)
+            )
+            .offset(y: isScrollingDown ? -minY : 0)
+        }
+        .frame(height: 560)
+        .overlay(alignment: .bottom) {
+            LinearGradient(
+                stops: [
+                    .init(color: Color(uiColor: .systemBackground), location: 0),
+                    .init(color: Color(uiColor: .systemBackground).opacity(0.9), location: 0.2),
+                    .init(color: Color(uiColor: .systemBackground).opacity(0.5), location: 0.5),
+                    .init(color: Color(uiColor: .systemBackground).opacity(0.2), location: 0.8),
+                    .init(color: .clear, location: 1.0)
+                ],
+                startPoint: .bottom,
+                endPoint  : .top
+            )
+            .frame(height: 300)
+            .allowsHitTesting(false)
+        }
+        .onTapGesture {
+            self.showImageSourceDialog = true
+        }
+        
+    }
+    
+    
+    
     @ViewBuilder
     var sectionGeneralInfo: some View {
-        Section("Info Garment") {
+        SectionList(titleKey: "Info Garment") {
             TextField("Name", text: self.$name)
             TextField("Brand", text: self.$brand)
             
@@ -218,7 +245,7 @@ struct AddGarmentView: View {
     
     @ViewBuilder
     var sectionPhysicalDetails: some View {
-        Section("Details") {
+        SectionList(titleKey: "Details") {
             ColorPicker("Color", selection: self.$color)
             
             NavigationLink {
@@ -230,14 +257,22 @@ struct AddGarmentView: View {
             } label: {
                 HStack {
                     Text("Fabrics")
+                        .foregroundStyle(.primary)
                     
                     Spacer()
                     
-                    Text(self.selectedFabrics.isEmpty ? "None" : "\(self.selectedFabrics.count) selected")
-                        .foregroundStyle(.secondary)
+                    HStack {
+                        Text(self.selectedFabrics.isEmpty ? "None" : "\(self.selectedFabrics.count) selected")
+                            .foregroundStyle(.secondary)
+                        
+                        Image(systemName: "chevron.forward")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    }
                     
                 }
             }
+            .tint(.primary)
         }
     }
     
@@ -245,7 +280,7 @@ struct AddGarmentView: View {
     
     @ViewBuilder
     var sectionCare: some View {
-        Section("Care") {
+        SectionList(titleKey: "Care") {
             NavigationLink {
                 GenericSelectionView<LaundrySymbol>(
                     selection: self.$washingSymbols
@@ -263,13 +298,22 @@ struct AddGarmentView: View {
             } label: {
                 HStack {
                     Text("Washing Symbols")
+                        .foregroundStyle(.primary)
                     
                     Spacer()
                     
-                    Text(self.washingSymbols.isEmpty ? "None" : "\(self.washingSymbols.count) selected")
-                        .foregroundStyle(.secondary)
+                    HStack {
+                        Text(self.washingSymbols.isEmpty ? "None" : "\(self.washingSymbols.count) selected")
+                            .foregroundStyle(.secondary)
+                        
+                        Image(systemName: "chevron.forward")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    }
                 }
             }
+            .tint(.primary)
+            
             
         }
     }
@@ -278,15 +322,16 @@ struct AddGarmentView: View {
     
     @ViewBuilder
     var sectionStyleAndCategory: some View {
-        Section("Style & Category") {
+        SectionList(titleKey: "Style & Category") {
             
-            Picker("Type", selection: self.$selectedCategory) {
+            PickerList("Type", selection: self.$selectedCategory) {
                 ForEach(GarmentCategory.allCases, id: \.id) { type in
                     Text(type.label).tag(type)
                 }
             }
+            .pickerStyle(.menu)
             
-            Picker("Model", selection: self.$selectedSubCategory) {
+            PickerList("Model", selection: self.$selectedSubCategory) {
                 ForEach(self.selectedCategory.subCategory, id: \.id) { type in
                     Text(type.rawValue).tag(type)
                 }
@@ -294,13 +339,13 @@ struct AddGarmentView: View {
             .id(self.selectedCategory)
             .disabled(self.selectedCategory == .other)
             
-            Picker("Season", selection: self.$selectedSeason) {
+            PickerList("Season", selection: self.$selectedSeason) {
                 ForEach(Season.allCases, id: \.id) { type in
                     Text(type.rawValue).tag(type)
                 }
             }
             
-            Picker("Style", selection: self.$selectedStyle) {
+            PickerList("Style", selection: self.$selectedStyle) {
                 ForEach(GarmentStyle.allCases, id: \.id) { type in
                     Text(type.rawValue).tag(type)
                 }
@@ -313,7 +358,7 @@ struct AddGarmentView: View {
     @ViewBuilder
     var sectionComposition: some View {
         if !selectedFabrics.isEmpty {
-            Section("Composition") {
+            SectionList(titleKey: "Composition") {
                 
                 VStack(alignment: .leading) {
                     HStack {
@@ -475,4 +520,14 @@ struct AddGarmentView: View {
         
         dismiss()
     }
+}
+
+#Preview {
+    @Previewable
+    @State
+    var manager: GarmentManager? = nil
+    
+    AddGarmentView(
+        garmentManager: $manager
+    )
 }
