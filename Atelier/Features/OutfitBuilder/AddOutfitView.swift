@@ -20,6 +20,11 @@ struct AddOutfitView: View {
     @Binding
     var outfitManager: OutfitManager?
     
+    @State
+    private var isSaved: Bool = false
+    
+    
+    
     // MARK: - Outfit Attributes
     
     @State
@@ -36,6 +41,8 @@ struct AddOutfitView: View {
     
     @State
     private var selectedStyle: GarmentStyle = .casual
+    
+    
     
     // MARK: - Manage image selection
     
@@ -90,6 +97,7 @@ struct AddOutfitView: View {
             self.sectionStyleAndCategory
             
         }
+        .sensoryFeedback(.success, trigger: self.isSaved)
         .navigationTitle("New outfit")
         .navigationBarTitleDisplayMode(.inline)
         .scrollDismissesKeyboard(.interactively)
@@ -100,7 +108,8 @@ struct AddOutfitView: View {
             
             ToolbarItem(placement: .confirmationAction) {
                 Button("Finish", systemImage: "checkmark") {
-                    saveOutfit()
+                    self.saveOutfit()
+                    self.isSaved.toggle()
                 }
                 .fontWeight(.bold)
                 .disabled(self.name.isEmpty || self.garments.count < 2)

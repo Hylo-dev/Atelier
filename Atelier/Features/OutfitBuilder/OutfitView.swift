@@ -250,8 +250,16 @@ struct OutfitContextCard: View {
     let manager      : OutfitManager?
     let subTitleAlert: String?
     
+    
+    
     @Binding
     var selectedItem: Outfit?
+    
+    
+    
+    // MARK: - Deleted target
+    @State
+    private var taskDeletedCompleted: Bool = false
     
     var body: some View {
         NavigationLink(value: self.outfit) {
@@ -268,6 +276,7 @@ struct OutfitContextCard: View {
             }
         }
         .buttonStyle(.plain)
+        .sensoryFeedback(.success, trigger: self.taskDeletedCompleted)
     }
     
     
@@ -283,6 +292,7 @@ struct OutfitContextCard: View {
         
         Button(role: .destructive) {
             self.manager?.deleteOutfit(item)
+            self.taskDeletedCompleted.toggle()
             
         } label: {
             Label("Delete", systemImage: "trash")

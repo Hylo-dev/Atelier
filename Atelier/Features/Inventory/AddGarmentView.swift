@@ -355,13 +355,15 @@ struct AddGarmentView: View {
                                     
                                     let availableSpace = 100.0 - otherFabricsSum
                                     
-                                    comp.percentual = min(newValue, availableSpace)
+                                    
+                                    $comp.wrappedValue.percentual = min(newValue, availableSpace)
                                 }
                             ),
                             in: 0...100,
                             step: 1
                         )
                         .buttonStyle(.plain)
+
                     }
                     .padding(.vertical, 4)
                 }

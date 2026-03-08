@@ -19,6 +19,9 @@ struct GarmentSelectionView: View {
     )
     private var garments: [Garment]
     
+    @State
+    private var isSelected: Bool = false
+    
     static private let columns = [
         GridItem(.adaptive(minimum: 150), spacing: 20)
     ]
@@ -64,11 +67,15 @@ struct GarmentSelectionView: View {
                     if self.selectedGarments.contains(item) {
                         self.selectedGarments.remove(item)
                         
-                    } else { self.selectedGarments.insert(item) }
+                    } else {
+                        self.selectedGarments.insert(item)
+                        self.isSelected.toggle()
+                    }
                 }
                 
                 
             }
         }
+        .sensoryFeedback(.selection, trigger: self.isSelected)
     }
 }
