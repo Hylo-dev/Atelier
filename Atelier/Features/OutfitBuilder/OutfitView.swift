@@ -153,15 +153,15 @@ struct OutfitView: View {
         }
         .sheet(isPresented: self.$isAddOutfitSheetVisible) {
             NavigationStack {
-                AddOutfitView(outfitManager: self.$outfitManager)
+                OutfitEditorView(outfitManager: self.$outfitManager)
             }
         }
         .sheet(item: self.$selectedItem) { outfit in
             
             NavigationStack {
-                ModifyOutfitView(
-                    manager: self.$outfitManager,
-                    outfit  : outfit
+                OutfitEditorView(
+                    outfitManager: self.$outfitManager,
+                    outfit       : outfit
                 )
             }
         }

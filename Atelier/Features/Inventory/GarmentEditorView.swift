@@ -137,35 +137,28 @@ struct GarmentEditorView: View {
     }
     
     var body: some View {
-        
-        ScrollView {
+                
+        HeroListView(
+            imagePath,
+            isImageClicked: $showImageSourceDialog
+        ) {
             
-            VStack {
-                self.heroImageSection
-                
-                // MARK: - Sections
-                
-                LazyVStack(spacing: 26) {
-                    // Section 1: Info
-                    self.sectionGeneralInfo
-                    
-                    // Section 2: Physical details
-                    self.sectionPhysicalDetails
-                    
-                    // Section 3: Care
-                    self.sectionCare
-                    
-                    // Section 4: Style & Category
-                    self.sectionStyleAndCategory
-                    
-                    // Section 5: Composition Garment
-                    self.sectionComposition
-                }
-                .padding(.horizontal)
-                .padding(.bottom, 40)
-            }
+        } content: {
+            // Section 1: Info
+            self.sectionGeneralInfo
+            
+            // Section 2: Physical details
+            self.sectionPhysicalDetails
+            
+            // Section 3: Care
+            self.sectionCare
+            
+            // Section 4: Style & Category
+            self.sectionStyleAndCategory
+            
+            // Section 5: Composition Garment
+            self.sectionComposition
         }
-        .ignoresSafeArea()
         .navigationTitle("New garment")
         .navigationBarTitleDisplayMode(.inline)
         .scrollDismissesKeyboard(.interactively)
@@ -216,48 +209,6 @@ struct GarmentEditorView: View {
     }
     
     // MARK: - Views
-    
-    
-    @ViewBuilder
-    private var heroImageSection: some View {
-        
-        GeometryReader { proxy in
-            let minY = proxy.frame(in: .global).minY
-            let isScrollingDown = minY > 0
-
-            AvatarView(
-                self.imagePath ?? "",
-                color: self.color,
-                icon : "hanger",
-                uiImage: self.uiImageToSave
-            )
-            .frame(
-                width: proxy.size.width,
-                height: proxy.size.height + (isScrollingDown ? minY : 0)
-            )
-            .offset(y: isScrollingDown ? -minY : 0)
-        }
-        .frame(height: 560)
-        .overlay(alignment: .bottom) {
-            LinearGradient(
-                stops: [
-                    .init(color: Color(uiColor: .systemBackground), location: 0),
-                    .init(color: Color(uiColor: .systemBackground).opacity(0.9), location: 0.2),
-                    .init(color: Color(uiColor: .systemBackground).opacity(0.5), location: 0.5),
-                    .init(color: Color(uiColor: .systemBackground).opacity(0.2), location: 0.8),
-                    .init(color: .clear, location: 1.0)
-                ],
-                startPoint: .bottom,
-                endPoint  : .top
-            )
-            .frame(height: 300)
-            .allowsHitTesting(false)
-        }
-        .onTapGesture {
-            self.showImageSourceDialog = true
-        }
-        
-    }
     
     
     

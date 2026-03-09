@@ -35,24 +35,18 @@ struct InfoGarmentView: View {
     
     var body: some View {
         
-        ScrollView {
-            VStack(spacing: 0) {
-                self.heroImageSection
-                
-                LazyVStack(spacing: 24) {
-                    self.sectionStyleAndCategory
-                    
-                    if !self.item.composition.isEmpty {
-                        self.sectionComposition
-                    }
-                    
-                    self.sectionCare
-                }
-                .padding(.horizontal)
-                .padding(.bottom, 40)
+        HeroListView(item.imagePath)  {
+            titleSection
+            
+        } content: {
+            self.sectionStyleAndCategory
+            
+            if !self.item.composition.isEmpty {
+                self.sectionComposition
             }
+            
+            self.sectionCare
         }
-        .ignoresSafeArea(edges: .top)
         .toolbar {
             
             ToolbarItem {
@@ -105,60 +99,7 @@ struct InfoGarmentView: View {
     
     
     // MARK: - Views
-    
-    
-    
-    @ViewBuilder
-    private var heroImageSection: some View {
-        let itemColor = Color(hex: self.item.color)
-        
-        GeometryReader { proxy in
-            let minY = proxy.frame(in: .global).minY
-            let isScrollingDown = minY > 0
-                        
-            AvatarView(
-                self.item.imagePath,
-                color: itemColor,
-                icon: "hanger"
-            )
-            .frame(
-                width: proxy.size.width,
-                height: proxy.size.height + (isScrollingDown ? minY : 0)
-            )
-            .offset(y: isScrollingDown ? -minY : 0)
-        }
-        .frame(height: 560)
-        .overlay(alignment: .bottom) {
-            LinearGradient(
-                stops: [
-                    .init(color: Color(uiColor: .systemBackground), location: 0),
-                    .init(color: Color(uiColor: .systemBackground).opacity(0.9), location: 0.2),
-                    .init(color: Color(uiColor: .systemBackground).opacity(0.5), location: 0.5),
-                    .init(color: Color(uiColor: .systemBackground).opacity(0.2), location: 0.8),
-                    .init(color: .clear, location: 1.0)
-                ],
-                startPoint: .bottom,
-                endPoint  : .top
-            )
-            .frame(height: 300)
-            .allowsHitTesting(false)
-        }
-        .overlay(alignment: .bottom) {
-            self.titleSection
-                .offset(y: -43)
-        }
-//        .overlay(alignment: .bottomTrailing) {
-//            Button(action: {}) {
-//                Image(systemName: "view.3d")
-//                    .font(.system(size: 18, weight: .semibold))
-//                    .foregroundStyle(.white)
-//                    .padding(12)
-//                    .background(.ultraThinMaterial)
-//                    .clipShape(Circle())
-//            }
-//            .padding(20)
-//        }
-    }
+
     
     
     @ViewBuilder
@@ -173,14 +114,14 @@ struct InfoGarmentView: View {
             
             HStack {
                 if let brand = self.item.brand {
-                    Text(brand)
+                    Text("\(brand) - ")
                         .font(.headline)
                         .fontWeight(.medium)
                         .foregroundStyle(.secondary)
                         .fontDesign(.rounded)
                 }
                 
-                Text("- \(self.item.purchaseDate.formatted(date: .abbreviated, time: .omitted))")
+                Text("\(self.item.purchaseDate.formatted(date: .abbreviated, time: .omitted))")
                     .font(.headline)
                     .fontWeight(.medium)
                     .foregroundStyle(.secondary)

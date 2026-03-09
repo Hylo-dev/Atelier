@@ -10,6 +10,7 @@ struct AvatarView: View {
     let uiImage: UIImage?
     
     
+    
     private var imageURL: URL? {
         
         if let path = self.pathImage {
@@ -22,9 +23,11 @@ struct AvatarView: View {
         return nil
     }
     
+    
+    
     init(
         _ pathImage: String?,
-        color: Color,
+        color: Color = .accentColor,
         icon: String,
         uiImage: UIImage? = nil
     ) {
@@ -60,7 +63,6 @@ struct AvatarView: View {
             
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .aspectRatio(contentMode: .fill)
         .clipped()
         //.shadow(color: Color.black.opacity(0.15), radius: 10, x: 0, y: 5)
     }

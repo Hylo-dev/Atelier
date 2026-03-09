@@ -36,16 +36,13 @@ struct InfoOutfitView: View {
     
     var body: some View {
         
-        Form {
+        HeroListView(outfit.fullLookImagePath) {
+            titleSection
             
-            // MARK: - Sections
-            
-            self.headerSection
-            
+        } content: {
             self.sectionCare
-                        
+            
             self.sectionStyleAndCategory
-                        
         }
         .toolbar {
             
@@ -72,9 +69,9 @@ struct InfoOutfitView: View {
             onDismiss: { self.isModifySheetVisible = false }
         ) {
             NavigationStack {
-                ModifyOutfitView(
-                    manager: self.$manager,
-                    outfit : self.outfit
+                OutfitEditorView(
+                    outfitManager: self.$manager,
+                    outfit       : self.outfit
                 )
             }
         }
@@ -99,75 +96,68 @@ struct InfoOutfitView: View {
     
     
     // MARK: - Views
-    
+
     
     
     @ViewBuilder
-    private var headerSection: some View {
-        Section {
-            VStack(spacing: 5) {
-                self.headerImageView
-                
-                VStack(spacing: 3) {
-                    Text(self.outfit.name)
-                        .font(.title)
-                        .fontWeight(.bold)
-                        .fontDesign(.rounded)
-                        .foregroundStyle(.primary)
-                        .multilineTextAlignment(.center)
-                    
-                    if let date = self.outfit.lastWornDate {
-                        Text("Last worn date \(date.formatted(date: .abbreviated, time: .omitted))")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                            .padding(.top, 4)
-                    }
-                    
-                    
-                }
+    private var titleSection: some View {
+        VStack(spacing: 3) {
+            Text(self.outfit.name)
+                .font(.system(size: 65))
+                .fontWeight(.bold)
+                .fontDesign(.default)
+                .foregroundStyle(.primary)
+                .multilineTextAlignment(.center)
+            
+            if let date = self.outfit.lastWornDate {
+                Text("Last worn date \(date.formatted(date: .abbreviated, time: .omitted))")
+                    .font(.headline)
+                    .fontWeight(.medium)
+                    .foregroundStyle(.secondary)
+                    .fontDesign(.rounded)
             }
-            .frame(maxWidth: .infinity)
-            .padding(.bottom, 10)
+            
+            
         }
-        .listRowInsets(EdgeInsets())
-        .listRowBackground(Color.clear)
+        .frame(maxWidth: .infinity)
     }
     
     
     
     @ViewBuilder
-    private var headerImageView: some View {
-        AvatarView(
-            self.outfit.fullLookImagePath,
-            color: .accentColor,
-            icon: "hanger"
-        )
-        .overlay(alignment: .bottomTrailing) {
-            Button(action: {
-                
-            }) {
-                Image(systemName: "view.3d")
-                    .font(.system(size: 18, weight: .semibold))
-                    .foregroundStyle(.white)
-                    .padding(12)
-                    .background(.ultraThinMaterial)
-                    .clipShape(Circle())
-                    .overlay(
-                        Circle()
-                            .stroke(.white.opacity(0.3), lineWidth: 1)
-                    )
+    private var sectionCare: some View {
+        SectionList(titleKey: "Care & Usage") {
+            
+            RowInfo(
+                title: "Ready to Wear",
+                value: self.outfit.stateWear
+            )
+            
+            
+            if self.outfit.missingItemsCount > 0 {
+                RowInfo(
+                    title: "Missing garments",
+                    value: "\(self.outfit.missingItemsCount) pieces"
+                )
             }
-            .padding(16)
+            
+            
+            if self.outfit.wearCount > 0 {
+                RowInfo(
+                    title: "Wear Count",
+                    value: "\(self.outfit.wearCount) times"
+                )
+            }
+            
+            
         }
-        
-        
     }
     
     
     
     @ViewBuilder
     private var sectionStyleAndCategory: some View {
-        Section("Details") {
+        SectionList(titleKey: "Details") {
             
             RowInfo(title: "Season", value: self.outfit.season.rawValue)
             RowInfo(title: "Style", value: self.outfit.style.rawValue)
@@ -204,36 +194,6 @@ struct InfoOutfitView: View {
                 }
             }
         }
+        .padding(.vertical, 10)
     }
-    
-    
-    @ViewBuilder
-    var sectionCare: some View {
-        Section("Care & Usage") {
-            
-            RowInfo(
-                title: "Ready to Wear",
-                value: self.outfit.stateWear
-            )
-            
-            
-            if self.outfit.missingItemsCount > 0 {
-                RowInfo(
-                    title: "Missing garments",
-                    value: "\(self.outfit.missingItemsCount) pieces"
-                )
-            }
-            
-            
-            if self.outfit.wearCount > 0 {
-                RowInfo(
-                    title: "Wear Count",
-                    value: "\(self.outfit.wearCount) times"
-                )
-            }
-            
-            
-        }
-    }
-
 }

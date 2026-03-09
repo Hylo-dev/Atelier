@@ -52,4 +52,15 @@ final class Outfit {
         self.wearCount         = 0
         self.fullLookImagePath = fullLookImagePath
     }
+    
+    init() {
+        self.id                = UUID()
+        self.name              = ""
+        self.garments          = []
+        self.season            = .summer
+        self.style             = .casual
+        self.lastWornDate      = nil
+        self.wearCount         = 0
+        self.fullLookImagePath = nil
+    }
 }
