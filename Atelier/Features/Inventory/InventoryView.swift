@@ -197,8 +197,8 @@ struct InventoryView: View {
                     
                     GarmentContextCard(
                         item        : item,
-                        manager     : self.garmentManager,
-                        selectedItem: self.$selectedItem
+                        manager     : garmentManager,
+                        selectedItem: $selectedItem
                         
                     )
                 }
@@ -277,6 +277,9 @@ struct GarmentContextCard: View {
     @Binding
     var selectedItem: Garment?
     
+    @State
+    private var isDeleted: Bool = false
+    
     var body: some View {
         NavigationLink(value: self.item) {
             ModelCardView(
@@ -290,6 +293,7 @@ struct GarmentContextCard: View {
                 self.contextMenuButtons(for: self.item)
             }
         }
+        .sensoryFeedback(.success, trigger: isDeleted)
         .buttonStyle(.plain)
     }
     
@@ -346,7 +350,8 @@ struct GarmentContextCard: View {
         }
         
         Button(role: .destructive) {
-            self.manager?.deleteGarment(item)
+            isDeleted.toggle()
+            manager?.deleteGarment(item)
             
         } label: {
             Label("Delete", systemImage: "trash")

@@ -29,6 +29,9 @@ struct OutfitView: View {
     @State
     private var selectedItem: Outfit?
     
+    @State
+    private var isDeleted: Bool = false
+    
     
     
     // MARK: - Private Attributes values
@@ -108,6 +111,7 @@ struct OutfitView: View {
                 .ignoresSafeArea(.container, edges: .top)
             }
         }
+        .sensoryFeedback(.success, trigger: isDeleted)
         .onAppear {
             if self.outfitManager == nil {
                 self.outfitManager = OutfitManager(context: self.context)
@@ -249,8 +253,6 @@ struct OutfitContextCard: View {
     let outfit       : Outfit
     let manager      : OutfitManager?
     let subTitleAlert: String?
-    
-    
     
     @Binding
     var selectedItem: Outfit?

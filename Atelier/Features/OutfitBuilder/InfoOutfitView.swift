@@ -44,6 +44,7 @@ struct InfoOutfitView: View {
             
             self.sectionStyleAndCategory
         }
+        .sensoryFeedback(.success, trigger: deleteItem)
         .toolbar {
             
             ToolbarItem {

@@ -25,7 +25,6 @@ struct OutfitEditorView: View {
     private var isSaved: Bool
     
     
-    
     // MARK: - Outfit Attributes
     
     @State

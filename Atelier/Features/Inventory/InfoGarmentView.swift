@@ -47,8 +47,8 @@ struct InfoGarmentView: View {
             
             self.sectionCare
         }
+        .sensoryFeedback(.success, trigger: deleteItem)
         .toolbar {
-            
             ToolbarItem {
                 Button(role: .destructive) {
                     self.deleteItem = true
