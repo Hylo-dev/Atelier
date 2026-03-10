@@ -83,49 +83,52 @@ final class Garment {
 		self.activeLaundrySession = .none
     }
 	
-	// Determina in che Cesto (A, B, C) dovrebbe andare
     var suggestedLaundryBin: LaundryBin {
         
-        // 1. Priorità Assoluta: Lana e Cashmere (Cesto Speciale)
-        if composition.contains(where: { $0.fabric == .wool || $0.fabric == .cashmere }) {
+        if requiresProfessionalCare {
+            return .professionalCare
+        }
+        
+        if totalPercentage(of: [.wool, .cashmere]) >= 10.0 {
             return .woolAndCashmere
         }
         
-        // 2. Priorità Alta: Denim (Per evitare che stingano su altri tessuti)
-        if subCategory == .jeans || composition.contains(where: { $0.fabric == .denim }) {
+        // 2. Denim: comanda sempre il lavaggio a parte o con capi scuri robusti
+        if subCategory == .jeans || totalPercentage(of: [.denim]) >= 50.0 {
             return .denim
         }
         
-        // 3. Analisi del Livello di Delicatezza
+        // 3. Verifica Delicatezza Combinata (Simboli + Quantità Seta/Delicati)
         let isDelicate = washingSymbols.contains(where: { $0.isDelicate }) ||
-        composition.contains(where: { $0.fabric == .silk }) ||
-        category == .lingerie ||
-        category == .onePiece
+                            hasCriticalDelicateFibers ||
+                            category == .lingerie ||
+                            category == .onePiece
         
-        // 4. Analisi del Colore
+        // 4. Analisi Colore (Il nostro fantastico HSB)
         let colorGroup = WashingColorGroup.from(hex: self.color)
         
-        // 5. Verifica Tessuti Specifici
-        let isResistantCotton = composition.allSatisfy { $0.fabric == .cotton || $0.fabric == .linen || $0.fabric == .hemp }
-        let isActivewear = composition.contains(where: { $0.fabric == .spandex || $0.fabric == .nylon }) && subCategory == .sportsBras
+        // 5. Activewear intelligente: è dominato dai sintetici (es. 70% poly) ED è abbigliamento sportivo?
+        let isActivewear = isSyntheticDominant && (style == .sporty || totalPercentage(of: [.fleece]) >= 20.0 || subCategory == .sportsBras)
         
-        // 6. Smistamento a Matrice (Colore + Trattamento)
+        // 6. Smistamento a Matrice Aggiornato
         switch colorGroup {
+                
             case .whites:
                 if isDelicate { return .whiteDelicate }
-                if isResistantCotton { return .whiteHeavyDuty }
-                return .whiteNormal
+                return isHeavyDutyNatural ? .whiteHeavyDuty : .whiteNormal
                 
             case .darks:
                 if isDelicate { return .darkDelicate }
-
                 return .darkNormal
                 
-            case .lights:
-                if isDelicate { return .colorDelicate }
+            case .pastels:
+                if isDelicate { return .pastelDelicate }
+                return .pastelNormal
+                
+            case .vibrant:
                 if isActivewear { return .activewear }
-
-                return .colorNormal
+                if isDelicate { return .vibrantDelicate }
+                return .vibrantNormal
         }
     }
 	
@@ -151,5 +154,46 @@ final class Garment {
     
     var isReadyToWash: Bool {
         return state.readyToWash && hasReachedWashingLimits
+    }
+        
+    // MARK: - Identikit del Capo basato sui Pesi
+    
+    /// È un capo a dominanza sintetica? (Oltre il 50%)
+    /// I sintetici catturano gli odori e rilasciano microplastiche, spesso richiedono cesti "Activewear" o "Mix" a temperature più basse.
+    var isSyntheticDominant: Bool {
+        return totalPercentage(of: .synthetic) > 50.0
+        // Nota: Assumo che percentual sia 0-100. Se usi 0.0-1.0, metti > 0.5
+    }
+    
+    /// È un capo robusto in cotone/lino? (Tolleranza fino al 15% di altre fibre es. elastan per comodità)
+    var isHeavyDutyNatural: Bool {
+        let strongNaturals = totalPercentage(of: [.cotton, .linen, .hemp])
+        return strongNaturals >= 85.0 // È robusto anche se ha un 5% di Spandex o un 10% di Poliestere
+    }
+    
+    /// Contiene una quantità critica di fibre iper-delicate?
+    /// Basta anche un 10% di Cashmere o un 20% di Seta per cambiare le regole del lavaggio.
+    var hasCriticalDelicateFibers: Bool {
+        let delicatePercentage = totalPercentage(of: [.silk, .wool, .cashmere])
+        return delicatePercentage >= 10.0 // Se ha più del 10% di Cashmere, si lava come Cashmere!
+    }
+    
+    var requiresProfessionalCare: Bool {
+        totalPercentage(of: [.leather, .suede]) >= 1.0 ||
+        washingSymbols.contains(where: { $0 == .doNotMachineWash || $0 == .dryClean || $0 == .dryCleanAnySolvent || $0 == .dryCleanPCE || $0 == .dryCleanHydrocarbon })
+    }
+    
+    /// Calcola la percentuale totale di una specifica categoria di tessuto (es. tutto ciò che è Sintetico)
+    func totalPercentage(of category: FabricCategory) -> Double {
+        composition
+            .filter { $0.fabric.category == category }
+            .reduce(0) { total, comp in total + comp.percentual }
+    }
+    
+    /// Calcola la percentuale di tessuti specifici (es. Cotone + Lino)
+    func totalPercentage(of fabrics: [GarmentFabric]) -> Double {
+        composition
+            .filter { fabrics.contains($0.fabric) }
+            .reduce(0) { total, comp in total + comp.percentual }
     }
 }

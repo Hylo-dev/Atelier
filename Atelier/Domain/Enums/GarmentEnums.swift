@@ -629,79 +629,94 @@ enum LaundrySymbol: String, Codable, SelectableItem {
 }
 
 enum LaundryBin: String, Codable, CaseIterable, Identifiable {
-    // MARK: - Bianchi
-    case whiteHeavyDuty = "Whites: Heavy Duty"
-    case whiteNormal    = "Whites: Normal"
-    case whiteDelicate  = "Whites: Delicate"
+    case whiteHeavyDuty  = "Whites: Heavy Duty"
+    case whiteNormal     = "Whites: Normal"
+    case whiteDelicate   = "Whites: Delicate"
     
     // MARK: - Scuri
-    case darkNormal     = "Darks: Normal"
-    case darkDelicate   = "Darks: Delicate"
+    case darkNormal      = "Darks: Normal"
+    case darkDelicate    = "Darks: Delicate"
     
-    // MARK: - Colorati / Chiari
-    case colorNormal    = "Colors: Normal"
-    case colorDelicate  = "Colors: Delicate"
+    // MARK: - Chiari / Pastello (Novità)
+    case pastelNormal    = "Pastels: Normal"
+    case pastelDelicate  = "Pastels: Delicate"
+    
+    // MARK: - Colori Vividi (Novità)
+    case vibrantNormal   = "Vibrant: Normal"
+    case vibrantDelicate = "Vibrant: Delicate"
     
     // MARK: - Categorie Speciali
-    case denim          = "Denim"              
-    case activewear     = "Activewear"
-    case woolAndCashmere = "Wool & Cashmere"
+    case denim            = "Denim"
+    case activewear       = "Activewear"
+    case woolAndCashmere  = "Wool & Cashmere"
+    case professionalCare = "Professional Care / Dry Clean"
     
     var id: String { rawValue }
     
     var description: String {
         switch self {
-            case .whiteHeavyDuty: return "Bianchi resistenti ad alte temperature"
-            case .whiteNormal:    return "Bianchi quotidiani (30°-40°)"
-            case .whiteDelicate:  return "Bianchi delicati e lingerie"
-            case .darkNormal:     return "Capi scuri quotidiani"
-            case .darkDelicate:   return "Capi scuri delicati"
-            case .colorNormal:    return "Capi colorati e misti"
-            case .colorDelicate:  return "Capi colorati delicati"
-            case .denim:          return "Jeans e capi in tela robusta"
-            case .activewear:     return "Capi tecnici e sportivi"
-            case .woolAndCashmere:return "Lana, Cashmere e filati pregiati"
+            case .whiteHeavyDuty:  "Bianchi resistenti ad alte temperature"
+            case .whiteNormal:     "Bianchi quotidiani (30°-40°)"
+            case .whiteDelicate:   "Bianchi delicati e lingerie"
+                
+            case .darkNormal:      "Capi scuri quotidiani"
+            case .darkDelicate:    "Capi scuri delicati"
+                
+            case .pastelNormal:    "Colori tenui e pastello"
+            case .pastelDelicate:  "Colori tenui delicati"
+                
+            case .vibrantNormal:   "Colori accesi e scuri"
+            case .vibrantDelicate: "Colori accesi delicati"
+                
+            case .denim:           "Jeans e capi in tela robusta"
+            case .activewear:      "Capi tecnici e sportivi"
+            case .woolAndCashmere: "Lana, Cashmere e filati pregiati"
+            case .professionalCare: "Pelle, camoscio e capi da lavanderia a secco"
         }
     }
     
     var isDelicate: Bool {
         self == .darkDelicate  ||
-        self == .colorDelicate ||
+        self == .pastelDelicate ||
+        self == .vibrantDelicate ||
         self == .whiteDelicate
     }
 }
 
 // Serve per il "Vincolo 1: Colore"
 enum WashingColorGroup: String, Codable, CaseIterable {
-	case whites      = "Whites"
-	case darks       = "Darks"
-	case lights      = "Lights/Colors"
+    case whites  = "Whites"
+    case darks   = "Darks"
+    case pastels = "Pastels"
+    case vibrant = "Vibrant"
 	
 	/// Restituisce la categoria di lavaggio basata sul codice Hex
-	static func classify(_ hex: String) -> WashingColorGroup {
-		let rgb = hexToRGB(hex)
-		let (_, s, b) = rgbToHSB(r: rgb.r, g: rgb.g, b: rgb.b)
-		
-		// --- LOGICA DI CLASSIFICAZIONE ---
-		
-		// 1. Categoria BIANCHI (Whites)
-		// Alta luminosità (> 85%) e bassissima saturazione (< 15%)
-		// Esempio: Bianco puro, panna, grigio chiarissimo
-		if b > 0.85 && s < 0.15 {
-			return .whites
-		}
-		
-		// 2. Categoria SCURI (Darks)
-		// Bassa luminosità (< 30%), indipendentemente dalla saturazione
-		// Esempio: Nero, Blu Notte, Marrone scuro, Bordeaux profondo
-		if b < 0.30 {
-			return .darks
-		}
-		
-		// 3. Categoria COLORATI / MEDI (Lights/Colors)
-		// Tutto il resto: Colori accesi, pastelli, grigi medi
-		return .lights
-	}
+    static func classify(_ hex: String) -> WashingColorGroup {
+        let rgb = hexToRGB(hex)
+        let (_, s, b) = rgbToHSB(r: rgb.r, g: rgb.g, b: rgb.b)
+        
+        // 1. BIANCHI: Alta luminosità, saturazione quasi inesistente
+        if b > 0.85 && s < 0.15 {
+            return .whites
+        }
+        
+        // 2. SCURI: Bassa luminosità (es. Blu Navy, Nero, Bordeaux)
+        // Alziamo la soglia a 0.35 per catturare in sicurezza tutti i toni profondi
+        if b < 0.35 {
+            return .darks
+        }
+        
+        // 3. CHIARI / PASTELLO (L'Azzurro di cui parlavi)
+        // Alta luminosità, ma saturazione moderata/bassa.
+        // Rischiano di assorbire il colore dagli altri capi.
+        if b > 0.70 && s < 0.50 {
+            return .pastels
+        }
+        
+        // 4. COLORI VIVIDI: Tutto il resto
+        // Colori saturi e medi che potrebbero stingere (es. Rosso, Blu Royal)
+        return .vibrant
+    }
 	
 	// MARK: - Helpers Matematici
 	

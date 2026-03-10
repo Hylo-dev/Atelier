@@ -126,7 +126,7 @@ struct GarmentEditorView: View {
         }
         
         _color               = State(initialValue: initialColor)
-        _wearCount           = State(initialValue: 0)
+        _wearCount           = State(initialValue: garment?.wearCount ?? 0)
         _selectedComposition = State(initialValue: garment?.composition ?? [])
         _selectedFabrics     = State(initialValue: Set(garment?.composition.map { $0.fabric } ?? []))
         
@@ -153,7 +153,8 @@ struct GarmentEditorView: View {
                 
         HeroListView(
             imagePath,
-            isImageClicked: $showImageSourceDialog
+            isImageClicked  : $showImageSourceDialog,
+            colorPlaceholder: color
         ) {
             
         } content: {
@@ -172,7 +173,7 @@ struct GarmentEditorView: View {
             // Section 5: Composition Garment
             self.sectionComposition
         }
-        .navigationTitle("New garment")
+        .navigationTitle(item == nil ? "New Garment" : "Edit Garment")
         .navigationBarTitleDisplayMode(.inline)
         .scrollDismissesKeyboard(.interactively)
         .toolbar {

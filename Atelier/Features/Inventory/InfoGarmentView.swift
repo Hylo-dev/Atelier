@@ -38,7 +38,10 @@ struct InfoGarmentView: View {
     
     var body: some View {
         
-        HeroListView(item.imagePath)  {
+        HeroListView(
+            item.imagePath,
+            colorPlaceholder: Color(hex: item.color)
+        )  {
             titleSection
             
         } content: { // MARK: - Sections

@@ -107,7 +107,7 @@ struct OutfitEditorView: View {
             self.sectionStyleAndCategory
         }
         .sensoryFeedback(.success, trigger: self.isSaved)
-        .navigationTitle("New outfit")
+        .navigationTitle(outfit == nil ? "New Outfit" : "Edit Outfit")
         .navigationBarTitleDisplayMode(.inline)
         .scrollDismissesKeyboard(.interactively)
         .toolbar {
