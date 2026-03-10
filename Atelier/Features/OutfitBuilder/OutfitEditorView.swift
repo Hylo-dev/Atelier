@@ -98,12 +98,10 @@ struct OutfitEditorView: View {
             isImageClicked: $showImageSourceDialog
         ) {
             
-        } content: {
+        } content: { // MARK: - Section
             sectionInfo
             
-            if outfit != nil {
-                sectionCare
-            }
+            if outfit != nil { sectionCare }
             
             // Section 1: Style & Category
             self.sectionStyleAndCategory
@@ -175,12 +173,19 @@ struct OutfitEditorView: View {
         SectionList(titleKey: "Care") {
             
             Stepper(
-                "Wear Count: \(self.wearCount) pieces",
                 value: self.$wearCount,
                 in   : 0...Int.max,
                 step : 1
-            )
-            
+            ) {
+                HStack(spacing: 4) {
+                    Text("Times worn:")
+                        
+                    
+                    Text("\(self.wearCount)")
+                        .fontWeight(.semibold)
+                        .monospacedDigit()
+                }
+            }
         }
     }
     

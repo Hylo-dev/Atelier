@@ -44,14 +44,14 @@ struct CompositionRow: View {
                 
                 Text("\(Int(self.percentage))%")
                     .fontWeight(.bold)
-                    .fontDesign(.rounded)
+                    .fontDesign(.default)
                     .foregroundStyle(.secondary)
             }
             
             GeometryReader { geo in
                 ZStack(alignment: .leading) {
                     Capsule()
-                        .fill(Color.gray.opacity(0.2))
+                        .fill(.quaternary)
                         .frame(height: 6)
                     
                     Capsule()

@@ -31,6 +31,9 @@ struct InfoGarmentView: View {
     @State
     private var deleteItem: Bool = false
     
+    @State
+    private var isDeleted: Bool = false
+    
     
     
     var body: some View {
@@ -38,20 +41,20 @@ struct InfoGarmentView: View {
         HeroListView(item.imagePath)  {
             titleSection
             
-        } content: {
-            self.sectionStyleAndCategory
+        } content: { // MARK: - Sections
+            sectionStyleAndCategory
             
-            if !self.item.composition.isEmpty {
-                self.sectionComposition
+            if !item.composition.isEmpty {
+                sectionComposition
             }
             
-            self.sectionCare
+            sectionCare
         }
-        .sensoryFeedback(.success, trigger: deleteItem)
+        .sensoryFeedback(.success, trigger: isDeleted)
         .toolbar {
             ToolbarItem {
                 Button(role: .destructive) {
-                    self.deleteItem = true
+                    deleteItem = true
                     
                 } label: {
                     Label("Delete", systemImage: "trash")
@@ -86,6 +89,7 @@ struct InfoGarmentView: View {
             Button("Delete", role: .destructive) {
                 withAnimation {
                     self.garmentManager?.deleteGarment(self.item)
+                    isDeleted.toggle()
                 }
                 
                 dismiss()
@@ -114,18 +118,18 @@ struct InfoGarmentView: View {
             
             HStack {
                 if let brand = self.item.brand {
-                    Text("\(brand) - ")
+                    Text("\(brand) -")
                         .font(.headline)
                         .fontWeight(.medium)
                         .foregroundStyle(.secondary)
-                        .fontDesign(.rounded)
+                        .fontDesign(.default)
                 }
                 
                 Text("\(self.item.purchaseDate.formatted(date: .abbreviated, time: .omitted))")
                     .font(.headline)
                     .fontWeight(.medium)
                     .foregroundStyle(.secondary)
-                    .fontDesign(.rounded)
+                    .fontDesign(.default)
             }
         }
         .frame(maxWidth: .infinity)
@@ -136,7 +140,9 @@ struct InfoGarmentView: View {
         
         SectionList(titleKey: "Details") {
             RowInfo(title: "Type", value: self.item.category.label)
+            
             RowInfo(title: "Model", value: self.item.subCategory.rawValue)
+            
             RowInfo(title: "Season", value: self.item.season.rawValue)
         }
     }
@@ -163,37 +169,7 @@ struct InfoGarmentView: View {
     @ViewBuilder
     var sectionCare: some View {
         SectionList(titleKey: "Care & Usage") {
-            if !self.item.washingSymbols.isEmpty {
-                ScrollView(.horizontal, showsIndicators: false) {
-                    
-                    HStack(spacing: 12) {
-                        
-                        ForEach(self.item.washingSymbols, id: \.id) { symbol in
-                            VStack(alignment: .center) {
-                                Image(symbol.iconName ?? "")
-                                    .frame(width: 30, height: 30)
-                                    .foregroundStyle(.secondary)
-                                
-                                Text(symbol.label)
-                                    .font(.caption2)
-                                    .fontWeight(.semibold)
-                                    .foregroundStyle(.secondary)
-                            }
-                            .frame(width: 60, height: 60)
-                            .background(Color(uiColor: .secondarySystemGroupedBackground))
-                            .cornerRadius(12)
-                            .padding(5)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 12)
-                                    .stroke(Color.primary.opacity(0.1), lineWidth: 1)
-                            )
-                        }
-                    }
-                    .padding(.vertical, 8)
-                }
-                .listRowInsets(EdgeInsets(top: 0, leading: 20, bottom: 0, trailing: 0))
-                .padding(.top, 5)
-            }
+            rowWashSymbols
             
             // Stats
             RowInfo(
@@ -205,6 +181,42 @@ struct InfoGarmentView: View {
                 title: "Wear Count",
                 value: self.item.wearCount == 0 ? "Unworn" : "\(self.item.wearCount) times"
             )
+        }
+    }
+    
+    @ViewBuilder
+    private var rowWashSymbols: some View {
+        if !self.item.washingSymbols.isEmpty {
+            ScrollView(
+                .horizontal,
+                showsIndicators: false
+            ) {
+                LazyHStack(spacing: 12) {
+                    
+                    ForEach(self.item.washingSymbols, id: \.id) { symbol in
+                        VStack(alignment: .center) {
+                            Image(symbol.iconName ?? "")
+                                .frame(width: 30, height: 30)
+                                .foregroundStyle(.secondary)
+                            
+                            Text(symbol.label)
+                                .font(.caption2)
+                                .fontWeight(.regular)
+                                .fontDesign(.default)
+                                .foregroundStyle(.secondary)
+                        }
+                        .frame(width: 60, height: 60)
+                        .background(.clear)
+                        .padding(5)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 16)
+                                .stroke(.tertiary, lineWidth: 1)
+                        )
+                    }
+                }
+                .padding(.vertical, 8)
+            }
+            .padding(.vertical, 5)
         }
     }
 

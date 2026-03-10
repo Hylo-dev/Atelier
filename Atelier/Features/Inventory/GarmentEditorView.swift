@@ -8,6 +8,7 @@
 import SwiftUI
 import PhotosUI
 import UIKit
+import SwiftData
 
 struct GarmentEditorView: View {
     @Environment(\.dismiss)
@@ -16,10 +17,19 @@ struct GarmentEditorView: View {
     @Environment(\.modelContext)
     private var modelContext
     
+    @Environment(ApplianceManager.self)
+    private var applianceManager
+    
+    @Query(
+        sort : \LaundrySession.dateCreated,
+        order: .forward
+    )
+    private var laundrySessions: [LaundrySession]
+    
     @Binding
     var garmentManager: GarmentManager?
     
-    private let item: Garment?
+    private var item: Garment?
     
     
     // MARK: - Garment Attributes
@@ -33,6 +43,8 @@ struct GarmentEditorView: View {
     @State
     private var color: Color
     
+    @State
+    private var wearCount: Int
     
     
     @State
@@ -114,6 +126,7 @@ struct GarmentEditorView: View {
         }
         
         _color               = State(initialValue: initialColor)
+        _wearCount           = State(initialValue: 0)
         _selectedComposition = State(initialValue: garment?.composition ?? [])
         _selectedFabrics     = State(initialValue: Set(garment?.composition.map { $0.fabric } ?? []))
         
@@ -169,8 +182,24 @@ struct GarmentEditorView: View {
             
             ToolbarItem(placement: .confirmationAction) {
                 Button("Finish", systemImage: "checkmark") {
-                    self.item == nil ? self.saveGarment() : self.updateGarment()
+                    let garmentToProcess: Garment
                     
+                    if self.item == nil {
+                        garmentToProcess = self.saveGarment()
+                        
+                    } else {
+                        
+                        self.updateGarment()
+                        garmentToProcess = item!
+                        applianceManager.unassignGarment(garmentToProcess)
+                    }
+                    
+                    applianceManager.processUnassignedGarments(
+                        [garmentToProcess],
+                        laundrySessions
+                    )
+                    
+                    dismiss()
                 }
                 .fontWeight(.bold)
                 .disabled(self.name.isEmpty)
@@ -307,6 +336,21 @@ struct GarmentEditorView: View {
                         Text(state.rawValue).tag(state)
                     }
                 }
+                
+                Stepper(
+                    value: self.$wearCount,
+                    in   : 0...Int.max,
+                    step : 1
+                ) {
+                    HStack(spacing: 4) {
+                        Text("Times worn:")
+                        
+                        
+                        Text("\(self.wearCount)")
+                            .fontWeight(.semibold)
+                            .monospacedDigit()
+                    }
+                }
             }
         }
     }
@@ -367,7 +411,7 @@ struct GarmentEditorView: View {
                     ProgressView(value: Double(currentTotalComposition), total: 100)
                         .tint(currentTotalComposition == 100 ? .green : .orange)
                 }
-                .padding(.vertical, 5)
+                .padding(.vertical, 15)
                 
                 ForEach(self.$selectedComposition, id: \.id) { $comp in
                     VStack(alignment: .leading) {
@@ -403,7 +447,7 @@ struct GarmentEditorView: View {
                         .buttonStyle(.plain)
 
                     }
-                    .padding(.vertical, 4)
+                    .padding(.vertical, 10)
                 }
             }
         }
@@ -500,7 +544,7 @@ struct GarmentEditorView: View {
         !self.name.isEmpty && self.color == Color.clear
     }
     
-    private func saveGarment() {
+    private func saveGarment() -> Garment {
         
         if let imageToSave = self.uiImageToSave,
            let filename = ImageStorage.saveImage(imageToSave) {
@@ -522,13 +566,13 @@ struct GarmentEditorView: View {
             
             imagePath     : self.imagePath
         )
-        
+                
         if let manager = self.garmentManager {
             manager.addGarment(newGarment)
             
         } else { print("Manager is nil") }
         
-        dismiss()
+        return newGarment
     }
     
     func updateGarment() {
@@ -548,6 +592,7 @@ struct GarmentEditorView: View {
         self.item!.subCategory    = self.selectedSubCategory
         self.item!.season         = self.selectedSeason
         self.item!.style          = self.selectedStyle
+        self.item!.wearCount      = self.wearCount
         
         self.item!.washingSymbols = Array(self.washingSymbols)
         self.item!.purchaseDate   = self.purchaseDate
@@ -557,8 +602,6 @@ struct GarmentEditorView: View {
             manager.updateGarment()
             
         } else { print("Manager is nil") }
-        
-        dismiss()
     }
 }
 

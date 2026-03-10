@@ -31,7 +31,7 @@ final class Outfit {
     }
     
     var stateWear: String {
-        self.isReadyToWear ? "Yes" : "No"
+        isReadyToWear ? "Yes" : "No"
     }
     
     var missingItemsCount: Int { self.garments.filter { $0.state != .available }.count }

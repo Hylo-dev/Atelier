@@ -118,6 +118,8 @@ struct InventoryView: View {
             if self.garmentManager == nil {
                 self.garmentManager = GarmentManager(context: self.context)
             }
+            
+            
                         
             self.updateBrands()
             self.updateCategories()
@@ -305,7 +307,7 @@ struct GarmentContextCard: View {
         let loanState    = item.state == .onLoan
         
         Button {
-            item.state = washingState ? .drying : .toWash
+            item.state = washingState ? .drying : .washing
             self.manager?.updateGarment()
             
         } label: {
@@ -314,7 +316,7 @@ struct GarmentContextCard: View {
                 systemImage: washingState ? "sparkle" : "washer.fill"
             )
         }
-        .disabled(!item.state.readyToWash())
+//        .disabled(!item.state.readyToWash)
         
         Button {
             item.state = loanState ? .available : .onLoan
@@ -326,7 +328,7 @@ struct GarmentContextCard: View {
                 systemImage: loanState ? "arrow.uturn.backward" : "person.2"
             )
         }
-        .disabled(!item.state.readyToLent())
+        .disabled(!item.state.readyToLent)
         
         
         Divider()

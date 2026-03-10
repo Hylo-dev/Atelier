@@ -11,16 +11,39 @@ import SwiftData
 struct HomeView: View {
     
     
+    
+    @Query(
+        sort : \Garment.name,
+        order: .forward
+    )
+    private var garments: [Garment]
+    
+    @Query(
+        sort : \LaundrySession.dateCreated,
+        order: .forward
+    )
+    private var laundrySessions: [LaundrySession]
+    
+    
+    
     // MARK: - Screen values
     
     @Environment(\.horizontalSizeClass)
     private var sizeClass
+    
+    @Environment(\.modelContext)
+    private var context
+    
+    @Environment(ApplianceManager.self)
+    private var applianceManager
+    
     
     @State
     private var selectedTab: AppTab? = .wardrobe
     
     @State
     private var manager = CaptureManager()
+    
     
     
     // MARK: - Categories app bar state
@@ -46,8 +69,22 @@ struct HomeView: View {
         
         if sizeClass == .regular {
             self.sidebarLayout
+                .onAppear {
+                    applianceManager.processUnassignedGarments(
+                        garments,
+                        laundrySessions
+                    )
+                }
             
-        } else { self.tabLayout }
+        } else {
+            self.tabLayout
+                .onAppear {
+                    applianceManager.processUnassignedGarments(
+                        garments,
+                        laundrySessions
+                    )
+                }
+        }
     }
     
     private var tabLayout: some View {
@@ -139,7 +176,10 @@ struct HomeView: View {
                 )
             
             case .care:
-                CareView(title: title)
+                CareView(
+                    title          : title,
+                    laundrySessions: laundrySessions
+                )
                 
             case .search:
                 EmptyView()

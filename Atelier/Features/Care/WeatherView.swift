@@ -10,79 +10,91 @@ import CoreLocation
 import WeatherKit
 
 struct WeatherView: View {
-    let currentWeather: WeatherState?
+    let weather: WeatherState?
+    
+    init(_ weather: WeatherState?) {
+        self.weather = weather
+    }
     
     var body: some View {
         ZStack {
             self.backgroundView
                 .glassEffect(in: .rect)
             
-            if let weather = self.currentWeather {
-                HStack(alignment: .center) {
-                    
-                    
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text(weather.locationName)
-                            .font(.title2)
+            HStack(alignment: .center) {
+                
+                VStack(alignment: .leading, spacing: 6) {
+                    HStack {
+                        Image(systemName: weather?.condition.icon ?? "sun.max.fill")
+                            .font(.title)
+                            .fontWeight(.bold)
+                            .symbolRenderingMode(.multicolor)
+                        
+                        Text("\(Int(weather?.temperature ?? 00))°")
+                            .font(.title)
                             .fontWeight(.bold)
                             .fontDesign(.rounded)
-                            .foregroundColor(.white)
+                            .foregroundColor(.primary)
                             .lineLimit(1)
-                            .minimumScaleFactor(0.5)
-                        
-                        Spacer()
-                        
-                        Text(weather.messageWeather)
-                            .font(.subheadline)
-                            .lineLimit(2)
-                            .minimumScaleFactor(0.8)
-                            .foregroundColor(.white.opacity(0.9))
                         
                     }
+                    .if(weather == nil, transform: { `view` in
+                        `view`
+                            .redacted(reason: .placeholder)
+                            .shimmer()
+                    })
                     
                     Spacer()
                     
-                    
-                    ZStack(alignment: .topTrailing) {
-                        Image(systemName: weather.condition.icon)
-                            .resizable()
-                            .scaledToFit()
-                            .font(.system(size: 70))
-                            .symbolRenderingMode(.multicolor)
-                        
-                        Text("\(Int(weather.temperature))°")
-                            .font(.system(size: 50, weight: .bold, design: .rounded))
-                            .foregroundColor(.white)
-                            .shadow(color: .black.opacity(0.3), radius: 5, x: 0, y: 3)
-                            .offset(x: -40, y: -10)
-                    }
-                    
+                    Text(weather?.messageWeather ?? "Test Test Test Test Test Test Test ")
+                        .font(.subheadline)
+                        .lineLimit(2)
+                        .minimumScaleFactor(0.8)
+                        .foregroundColor(.primary)
+                        .if(weather == nil, transform: { `view` in
+                            `view`
+                                .redacted(reason: .placeholder)
+                                .shimmer()
+                        })
                     
                 }
-                .padding(24)
                 
+                Spacer()
                 
-            } else {
-                VStack(spacing: 12) {
-                    ProgressView()
-                        .tint(.white)
+                VStack(alignment: .trailing) {
+                    Text(weather?.locationName ?? "Placeholder")
+                        .font(.headline)
+                        .fontWeight(.bold)
+                        .fontDesign(.default)
+                        .foregroundColor(.primary)
+                        .lineLimit(1)
                     
-                    Text("Recupero meteo...")
-                        .font(.caption)
-                        .foregroundColor(.white.opacity(0.8))
+                    Text(weather?.condition.rawValue ?? "Test")
+                        .font(.subheadline)
+                        .fontWeight(.light)
+                        .fontDesign(.default)
+                        .foregroundColor(.primary)
+                        .lineLimit(1)
+                    
+                    Spacer()
                 }
+                .if(weather == nil, transform: { `view` in
+                    `view`
+                        .redacted(reason: .placeholder)
+                        .shimmer()
+                })
             }
+            .padding(24)
         }
         .frame(height: 140)
         .frame(maxWidth: .infinity)
-        .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
-        .shadow(color: .black.opacity(0.15), radius: 10, x: 0, y: 5)
+        .clipShape(RoundedRectangle(cornerRadius: 26))
         .padding(.horizontal)
     }
     
     @ViewBuilder
     var backgroundView: some View {
-        if let weather = self.currentWeather {
+        if let weather = self.weather {
             weather.condition.backgroundGradient
             
         } else {
@@ -99,7 +111,7 @@ struct WeatherView: View {
     
     let service = WeatherService()
     
-    WeatherView(currentWeather: weather)
+    WeatherView(weather)
         .onAppear {
             Task { @MainActor in
                 weather = try await service.fetchWeather(

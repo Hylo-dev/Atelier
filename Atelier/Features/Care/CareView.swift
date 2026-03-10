@@ -7,21 +7,31 @@
 
 import SwiftUI
 import CoreLocation
+import SwiftData
 
 struct CareView: View {
-    
-    let service = WeatherService()
-    
+        
     let title: String
+    
+    var laundrySessions: [LaundrySession]
+    
+    
+    
+    let weatherService = WeatherService()
+    
+    @Environment(ApplianceManager.self)
+    private var manager
     
     @State
     private var weather: WeatherState?
+    
+    
     
     var body: some View {
         
         ScrollView {
             LazyVStack {
-                WeatherView(currentWeather: weather)
+                WeatherView(weather)
                 
             }
             
@@ -49,9 +59,16 @@ struct CareView: View {
             }
         }
         .onAppear {
+            
+            for session in laundrySessions {
+                print("\(session.bin) \(session.suggestedProgram) \(session.targetTemperature)")
+            }
+            
+            
+            
             Task { @MainActor in
                 
-                self.weather = try await service.fetchWeather(
+                self.weather = try await weatherService.fetchWeather(
                     for: CLLocation(
                         latitude: .zero,
                         longitude: .zero
@@ -65,5 +82,18 @@ struct CareView: View {
 }
 
 #Preview {
-    CareView(title: "Care")
+    
+//    @Previewable
+//    @Environment(\.modelContext)
+//    var context
+//    
+//    @Previewable
+//    @State
+//    var manager = ApplianceManager(context)
+//    
+//    
+//    CareView(
+//        title: "Care",
+//        manager: manager
+//    )
 }

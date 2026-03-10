@@ -45,23 +45,22 @@ struct GenericSelectionView<Item: SelectableItem>: View {
         List {
             ForEach(Array(Item.CategoryType.allCases), id: \.id) { category in
                 Section(header: Text(category.rawValue)) {
-                    LazyVGrid(columns: columns, spacing: 20) {
+                    LazyVGrid(columns: columns, spacing: 16) {
 
                         ForEach(Item.allCases.filter { $0.category == category }, id: \.id) { item in
-                            VStack {
-                                selectionCell(for: item)
-                                
-                            }
-                            .onTapGesture {
-                                self.toggleSelection(item)
-                                self.isSelected.toggle()
-                            }
+                            
+                            selectionCell(for: item)
+                                .onTapGesture {
+                                    self.toggleSelection(item)
+                                    self.isSelected.toggle()
+                                }
                         }
                     }
                     .padding(.vertical, 8)
                 }
             }
         }
+        // TODO: Change this and test use `selection` variable
         .sensoryFeedback(.selection, trigger: self.isSelected)
         .navigationTitle("Select Options")
     }
@@ -104,7 +103,7 @@ struct GenericSelectionView<Item: SelectableItem>: View {
             }
             
             Text(item.title)
-                .font(.caption)
+                .font(.footnote)
                 .fontWeight(isSelected ? .medium : .regular)
                 .multilineTextAlignment(.center)
                 .lineLimit(2)
@@ -113,13 +112,14 @@ struct GenericSelectionView<Item: SelectableItem>: View {
         }
     }
     
+    
     private func toggleSelection(_ item: Item) {
         withAnimation(.easeInOut(duration: 0.1)) {
-            if self.selection.contains(item) {
-                self.selection.remove(item)
+            if selection.contains(item) {
+                selection.remove(item)
                 
             } else {
-                self.selection.insert(item)
+                selection.insert(item)
             }
         }
     }

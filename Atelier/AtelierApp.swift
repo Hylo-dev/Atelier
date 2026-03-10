@@ -10,8 +10,12 @@ import SwiftData
 
 @main
 struct AtelierApp: App {
-    // Create local DB
-    var sharedModelContainer: ModelContainer = {
+    
+    let applianceManager    : ApplianceManager
+    let sharedModelContainer: ModelContainer
+    
+    init() {
+        
         let schema = Schema([
             Garment.self,
             Outfit.self,
@@ -22,22 +26,26 @@ struct AtelierApp: App {
             schema              : schema,
             isStoredInMemoryOnly: false
         )
-
+        
         do {
-            return try ModelContainer(
+            sharedModelContainer = try ModelContainer(
                 for           : schema,
                 configurations: [modelConfiguration]
             )
             
+            applianceManager = ApplianceManager(sharedModelContainer.mainContext)
+            
         } catch {
-            fatalError("Could not create ModelContainer Database: \(error)")
+            print("Could not create ModelContainer Database: \(error)")
+            fatalError("Exit")
         }
         
-    }()
+    }
 
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .environment(applianceManager)
         }
         .modelContainer(sharedModelContainer)
     }

@@ -196,12 +196,40 @@ enum GarmentSubCategory: String, Codable, CaseIterable, Identifiable {
     case none       = "None"
     
     var id: String { rawValue }
+    
+    var wearLimit: Int {
+        switch self {
+                
+            case .tshirts, .tankTops, .bodysuits, .sweatpants,
+                    .bras, .bralettes, .sportsBras, .panties, .thongs, .boxerShorts,
+                    .boxerBriefs, .briefs, .socks, .tights, .stockings,
+                    .bodysuitsLingerie, .shapewear:
+                return 1
+                
+            case .shirts, .blouses, .dresses, .jumpsuits, .pajamas, .nightgowns:
+                return 2
+                
+            case .trousers, .shorts, .skirts, .leggings, .sweaters, .hoodies, .sweatshirt, .top:
+                return 3
+                
+            case .jeans:
+                return 5
+                
+            case .coats, .jackets, .blazers, .pufferJackets, .rainwear, .robes:
+                return 10
+                
+            case .sneakers, .boots, .loafers, .heels, .sandals, .flats, .slippers,
+                    .bags, .belts, .hats, .scarves, .jewelry, .eyewear, .watches, .none:
+                return -1
+        }
+    }
 }
 
 enum GarmentState: String, Codable, CaseIterable, Identifiable {
     
     case available   = "Available"
     case toWash      = "To wash"
+    case washing     = "Washing"
     case atLaundry   = "At laundry"
     case onLoan      = "On loan"
     case underRepair = "Under repair"
@@ -209,12 +237,12 @@ enum GarmentState: String, Codable, CaseIterable, Identifiable {
     
     var id: String { rawValue }
     
-    func readyToWash() -> Bool {
-        return self != .drying && self != .onLoan && self != .underRepair
+    var readyToWash: Bool {
+        self != .drying && self != .onLoan && self != .underRepair
     }
     
-    func readyToLent() -> Bool {
-        return self != .underRepair
+    var readyToLent: Bool {
+        self != .underRepair
     }
     
 }
@@ -601,19 +629,46 @@ enum LaundrySymbol: String, Codable, SelectableItem {
 }
 
 enum LaundryBin: String, Codable, CaseIterable, Identifiable {
-	case heavyDuty = "White & Hot"
-	case daily     = "Daily Dark"
-	case delicate  = "Delicate"
-	
-	var id: String { rawValue }
-	
-	var description: String {
-		switch self {
-		case .heavyDuty: return "Bianchi, asciugamani, intimo cotone"
-		case .daily: return "Jeans, t-shirt colorate, sintetici"
-		case .delicate: return "Lana, seta, tecnici, ricami"
-		}
-	}
+    // MARK: - Bianchi
+    case whiteHeavyDuty = "Whites: Heavy Duty"
+    case whiteNormal    = "Whites: Normal"
+    case whiteDelicate  = "Whites: Delicate"
+    
+    // MARK: - Scuri
+    case darkNormal     = "Darks: Normal"
+    case darkDelicate   = "Darks: Delicate"
+    
+    // MARK: - Colorati / Chiari
+    case colorNormal    = "Colors: Normal"
+    case colorDelicate  = "Colors: Delicate"
+    
+    // MARK: - Categorie Speciali
+    case denim          = "Denim"              
+    case activewear     = "Activewear"
+    case woolAndCashmere = "Wool & Cashmere"
+    
+    var id: String { rawValue }
+    
+    var description: String {
+        switch self {
+            case .whiteHeavyDuty: return "Bianchi resistenti ad alte temperature"
+            case .whiteNormal:    return "Bianchi quotidiani (30°-40°)"
+            case .whiteDelicate:  return "Bianchi delicati e lingerie"
+            case .darkNormal:     return "Capi scuri quotidiani"
+            case .darkDelicate:   return "Capi scuri delicati"
+            case .colorNormal:    return "Capi colorati e misti"
+            case .colorDelicate:  return "Capi colorati delicati"
+            case .denim:          return "Jeans e capi in tela robusta"
+            case .activewear:     return "Capi tecnici e sportivi"
+            case .woolAndCashmere:return "Lana, Cashmere e filati pregiati"
+        }
+    }
+    
+    var isDelicate: Bool {
+        self == .darkDelicate  ||
+        self == .colorDelicate ||
+        self == .whiteDelicate
+    }
 }
 
 // Serve per il "Vincolo 1: Colore"
@@ -708,4 +763,34 @@ enum WashingAgitation: String, Sendable, Equatable {
 	case reduced     // "Synthetics" / "Permanent Press"
 	case gentle      // "Delicates" / "Wool"
 	case none        // Non lavare / Non centrifugare
+    
+    var program: Program {
+        switch self {
+            case .normal:
+                .standard
+                
+            case .reduced:
+                .mix
+                
+            case .gentle:
+                .delicate
+                
+            case .none:
+                .notWash
+        }
+    }
+}
+
+enum LaundrySessionStatus: String, Codable, CaseIterable {
+    case planned   = "Planed"
+    case washing   = "On Washing"
+    case drying    = "On Drying"
+    case completed = "Complete"
+}
+
+enum Program: String, Codable, CaseIterable {
+    case standard = "Cotton/Standard"
+    case mix      = "Mix"
+    case delicate = "Delicate"
+    case notWash  = "Not Wash"
 }

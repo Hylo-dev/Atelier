@@ -32,6 +32,9 @@ struct InfoOutfitView: View {
     @State
     private var deleteItem: Bool = false
     
+    @State
+    private var isDeleted: Bool = false
+    
     
     
     var body: some View {
@@ -44,7 +47,7 @@ struct InfoOutfitView: View {
             
             self.sectionStyleAndCategory
         }
-        .sensoryFeedback(.success, trigger: deleteItem)
+        .sensoryFeedback(.success, trigger: isDeleted)
         .toolbar {
             
             ToolbarItem {
@@ -84,6 +87,7 @@ struct InfoOutfitView: View {
             Button("Delete", role: .destructive) {
                 withAnimation {
                     self.manager?.deleteOutfit(self.outfit)
+                    isDeleted.toggle()
                 }
                 
                 dismiss()
@@ -111,7 +115,7 @@ struct InfoOutfitView: View {
                 .multilineTextAlignment(.center)
             
             if let date = self.outfit.lastWornDate {
-                Text("Last worn date \(date.formatted(date: .abbreviated, time: .omitted))")
+                Text("Last worn - \(date.formatted(date: .abbreviated, time: .omitted))")
                     .font(.headline)
                     .fontWeight(.medium)
                     .foregroundStyle(.secondary)
@@ -130,7 +134,7 @@ struct InfoOutfitView: View {
         SectionList(titleKey: "Care & Usage") {
             
             RowInfo(
-                title: "Ready to Wear",
+                title: "Wear availability",
                 value: self.outfit.stateWear
             )
             

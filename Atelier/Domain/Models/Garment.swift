@@ -23,6 +23,9 @@ final class Garment {
     var style       : GarmentStyle
     var purchaseDate: Date
     var state       : GarmentState
+    
+    // MARK: Handler Washing
+    var isBinAssigned: Bool
 
     
     // MARK: - Washing Info
@@ -52,6 +55,7 @@ final class Garment {
         season        : Season,
         style         : GarmentStyle,
         purchaseDate  : Date = .now,
+        isBinAssigned : Bool = false,
         washingSymbols: [LaundrySymbol] = [],
         imagePath     : String? = nil,
         model3DPath   : String? = nil
@@ -66,6 +70,7 @@ final class Garment {
         self.season         = season
         self.style          = style
         self.purchaseDate   = purchaseDate
+        self.isBinAssigned  = isBinAssigned
         self.state          = .available
         
         self.washingSymbols = washingSymbols
@@ -79,37 +84,72 @@ final class Garment {
     }
 	
 	// Determina in che Cesto (A, B, C) dovrebbe andare
-	var suggestedLaundryBin: LaundryBin {
-		
-		// 1. Priorità Assoluta: Delicati (Cesto C)
-		if category == .onePiece ||
-			composition.contains(where: { $0.fabric == .silk || $0.fabric == .wool || $0.fabric == .cashmere }) ||
-			washingSymbols.contains(where: { $0.isDelicate }) {
-			return .delicate
-		}
-		
-		// 2. Analisi Colore tramite HEX
-		let colorGroup = WashingColorGroup.from(hex: self.color)
-		
-		// 3. Verifica Tessuto
-		let isResistantCotton = composition.allSatisfy { $0.fabric == .cotton || $0.fabric == .linen || $0.fabric == .hemp }
-		
-		// LOGICA DECISIONALE
-		
-		// Cesto A (Bianchi & Resistenti)
-		// Solo se è "White" matematicamente E resistente
-		if colorGroup == .whites && isResistantCotton {
-			return .heavyDuty
-		}
-		
-		// Cesto B (Scuri & Quotidiani)
-		// Tutto il resto (Scuri, Colorati, Sintetici non delicati)
-		return .daily
-	}
+    var suggestedLaundryBin: LaundryBin {
+        
+        // 1. Priorità Assoluta: Lana e Cashmere (Cesto Speciale)
+        if composition.contains(where: { $0.fabric == .wool || $0.fabric == .cashmere }) {
+            return .woolAndCashmere
+        }
+        
+        // 2. Priorità Alta: Denim (Per evitare che stingano su altri tessuti)
+        if subCategory == .jeans || composition.contains(where: { $0.fabric == .denim }) {
+            return .denim
+        }
+        
+        // 3. Analisi del Livello di Delicatezza
+        let isDelicate = washingSymbols.contains(where: { $0.isDelicate }) ||
+        composition.contains(where: { $0.fabric == .silk }) ||
+        category == .lingerie ||
+        category == .onePiece
+        
+        // 4. Analisi del Colore
+        let colorGroup = WashingColorGroup.from(hex: self.color)
+        
+        // 5. Verifica Tessuti Specifici
+        let isResistantCotton = composition.allSatisfy { $0.fabric == .cotton || $0.fabric == .linen || $0.fabric == .hemp }
+        let isActivewear = composition.contains(where: { $0.fabric == .spandex || $0.fabric == .nylon }) && subCategory == .sportsBras
+        
+        // 6. Smistamento a Matrice (Colore + Trattamento)
+        switch colorGroup {
+            case .whites:
+                if isDelicate { return .whiteDelicate }
+                if isResistantCotton { return .whiteHeavyDuty }
+                return .whiteNormal
+                
+            case .darks:
+                if isDelicate { return .darkDelicate }
+
+                return .darkNormal
+                
+            case .lights:
+                if isDelicate { return .colorDelicate }
+                if isActivewear { return .activewear }
+
+                return .colorNormal
+        }
+    }
 	
-	// Helper per capire se il capo comanda il lavaggio delicato
 	var isDelicatePriority: Bool {
-		return suggestedLaundryBin == .delicate
+        suggestedLaundryBin.isDelicate
 	}
+    
+    var requiresWashing: Bool {
+        wearCount >= subCategory.wearLimit
+    }
 	
+    var daysSinceLastWash: Int {
+        guard let lastWashingDate = lastWashingDate else { return 999 }
+        return Calendar.current.dateComponents([.day], from: lastWashingDate, to: .now).day ?? 0
+    }
+    
+    var hasReachedWashingLimits: Bool {
+        let wearLimitReached = wearCount >= subCategory.wearLimit
+        let timeLimitReached = (daysSinceLastWash >= 30) && (wearCount > 0)
+        
+        return wearLimitReached || timeLimitReached
+    }
+    
+    var isReadyToWash: Bool {
+        return state.readyToWash && hasReachedWashingLimits
+    }
 }
