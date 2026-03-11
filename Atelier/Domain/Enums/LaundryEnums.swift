@@ -319,25 +319,82 @@ enum LaundryBin: String, Codable, CaseIterable, Identifiable {
     case whiteNormal     = "Whites: Normal"
     case whiteDelicate   = "Whites: Delicate"
     
-    // MARK: - Scuri
+    
+    
+    // MARK: - Darks
     case darkNormal      = "Darks: Normal"
     case darkDelicate    = "Darks: Delicate"
     
-    // MARK: - Chiari / Pastello (Novità)
+    
+    
+    // MARK: - Pastels
     case pastelNormal    = "Pastels: Normal"
     case pastelDelicate  = "Pastels: Delicate"
     
-    // MARK: - Colori Vividi (Novità)
+    
+    
+    // MARK: - Vibrants
     case vibrantNormal   = "Vibrant: Normal"
     case vibrantDelicate = "Vibrant: Delicate"
     
-    // MARK: - Categorie Speciali
+    
+    
+    // MARK: - Specials
     case denim            = "Denim"
     case activewear       = "Activewear"
     case woolAndCashmere  = "Wool & Cashmere"
     case professionalCare = "Professional Care / Dry Clean"
     
+    
+    
     var id: String { rawValue }
+    
+    
+    
+    var displayName: String {
+        switch self {
+            case .whiteHeavyDuty:
+                "Heavy Whites"
+                
+            case .whiteNormal:
+                "Whites"
+                
+            case .whiteDelicate:
+                "Delicate Whites"
+                
+            case .darkNormal:
+                "Darks"
+                
+            case .darkDelicate:
+                "Delicate Darks"
+                
+            case .pastelNormal:
+                "Pastels"
+                
+            case .pastelDelicate:
+                "Delicate Pastels"
+                
+            case .vibrantNormal:
+                "Vibrants"
+                
+            case .vibrantDelicate:
+                "Delicate Vibrants"
+                
+            case .denim:
+                "Denim"
+                
+            case .activewear:
+                "Activewear"
+                
+            case .woolAndCashmere:
+                "Wool & Cashmere"
+                
+            case .professionalCare:
+                "Dry Clean"
+        }
+    }
+    
+    
     
     var description: String {
         switch self {

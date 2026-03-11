@@ -7,19 +7,19 @@
 
 import SwiftUI
 
-struct ModelCardView: Equatable, View {
+struct CardView<Content: View>: View {
     let title      : String
     let subheadline: String?
-    let imagePath  : String?
+    let content    : Content
     
     init(
         title      : String,
         subheadline: String? = nil,
-        imagePath  : String?
+        @ViewBuilder content: () -> Content
     ) {
         self.title       = title
         self.subheadline = subheadline
-        self.imagePath   = imagePath
+        self.content     = content()
     }
     
     var body: some View {
@@ -27,32 +27,22 @@ struct ModelCardView: Equatable, View {
             
             Color.secondary.opacity(0.15)
                 .aspectRatio(1, contentMode: .fit)
-                .overlay {
-                    
-                    
-                    if let path = self.imagePath {
-                        CachedImageView(imagePath: path)
-                        
-                    } else {
-                        Image(systemName: "hanger")
-                            .font(.largeTitle)
-                            .foregroundStyle(.secondary.opacity(0.4))
-                    }
+                .overlay(alignment: .leading) {
+                    content
                 }
                 .clipShape(Rectangle())
             
-            if self.imagePath != nil {
-                LinearGradient(
-                    stops: [
-                        .init(color: .clear, location: 0.0),
-                        .init(color: .black.opacity(0.6), location: 0.5),
-                        .init(color: .black.opacity(0.8), location: 1.0)
-                    ],
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
-                .frame(height: 80)
-            }
+            LinearGradient(
+                colors: [
+                    Color(UIColor.tertiaryLabel).opacity(0.4),
+                    Color(UIColor.tertiaryLabel).opacity(0.2),
+                    Color(UIColor.tertiaryLabel).opacity(0.1),
+                    .clear
+                ],
+                startPoint: .bottom,
+                endPoint  : UnitPoint(x: 0.5, y: 0.3)
+            )
+            .frame(height: 80)
             
             VStack(alignment: .leading, spacing: 4) {
                 Text(self.title)
@@ -71,17 +61,19 @@ struct ModelCardView: Equatable, View {
                         .lineLimit(1)
                 }
             }
-            .padding(12)
+            .padding(.bottom, 12)
+            .padding(.horizontal, 18)
             .frame(
                 maxWidth : .infinity,
                 alignment: .leading
             )
             .background(.clear)
         }
-        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-        .contentShape(.contextMenuPreview, RoundedRectangle(cornerRadius: 16, style: .continuous))
-#if os(macOS)
-        .shadow(color: .black.opacity(0.1), radius: 2, x: 0, y: 1)
-#endif
+        .clipShape(RoundedRectangle(cornerRadius: 26, style: .continuous))
+        .contentShape(.contextMenuPreview, RoundedRectangle(cornerRadius: 26, style: .continuous))
+        .overlay {
+            RoundedRectangle(cornerRadius: 26)
+                .stroke(.tertiary, lineWidth: 0.5)
+        }
     }
 }

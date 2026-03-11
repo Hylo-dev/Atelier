@@ -25,20 +25,29 @@ struct CareView: View {
     @State
     private var weather: WeatherState?
     
-    
+    private static let columns = [
+        GridItem(.adaptive(minimum: 150), spacing: 20)
+    ]
     
     var body: some View {
         
         ScrollView {
-            LazyVStack {
+            LazyVStack(spacing: 20) {
                 WeatherView(weather)
                 
-                LazyVGrid(columns: [GridItem(.adaptive(minimum: 150), spacing: 20)]) {
+                LazyVGrid(columns: Self.columns, spacing: 20) {
                     ForEach(laundrySessions, id: \.id) { item in
+                        let garmentsWithImage = item.garments.filter {
+                            $0.imagePath != nil
+                        }
                         
-                        cardLaundryView(item)
+                        MultipleCardView(
+                            title: item.bin.displayName,
+                            items: garmentsWithImage
+                        )
                     }
                 }
+                .padding(.horizontal, 16)
             }
             
         }
@@ -88,69 +97,6 @@ struct CareView: View {
     
     // MARK: - Views
     
-    
-    
-    @ViewBuilder
-    private func cardLaundryView(_ item: LaundrySession) -> some View {
-        ZStack(alignment: .bottomLeading) {
-            
-            Color.secondary.opacity(0.15)
-                .aspectRatio(1, contentMode: .fit)
-                .overlay {
-                    
-                    
-                    //                                if let path = self.imagePath {
-                    //                                    CachedImageView(imagePath: path)
-                    //
-                    //                                } else {
-                    Image(systemName: "hanger")
-                        .font(.largeTitle)
-                        .foregroundStyle(.secondary.opacity(0.4))
-                    //                                }
-                }
-                .clipShape(Rectangle())
-            
-            //                        if self.imagePath != nil {
-            LinearGradient(
-                stops: [
-                    .init(color: .clear, location: 0.0),
-                    .init(color: .black.opacity(0.6), location: 0.5),
-                    .init(color: .black.opacity(0.8), location: 1.0)
-                ],
-                startPoint: .top,
-                endPoint: .bottom
-            )
-            .frame(height: 80)
-            //                        }
-            
-            VStack(alignment: .leading, spacing: 4) {
-                Text(item.bin.rawValue)
-                    .font(.headline)
-                    .fontDesign(.rounded)
-                    .fontWeight(.semibold)
-                    .lineLimit(1)
-                    .foregroundStyle(.primary)
-                
-                //                            if let subhead = self.subheadline {
-                //                                Text(subhead)
-                //                                    .font(.caption)
-                //                                    .fontDesign(.rounded)
-                //                                    .fontWeight(.regular)
-                //                                    .foregroundStyle(.secondary)
-                //                                    .lineLimit(1)
-                //                            }
-            }
-            .padding(12)
-            .frame(
-                maxWidth : .infinity,
-                alignment: .leading
-            )
-            .background(.clear)
-        }
-        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-        .contentShape(.contextMenuPreview, RoundedRectangle(cornerRadius: 16, style: .continuous))
-        
-    }
 }
 
 #Preview {
