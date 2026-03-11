@@ -139,7 +139,7 @@ struct LiquidPagingView<T: Hashable, Content: View>: View {
     @State
     var progress: CGFloat = .zero
     
-    let items = ["pisnello", "culo", "palle", "Gratta"]
+    let items = ["prova", "prova1", "prova2", "prova3"]
     
     ZStack {
         

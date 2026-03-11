@@ -419,8 +419,8 @@ enum LaundryBin: String, Codable, CaseIterable, Identifiable {
     }
     
     var isDelicate: Bool {
-        self == .darkDelicate  ||
-        self == .pastelDelicate ||
+        self == .darkDelicate    ||
+        self == .pastelDelicate  ||
         self == .vibrantDelicate ||
         self == .whiteDelicate
     }
@@ -442,4 +442,20 @@ enum Program: String, Codable, CaseIterable {
     case mix      = "Mix"
     case delicate = "Delicate"
     case notWash  = "Not Wash"
+    
+    var displayName: String {
+        switch self {
+            case .standard:
+                "Standard"
+                
+            case .mix:
+                "Mix"
+                
+            case .delicate:
+                "Delicate"
+                
+            case .notWash:
+                "Not Wash"
+        }
+    }
 }

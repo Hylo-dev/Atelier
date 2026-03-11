@@ -32,7 +32,7 @@ struct ModelCardView: Equatable, View {
                 CachedImageView(imagePath: path)
                 
             } else {
-                Image(systemName: "hanger")
+                Image(systemName: "hanger") 
                     .font(.largeTitle)
                     .foregroundStyle(.tertiary)
                     .frame(

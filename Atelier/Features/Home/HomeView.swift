@@ -51,17 +51,18 @@ struct HomeView: View {
     @State
     private var categoryState: TabFilterState = TabFilterState()
     
-    @State
-    private var selection : String?  = "All"
-    
-    @State
-    private var progress : CGFloat  = .zero
     
     
     // MARK: - Season app bar state
     
     @State
     private var seasonState: TabFilterState = TabFilterState()
+    
+    
+    
+    // MARK: - Laundry bar state
+    @State
+    private var laundryState: TabFilterState = TabFilterState()
     
     
     var body: some View {
@@ -112,13 +113,15 @@ struct HomeView: View {
             }
         }
         .tabViewBottomAccessory(isEnabled: self.isTopAppBarVisible(self.selectedTab)) {
-            
             switch self.selectedTab {
                 case .wardrobe:
                     LiquidCategoryBarView(state: categoryState)
                     
                 case .outfitBuilder:
                     LiquidCategoryBarView(state: seasonState)
+                    
+                case .care:
+                    LiquidCategoryBarView(state: laundryState)
                     
                 default: EmptyView()
             }
@@ -178,7 +181,8 @@ struct HomeView: View {
             case .care:
                 CareView(
                     title          : title,
-                    laundrySessions: laundrySessions
+                    laundrySessions: laundrySessions,
+                    laundryState   : laundryState
                 )
                 
             case .search:
@@ -192,10 +196,13 @@ struct HomeView: View {
         
         switch tab {
             case .wardrobe:
-                self.categoryState.isVisible
+                categoryState.isVisible
                 
             case .outfitBuilder:
-                self.seasonState.isVisible
+                seasonState.isVisible
+                
+            case .care:
+                laundryState.isVisible
             
             default: false
         }
