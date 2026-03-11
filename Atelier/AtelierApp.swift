@@ -16,11 +16,7 @@ struct AtelierApp: App {
     
     init() {
         
-        let schema = Schema([
-            Garment.self,
-            Outfit.self,
-            LaundrySession.self
-        ])
+        let schema = Schema(versionedSchema: AtelierSchemaV1.self)
         
         let modelConfiguration = ModelConfiguration(
             schema              : schema,
@@ -36,7 +32,7 @@ struct AtelierApp: App {
             applianceManager = ApplianceManager(sharedModelContainer.mainContext)
             
         } catch {
-            print("Could not create ModelContainer Database: \(error)")
+            print("Could not create ModelContainer Database: \(error.localizedDescription)")
             fatalError("Exit")
         }
         

@@ -8,59 +8,64 @@
 import SwiftUI
 import SwiftData
 
-@Model
-final class Outfit {
-    @Attribute(.unique)
-    var id: UUID
+extension AtelierSchemaV1 {
     
-    var name: String
     
-    @Relationship(deleteRule: .nullify)
-    var garments: [Garment]
     
-    var lastWornDate     : Date?
-    var wearCount        : Int
-    var fullLookImagePath: String?
-    var season           : Season
-    var style            : GarmentStyle
-    
-    var isReadyToWear: Bool {
-        guard !self.garments.isEmpty else { return false }
+    @Model
+    final class Outfit {
+        @Attribute(.unique)
+        var id: UUID
         
-        return self.garments.allSatisfy { $0.state == .available }
-    }
-    
-    var stateWear: String {
-        isReadyToWear ? "Yes" : "No"
-    }
-    
-    var missingItemsCount: Int { self.garments.filter { $0.state != .available }.count }
-    
-    init(
-        name    : String,
-        garments: [Garment],
-        season  : Season,
-        fullLookImagePath: String?,
-        style   : GarmentStyle
-    ) {
-        self.id                = UUID()
-        self.name              = name
-        self.garments          = garments
-        self.season            = season
-        self.style             = style
-        self.lastWornDate      = nil
-        self.wearCount         = 0
-        self.fullLookImagePath = fullLookImagePath
-    }
-    
-    init() {
-        self.id                = UUID()
-        self.name              = ""
-        self.garments          = []
-        self.season            = .summer
-        self.style             = .casual
-        self.lastWornDate      = nil
-        self.wearCount         = 0
-        self.fullLookImagePath = nil
+        var name: String
+        
+        @Relationship(deleteRule: .nullify)
+        var garments: [Garment]
+        
+        var lastWornDate     : Date?
+        var wearCount        : Int
+        var fullLookImagePath: String?
+        var season           : Season
+        var style            : GarmentStyle
+        
+        var isReadyToWear: Bool {
+            guard !self.garments.isEmpty else { return false }
+            
+            return self.garments.allSatisfy { $0.state == .available }
+        }
+        
+        var stateWear: String {
+            isReadyToWear ? "Yes" : "No"
+        }
+        
+        var missingItemsCount: Int { self.garments.filter { $0.state != .available }.count }
+        
+        init(
+            name    : String,
+            garments: [Garment],
+            season  : Season,
+            fullLookImagePath: String?,
+            style   : GarmentStyle
+        ) {
+            self.id                = UUID()
+            self.name              = name
+            self.garments          = garments
+            self.season            = season
+            self.style             = style
+            self.lastWornDate      = nil
+            self.wearCount         = 0
+            self.fullLookImagePath = fullLookImagePath
+        }
+        
+        init() {
+            self.id                = UUID()
+            self.name              = ""
+            self.garments          = []
+            self.season            = .summer
+            self.style             = .casual
+            self.lastWornDate      = nil
+            self.wearCount         = 0
+            self.fullLookImagePath = nil
+        }
     }
 }
