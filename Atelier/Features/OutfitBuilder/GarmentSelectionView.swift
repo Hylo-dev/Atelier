@@ -56,10 +56,10 @@ struct GarmentSelectionView: View {
                         imagePath  : item.imagePath
                     )
                     
-                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    RoundedRectangle(cornerRadius: 26, style: .continuous)
                         .fill(isSelected ? Color.accentColor.opacity(0.15) : .clear)
                         .overlay(
-                            RoundedRectangle(cornerRadius: 16)
+                            RoundedRectangle(cornerRadius: 26)
                                 .stroke(isSelected ? Color.accentColor : Color.clear, lineWidth: 2)
                         )
                 }

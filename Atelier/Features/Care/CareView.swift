@@ -98,6 +98,13 @@ struct CareView: View {
                 }
             }
         }
+        .navigationDestination(for: LaundrySession.self) { selectedItem in
+//            InfoGarmentView(
+//                garmentManager: self.$garmentManager,
+//                item          : selectedItem
+//            )
+//            
+        }
         .onAppear {
             updateBins()
             updateFilteredGarments()
@@ -138,19 +145,18 @@ struct CareView: View {
                         $0.imagePath != nil
                     }
                     
-                    // var targetTemperature: Int
-                    // var suggestedProgram: Program
                     
                     MultipleCardView(
                         title: "\(item.targetTemperature)° \(item.suggestedProgram.displayName)",
                         items: garmentsWithImage
                     )
+                    .equatable()
+                    .id(item.id)
                 }
             }
             .padding(.horizontal, 16)
             
         }
-        .scrollIndicators(.hidden)
         .scrollIndicators(.hidden)
         .onScrollGeometryChange(for: CGFloat.self) { geometry in
             geometry.contentOffset.y

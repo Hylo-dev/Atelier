@@ -313,7 +313,7 @@ struct GarmentContextCard: View {
         } label: {
             Label(
                 washingState ? "Mark as Clean" : "Move to Wash",
-                systemImage: washingState ? "sparkle" : "washer.fill"
+                systemImage: washingState ? "sparkle" : "washer"
             )
         }
 //        .disabled(!item.state.readyToWash)
@@ -331,17 +331,29 @@ struct GarmentContextCard: View {
         .disabled(!item.state.readyToLent)
         
         
+        
         Divider()
+        
+        
+        
+        Button {
+            item.wearCount += 1
+            
+        } label: {
+            Label("Log wear", systemImage: "checkmark.seal")
+        }
         
         
         Button {
             
         } label: {
-            Label("Add to Outfit", systemImage: "tshirt.fill")
+            Label("Add to Outfit", systemImage: "tshirt")
         }
         
         
+        
         Divider()
+        
         
         
         Button {

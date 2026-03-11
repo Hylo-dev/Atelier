@@ -57,7 +57,7 @@ struct MultipleCardView: Equatable, View {
                 .padding(.horizontal, 17.5)
                 
             } else {
-                Image(systemName: "washer.fill")
+                Image(systemName: "washer")
                     .font(.largeTitle)
                     .foregroundStyle(.tertiary)
                     .frame(
