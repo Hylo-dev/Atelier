@@ -114,7 +114,7 @@ struct OutfitView: View {
         .sensoryFeedback(.success, trigger: isDeleted)
         .onAppear {
             if self.outfitManager == nil {
-                self.outfitManager = OutfitManager(context: self.context)
+                self.outfitManager = OutfitManager(context)
             }
             
             self.updateSeason()
@@ -293,7 +293,7 @@ struct OutfitContextCard: View {
         }
         
         Button(role: .destructive) {
-            self.manager?.deleteOutfit(item)
+            self.manager?.delete(item)
             self.taskDeletedCompleted.toggle()
             
         } label: {

@@ -116,7 +116,7 @@ struct InventoryView: View {
         }
         .onAppear {
             if self.garmentManager == nil {
-                self.garmentManager = GarmentManager(context: self.context)
+                self.garmentManager = GarmentManager(context)
             }
             
             
@@ -308,7 +308,7 @@ struct GarmentContextCard: View {
         
         Button {
             item.state = washingState ? .drying : .washing
-            self.manager?.updateGarment()
+            self.manager?.update()
             
         } label: {
             Label(
@@ -320,7 +320,7 @@ struct GarmentContextCard: View {
         
         Button {
             item.state = loanState ? .available : .onLoan
-            self.manager?.updateGarment()
+            self.manager?.update()
             
         } label: {
             Label(
@@ -353,7 +353,7 @@ struct GarmentContextCard: View {
         
         Button(role: .destructive) {
             isDeleted.toggle()
-            manager?.deleteGarment(item)
+            manager?.delete(item)
             
         } label: {
             Label("Delete", systemImage: "trash")

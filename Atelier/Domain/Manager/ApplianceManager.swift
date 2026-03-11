@@ -11,12 +11,36 @@ import Foundation
 
 @MainActor
 @Observable
-final class ApplianceManager {
+final class ApplianceManager: Manager {
     var context: ModelContext
+
+    
     
     init(_ context: ModelContext) {
         self.context = context
     }
+    
+    
+    
+    func insert(_ element: LaundrySession) {
+        context.insert(element)
+        save()
+    }
+    
+    
+    
+    func update() {
+        save()
+    }
+    
+    
+    
+    func delete(_ element: LaundrySession) {
+        context.delete(element)
+        save()
+    }
+    
+    
     
     func unassignGarment(_ garment: Garment) {
         
@@ -36,14 +60,21 @@ final class ApplianceManager {
         }
     }
     
+    
+    
     func processUnassignedGarments(
-        _ garments       : [Garment],
+        _ garments: [Garment],
         _ laundrySessions: [LaundrySession]
     ) {
-        let unassignedGarments = garments.filter { !$0.isBinAssigned && $0.isReadyToWash }
+        
+        let unassignedGarments = garments.filter {
+            !$0.isBinAssigned && $0.isReadyToWash
+        }
         guard !unassignedGarments.isEmpty else { return }
         
         var activeSessions = laundrySessions
+        let engine = LaundryEngine()
+        
         for garment in unassignedGarments {
             
             if garment.washingSymbols.isEmpty && garment.composition.isEmpty {
@@ -51,65 +82,40 @@ final class ApplianceManager {
                 continue
             }
             
-            // 1. MACRO-CESTO base (deciso dalla logica in Garment: A, B o C)
-            let targetBin = garment.suggestedLaundryBin
+            let decision = engine.process(garment)
             
-            // 2. ESTRAIAMO IL PROFILO DEL SINGOLO CAPO
-            // Temperatura massima tollerata dal capo
-            let idealTemp = garment.washingSymbols
-                .compactMap { $0.maxWashingTemperature }
-                .min() ?? 40
-            
-            // Agitazione / Delicatezza
-            let levels = garment.washingSymbols.map { $0.agitationLevel }
-            var idealAgitation: WashingAgitation = .normal
-            
-            if levels.contains(.gentle) {
-                idealAgitation = .gentle
-                
-            } else if levels.contains(.reduced) {
-                idealAgitation = .reduced
-            }
-            
-            let suggestedProgram: Program = idealAgitation.program
-            
-            // 3. SMISTAMENTO RIGIDO
-            // Cerchiamo una sessione che abbia ESATTAMENTE gli stessi parametri
             if let exactSession = activeSessions.first(where: {
                 $0.status == .planned &&
-                $0.bin == targetBin &&
-                $0.targetTemperature == idealTemp &&
-                $0.suggestedProgram == suggestedProgram
+                $0.bin == decision.bin &&
+                $0.targetTemperature == decision.targetTemperature &&
+                $0.suggestedProgram == decision.suggestedProgram
             }) {
-                // Il cesto perfetto esiste già, aggiungiamo il capo qui
                 exactSession.garments.append(garment)
                 exactSession.updateWarnings()
                 
             } else {
-                // Nessun cesto identico trovato? Creiamo un NUOVO cesto specializzato
                 let newSession = LaundrySession(
-                    bin: targetBin,
-                    targetTemperature: idealTemp,
-                    suggestedProgram: suggestedProgram,
+                    bin: decision.bin,
+                    targetTemperature: decision.targetTemperature,
+                    suggestedProgram: decision.suggestedProgram,
                     garments: [garment]
                 )
                 
                 newSession.updateWarnings()
                 activeSessions.append(newSession)
-                
                 context.insert(newSession)
             }
             
-            // Segniamo il capo come processato
             garment.isBinAssigned = true
-            garment.state         = .toWash
+            garment.state = .toWash
         }
         
         save()
     }
     
+    
     @inline(__always)
-    private func save() {
+    internal func save() {
         do {
             try context.save()
             

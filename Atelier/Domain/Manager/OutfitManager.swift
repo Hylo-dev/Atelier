@@ -10,33 +10,33 @@ import SwiftData
 
 @Observable
 @MainActor
-final class OutfitManager {
+final class OutfitManager: Manager {
     var context: ModelContext
     
-    init(context: ModelContext) {
+    init(_ context: ModelContext) {
         self.context = context
     }
     
     @inline(__always)
-    func createOutfit(_ outfit: Outfit) {
-        context.insert(outfit)
+    func insert(_ element: Outfit) {
+        context.insert(element)
         
         save()
     }
     
     @inline(__always)
-    func updateOutfit() {
+    func update() {
         save()
     }
     
     @inline(__always)
-    func deleteOutfit(_ outfit: Outfit) {
-        self.context.delete(outfit)
+    func delete(_ element: Outfit) {
+        self.context.delete(element)
         save()
     }
     
     @inline(__always)
-    private func save() {
+    internal func save() {
         try? context.save()
     }
 }

@@ -312,7 +312,7 @@ struct OutfitEditorView: View {
         )
         
         if let manager = self.outfitManager {
-            manager.createOutfit(newOutfit)
+            manager.insert(newOutfit)
             
         } else { print("Outfit manager is nil") }
         
@@ -330,7 +330,7 @@ struct OutfitEditorView: View {
         
         
         if let manager = self.outfitManager {
-            manager.updateOutfit()
+            manager.update()
             
         } else { print("ERROR: Manager is not available") }
         

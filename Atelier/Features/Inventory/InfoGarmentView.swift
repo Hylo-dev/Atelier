@@ -91,7 +91,7 @@ struct InfoGarmentView: View {
             
             Button("Delete", role: .destructive) {
                 withAnimation {
-                    self.garmentManager?.deleteGarment(self.item)
+                    self.garmentManager?.delete(self.item)
                     isDeleted.toggle()
                 }
                 

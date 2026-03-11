@@ -569,7 +569,7 @@ struct GarmentEditorView: View {
         )
                 
         if let manager = self.garmentManager {
-            manager.addGarment(newGarment)
+            manager.insert(newGarment)
             
         } else { print("Manager is nil") }
         
@@ -600,7 +600,7 @@ struct GarmentEditorView: View {
         self.item!.imagePath      = self.imagePath
         
         if let manager = self.garmentManager {
-            manager.updateGarment()
+            manager.update()
             
         } else { print("Manager is nil") }
     }
