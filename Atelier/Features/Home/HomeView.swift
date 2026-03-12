@@ -63,12 +63,13 @@ struct HomeView: View {
     // MARK: - Laundry bar state
     @State
     private var laundryState: TabFilterState = TabFilterState()
-    
-    
+	
+	
+
+	
     var body: some View {
-//        let _ = Self._printChanges()
-        
         if sizeClass == .regular {
+			
             self.sidebarLayout
                 .onAppear {
                     applianceManager.processUnassignedGarments(
@@ -99,16 +100,15 @@ struct HomeView: View {
                     value      : tab,
                     role       : tab.role
                 ) {
-                    NavigationStack {
-                        self.destinationView(
-                            for: tab,
-                            tab.title
-                        )
-                        .onAppear {
-                            self.selectedTab = tab
-                        }
-                    }
-                    
+					NavigationStack {
+						self.destinationView(
+							for: tab,
+							tab.title
+						)
+						.onAppear {
+							self.selectedTab = tab
+						}
+					}
                 }
             }
         }
@@ -151,11 +151,10 @@ struct HomeView: View {
                     for: selectedTab,
                     "Atelier"
                 )
-                
             } else {
                 ContentUnavailableView("Select view", systemImage: "arrow.left")
             }
-        }
+		}
     }
     
     @ViewBuilder
@@ -164,31 +163,34 @@ struct HomeView: View {
         _   title: String
     ) -> some View {
         switch tab {
-            case .wardrobe:
-                InventoryView(
-                    manager      : self.manager,
-                    categoryState: self.categoryState,
-                    title        : title
-                )
-            
-            case .outfitBuilder:
-                OutfitView(
-                    manager     : self.manager,
-                    seasonsState: self.seasonState,
-                    title       : title
-                )
-            
-            case .care:
-                CareView(
-                    title          : title,
-                    laundrySessions: laundrySessions,
-                    laundryState   : laundryState
-                )
-                
-            case .search:
-                EmptyView()
+		case .wardrobe:
+			InventoryView(
+				manager      : self.manager,
+				categoryState: self.categoryState,
+				title        : title
+			)
+		
+		case .outfitBuilder:
+			OutfitView(
+				manager     : self.manager,
+				seasonsState: self.seasonState,
+				title       : title
+			)
+		
+		case .care:
+			CareView(
+				title          : title,
+				laundrySessions: laundrySessions,
+				laundryState   : laundryState
+			)
+			
+		case .search:
+			SearchView(
+				title: title
+			)
         }
     }
+	
     
     // MARK: - Handlers
     
@@ -203,7 +205,7 @@ struct HomeView: View {
                 
             case .care:
                 laundryState.isVisible
-            
+			
             default: false
         }
         
