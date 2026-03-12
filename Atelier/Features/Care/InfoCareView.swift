@@ -9,6 +9,8 @@ import SwiftUI
 
 struct InfoCareView: View {
     
+    
+    
     @Environment(ApplianceManager.self)
     private var manager
     
@@ -16,9 +18,21 @@ struct InfoCareView: View {
     
     
     
+    // MARK: - State variables
+    
+    
+    
+    @State
+    private var isSelectionVisible: Bool
+    
+    
+    
     init(_ item: LaundrySession) {
-        self.item = item
+        self.item               = item
+        self.isSelectionVisible = false
     }
+    
+    
     
     var body: some View {
         
@@ -51,17 +65,27 @@ struct InfoCareView: View {
                     Label("Edit", systemImage: "pencil")
                 }
             }
+            
+            ToolbarSpacer()
                         
-            ToolbarItem {
+            ToolbarItem(placement: .topBarTrailing) {
                 Button {
-                    // TODO: Select garments for washing
+                    isSelectionVisible = true
                     
                 } label: {
                     Label("Wash", systemImage: "washer.fill")
                 }
             }
         }
-        
+        .sheet(isPresented: $isSelectionVisible) {
+            
+            NavigationStack {
+                WashGarmentView(
+                    garments: item.garments
+                )
+            }
+            
+        }
     }
     
     
@@ -170,5 +194,11 @@ struct InfoCareView: View {
         }
         
     }
+    
+    
+    
+    // MARK: - Handlers
+    
+    
     
 }

@@ -73,10 +73,7 @@ struct InfoGarmentView: View {
                 }
             }
         }
-        .sheet(
-            isPresented: self.$isModifySheetVisible,
-            onDismiss: { self.isModifySheetVisible = false }
-        ) {
+        .sheet(isPresented: self.$isModifySheetVisible) {
             NavigationStack {
                 GarmentEditorView(
                     garmentManager: self.$garmentManager,
