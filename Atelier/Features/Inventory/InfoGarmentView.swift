@@ -142,11 +142,11 @@ struct InfoGarmentView: View {
     private var sectionStyleAndCategory: some View {
         
         SectionList(titleKey: "Details") {
-            RowInfo(title: "Type", value: self.item.category.label)
+            RowInfoView(title: "Type", value: self.item.category.label)
             
-            RowInfo(title: "Model", value: self.item.subCategory.rawValue)
+            RowInfoView(title: "Model", value: self.item.subCategory.rawValue)
             
-            RowInfo(title: "Season", value: self.item.season.rawValue)
+            RowInfoView(title: "Season", value: self.item.season.rawValue)
         }
     }
     
@@ -157,7 +157,7 @@ struct InfoGarmentView: View {
         SectionList(titleKey: "Composition") {
             
             ForEach(self.item.composition, id: \.id) { item in
-                CompositionRow(
+                CompositionRowView(
                     fabricName: item.fabric.rawValue,
                     percentage: item.percentual,
                     color     : Color(hex: self.item.color)
@@ -175,12 +175,12 @@ struct InfoGarmentView: View {
             rowWashSymbols
             
             // Stats
-            RowInfo(
+            RowInfoView(
                 title: "Last Washed",
                 value: self.item.lastWashingDate?.formatted(date: .abbreviated, time: .omitted) ?? "Never"
             )
             
-            RowInfo(
+            RowInfoView(
                 title: "Wear Count",
                 value: self.item.wearCount == 0 ? "Unworn" : "\(self.item.wearCount) times"
             )

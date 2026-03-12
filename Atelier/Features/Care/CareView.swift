@@ -10,33 +10,48 @@ import CoreLocation
 import SwiftData
 
 struct CareView: View {
+    
+    
+    
+    // MARK: - Struct attributes
         
     let title: String
     
     var laundrySessions: [LaundrySession]
     
+    @Bindable
+    var laundryState: TabFilterState
     
+    
+    
+    // MARK: - private managers
     
     let weatherService = WeatherService()
     
     @Environment(ApplianceManager.self)
     private var manager
-    
-    @Bindable
-    var laundryState: TabFilterState
-    
+        
     @State
     private var weather: WeatherState?
+    
+    
+    
+    // MARK: - Private state variables
     
     @State
     private var groupedBins: [String: [LaundrySession]] = [:]
     
+    @State
+    private var garmentsWithImage: [UUID: [Garment]] = [:]
+        
     @State
     private var isWidgetVisible: Bool = true
     
     private static let columns = [
         GridItem(.adaptive(minimum: 150), spacing: 20)
     ]
+    
+    
     
     var body: some View {
         
@@ -99,11 +114,7 @@ struct CareView: View {
             }
         }
         .navigationDestination(for: LaundrySession.self) { selectedItem in
-//            InfoGarmentView(
-//                garmentManager: self.$garmentManager,
-//                item          : selectedItem
-//            )
-//            
+            InfoCareView(selectedItem)
         }
         .onAppear {
             updateBins()
@@ -141,17 +152,11 @@ struct CareView: View {
         ScrollView {
             LazyVGrid(columns: Self.columns, spacing: 20) {
                 ForEach(groupedBins[type] ?? [], id: \.id) { item in
-                    let garmentsWithImage = item.garments.filter {
-                        $0.imagePath != nil
-                    }
                     
-                    
-                    MultipleCardView(
-                        title: "\(item.targetTemperature)° \(item.suggestedProgram.displayName)",
-                        items: garmentsWithImage
+                    ItemCareView(
+                        item    : item,
+                        garments: garmentsWithImage[item.id] ?? []
                     )
-                    .equatable()
-                    .id(item.id)
                 }
             }
             .padding(.horizontal, 16)
@@ -190,11 +195,6 @@ struct CareView: View {
     
     @inline(__always)
     private func updateFilteredGarments() {
-//        self.visibleGarments = FilterGarmentConfig.filterGarments(
-//            allGarments: self.garments,
-//            config     : self.filter
-//        )
-        
         var newGrouped: [String: [LaundrySession]] = [:]
         newGrouped["All"] = laundrySessions
         
@@ -208,6 +208,15 @@ struct CareView: View {
         }
         
         self.groupedBins = newGrouped
+        
+        var newGarmentsWithImage: [UUID: [Garment]] = [:]
+        for session in self.laundrySessions {
+            newGarmentsWithImage[session.id] = session.garments.filter {
+                $0.imagePath != nil
+            }
+        }
+        
+        self.garmentsWithImage = newGarmentsWithImage
     }
     
     
@@ -226,6 +235,25 @@ struct CareView: View {
         } else {
             print("No changes in bins, skipping update to save cycles")
         }
+    }
+}
+
+fileprivate struct ItemCareView: View {
+    
+    let item    : LaundrySession
+    let garments: [Garment]
+    
+    var body: some View {
+        
+        NavigationLink(value: item) {
+            MultipleCardView(
+                title: "\(item.targetTemperature)° \(item.suggestedProgram.displayName)",
+                items: garments
+            )
+            .equatable()
+            .id(item.id)
+        }
+        .buttonStyle(.plain)
     }
 }
 

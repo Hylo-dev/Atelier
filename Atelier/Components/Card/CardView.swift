@@ -10,15 +10,18 @@ import SwiftUI
 struct CardView<Content: View>: View {
     let title      : String
     let subheadline: String?
+    let gradient   : Color
     let content    : Content
     
     init(
         title      : String,
         subheadline: String? = nil,
+        gradient   : Color   = Color(UIColor.tertiaryLabel),
         @ViewBuilder content: () -> Content
     ) {
         self.title       = title
         self.subheadline = subheadline
+        self.gradient    = gradient
         self.content     = content()
     }
     
@@ -34,9 +37,11 @@ struct CardView<Content: View>: View {
             
             LinearGradient(
                 colors: [
-                    Color(UIColor.tertiaryLabel).opacity(0.4),
-                    Color(UIColor.tertiaryLabel).opacity(0.2),
-                    Color(UIColor.tertiaryLabel).opacity(0.1),
+                    gradient,
+                    gradient.opacity(0.8),
+                    gradient.opacity(0.6),
+                    gradient.opacity(0.3),
+                    gradient.opacity(0.1),
                     .clear
                 ],
                 startPoint: .bottom,
@@ -55,7 +60,6 @@ struct CardView<Content: View>: View {
                 if let subhead = self.subheadline {
                     Text(subhead)
                         .font(.caption)
-                        .fontDesign(.rounded)
                         .fontWeight(.regular)
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
@@ -73,7 +77,7 @@ struct CardView<Content: View>: View {
         .contentShape(.contextMenuPreview, RoundedRectangle(cornerRadius: 26, style: .continuous))
         .overlay {
             RoundedRectangle(cornerRadius: 26)
-                .stroke(.tertiary, lineWidth: 0.5)
+                .stroke(.tertiary, lineWidth: 0.75)
         }
     }
 }

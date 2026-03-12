@@ -7,28 +7,9 @@
 
 import SwiftUI
 
-struct RowInfo: View {
-    let title: String
-    let value: String
-    
-    var body: some View {
-        HStack {
-            Text(title)
-                .fontWeight(.medium)
-                .fontDesign(.rounded)
-                .foregroundStyle(.secondary)
-            
-            Spacer()
-            
-            Text(value)
-                .fontWeight(.medium)
-                .fontDesign(.rounded)
-                .foregroundStyle(.primary)
-        }
-    }
-}
 
-struct CompositionRow: View {
+
+struct CompositionRowView: View {
     let fabricName: String
     let percentage: Double
     let color: Color

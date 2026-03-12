@@ -133,14 +133,14 @@ struct InfoOutfitView: View {
     private var sectionCare: some View {
         SectionList(titleKey: "Care & Usage") {
             
-            RowInfo(
+            RowInfoView(
                 title: "Wear availability",
                 value: self.outfit.stateWear
             )
             
             
             if self.outfit.missingItemsCount > 0 {
-                RowInfo(
+                RowInfoView(
                     title: "Missing garments",
                     value: "\(self.outfit.missingItemsCount) pieces"
                 )
@@ -148,7 +148,7 @@ struct InfoOutfitView: View {
             
             
             if self.outfit.wearCount > 0 {
-                RowInfo(
+                RowInfoView(
                     title: "Wear Count",
                     value: "\(self.outfit.wearCount) times"
                 )
@@ -164,8 +164,8 @@ struct InfoOutfitView: View {
     private var sectionStyleAndCategory: some View {
         SectionList(titleKey: "Details") {
             
-            RowInfo(title: "Season", value: self.outfit.season.rawValue)
-            RowInfo(title: "Style", value: self.outfit.style.rawValue)
+            RowInfoView(title: "Season", value: self.outfit.season.rawValue)
+            RowInfoView(title: "Style", value: self.outfit.style.rawValue)
             
             self.garmentsLazyRow
         }

@@ -25,6 +25,7 @@ extension AtelierSchemaV1 {
         var targetTemperature: Int
         var suggestedProgram: Program
         
+        var laundrySymbols: Set<LaundrySymbol>
         
         var warnings: [String]
         
@@ -32,7 +33,8 @@ extension AtelierSchemaV1 {
             bin              : LaundryBin,
             targetTemperature: Int,
             suggestedProgram : Program,
-            garments         : [Garment] = []
+            garments         : [Garment] = [],
+            laundrySymbols   : Set<LaundrySymbol>
         ) {
             self.id                = UUID()
             self.dateCreated       = .now
@@ -43,6 +45,7 @@ extension AtelierSchemaV1 {
             
             self.targetTemperature = targetTemperature
             self.suggestedProgram  = suggestedProgram
+            self.laundrySymbols    = laundrySymbols
         }
         
         func updateWarnings() {
