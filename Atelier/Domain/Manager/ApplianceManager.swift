@@ -91,14 +91,16 @@ final class ApplianceManager: Manager {
                 $0.suggestedProgram == decision.suggestedProgram
             }) {
                 exactSession.garments.append(garment)
+                exactSession.laundrySymbols.formUnion(garment.washingSymbols)
                 exactSession.updateWarnings()
                 
             } else {
                 let newSession = LaundrySession(
-                    bin: decision.bin,
+                    bin              : decision.bin,
                     targetTemperature: decision.targetTemperature,
-                    suggestedProgram: decision.suggestedProgram,
-                    garments: [garment]
+                    suggestedProgram : decision.suggestedProgram,
+                    garments         : [garment],
+                    laundrySymbols   : Set(garment.washingSymbols)
                 )
                 
                 newSession.updateWarnings()

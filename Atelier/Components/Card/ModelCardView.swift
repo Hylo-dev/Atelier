@@ -26,7 +26,8 @@ struct ModelCardView: Equatable, View {
         
         CardView(
             title      : self.title,
-            subheadline: self.subheadline
+            subheadline: self.subheadline,
+            gradient   : .black
         ) {
             if let path = self.imagePath {
                 CachedImageView(imagePath: path)
