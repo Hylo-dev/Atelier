@@ -15,6 +15,9 @@ struct InventoryView: View {
     @Environment(\.modelContext)
     private var context
     
+    @Environment(GarmentManager.self)
+    private var garmentManager: GarmentManager
+    
     
     
     // MARK: - Parameters Val
@@ -37,10 +40,7 @@ struct InventoryView: View {
     )
     private var garments: [Garment]
     
-    @State
-    private var garmentManager: GarmentManager?
-    
-    
+        
     
     // MARK: - Add Garment Sheet values
     
@@ -127,9 +127,6 @@ struct InventoryView: View {
             updateData()
         }
         .onAppear {
-            if self.garmentManager == nil {
-                self.garmentManager = GarmentManager(context)
-            }
             updateData()
         }
         .toolbar {
@@ -155,30 +152,24 @@ struct InventoryView: View {
             }
         }
         .navigationDestination(for: Garment.self) { selectedItem in
-            InfoGarmentView(
-                garmentManager: self.$garmentManager,
-                item          : selectedItem
-            )
-            
+            InfoGarmentView(item: selectedItem)
+        
         }
         .sheet(isPresented: self.$isAddGarmentSheetVisible) {
             NavigationStack {
-                GarmentEditorView(garmentManager: self.$garmentManager)
+                GarmentEditorView()
             }
         }
         .sheet(item: self.$selectedItem) { germent in
             
             NavigationStack {
-                GarmentEditorView(
-                    garmentManager: self.$garmentManager,
-                    garment       : germent
-                )
+                GarmentEditorView(garment: germent)
             }
         }
         .sheet(isPresented: self.$isFilterSheetVisible) {
             FilterGarmentView(
                 filters: self.$filter,
-                brands : .constant(garmentManager?.availableBrands ?? [])
+                brands : .constant(garmentManager.availableBrands)
             )
         }
     }
@@ -190,7 +181,7 @@ struct InventoryView: View {
         ScrollView(.vertical) {
             
             LazyVGrid(columns: Self.columns, spacing: 20) {
-                ForEach(garmentManager?.groupedGarments[category] ?? [], id: \.id) { item in
+                ForEach(garmentManager.groupedGarments[category] ?? [], id: \.id) { item in
                     
                     GarmentContextCard(
                         item        : item,
@@ -214,11 +205,10 @@ struct InventoryView: View {
     
     @inline(__always)
     private func updateData() {
-        garmentManager?.processGarments(garments, with: filter)
+        garmentManager.processGarments(garments, with: filter)
         
-        if let newCategories = garmentManager?.availableCategories,
-           self.categoryState.items != newCategories {
-            self.categoryState.items = newCategories
+        if self.categoryState.items != garmentManager.availableCategories {
+            self.categoryState.items = garmentManager.availableCategories
         }
     }
 }
@@ -226,7 +216,7 @@ struct InventoryView: View {
 fileprivate
 struct GarmentContextCard: View, Equatable {
     let item   : Garment
-    let manager: GarmentManager?
+    let manager: GarmentManager
     
     @Binding
     var selectedItem: Garment?
@@ -266,7 +256,7 @@ struct GarmentContextCard: View, Equatable {
         
         Button {
             item.state = washingState ? .drying : .washing
-            self.manager?.update()
+            self.manager.update()
             
         } label: {
             Label(
@@ -278,7 +268,7 @@ struct GarmentContextCard: View, Equatable {
         
         Button {
             item.state = loanState ? .available : .onLoan
-            self.manager?.update()
+            self.manager.update()
             
         } label: {
             Label(
@@ -323,7 +313,7 @@ struct GarmentContextCard: View, Equatable {
         
         Button(role: .destructive) {
             isDeleted.toggle()
-            manager?.delete(item)
+            manager.delete(item)
             
         } label: {
             Label("Delete", systemImage: "trash")

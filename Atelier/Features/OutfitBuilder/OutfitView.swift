@@ -10,13 +10,11 @@ import SwiftData
 
 struct OutfitView: View {
     
-    
-    
     // MARK: - Param values
     
     @Bindable
     var manager: CaptureManager
-        
+    
     @Bindable
     var seasonsState: TabFilterState
     
@@ -39,24 +37,14 @@ struct OutfitView: View {
     @Environment(\.modelContext)
     private var context
     
+    @Environment(OutfitManager.self)
+    private var outfitManager: OutfitManager
+    
     @Query(
         sort : \Outfit.lastWornDate,
         order: .reverse
     )
     private var outfits: [Outfit]
-    
-    @State
-    private var outfitManager: OutfitManager?
-    
-    
-    
-    // MARK: - Visibles Outfits
-    
-    @State
-    private var visibleOutfits: [Outfit] = []
-    
-    @State
-    private var groupedOutfits: [String : [Outfit]] = [:]
     
     
     
@@ -83,9 +71,26 @@ struct OutfitView: View {
         GridItem(.adaptive(minimum: 150), spacing: 20)
     ]
     
-    var body: some View {
-//        let _ = Self._printChanges()
+    
+    
+    // MARK: - Refresh Trigger
+    
+    private var outfitsUpdateTrigger: Int {
+        var hasher = Hasher()
         
+        for outfit in outfits {
+            hasher.combine(outfit.id)
+            hasher.combine(outfit.name)
+            hasher.combine(outfit.season.title)
+            hasher.combine(outfit.fullLookImagePath)
+            hasher.combine(outfit.garments.count)
+            hasher.combine(outfit.lastWornDate)
+        }
+        
+        return hasher.finalize()
+    }
+    
+    var body: some View {
         Group {
             if self.outfits.isEmpty {
                 ContentUnavailableView(
@@ -104,31 +109,25 @@ struct OutfitView: View {
                         }
                     },
                     items      : self.seasonsState.items,
-                    isEnabled  : self.seasonsState.isVisible,
+                    isEnabled  : self.seasonsState.isVisible
                 ) { season in
                     self.scrollableGrid(for: season)
                 }
                 .ignoresSafeArea(.container, edges: .top)
+                
             }
         }
         .sensoryFeedback(.success, trigger: isDeleted)
         .onAppear {
-            if self.outfitManager == nil {
-                self.outfitManager = OutfitManager(context)
-            }
-            
-            self.updateSeason()
-            self.updateFilteredOutfits()
+            self.updateData()
         }
-        .onChange(of: self.outfits) {
-            self.updateSeason()
-            self.updateFilteredOutfits()
+        .onChange(of: outfitsUpdateTrigger) {
+            self.updateData()
         }
         .onChange(of: self.filter) {
-            self.updateFilteredOutfits()
+            self.updateData()
         }
         .toolbar {
-            
             ToolbarItem(placement: .title) {
                 Text(String(repeating: " ", count: 50))
                     .overlay(alignment: .leading) {
@@ -137,7 +136,7 @@ struct OutfitView: View {
                             .fontWeight(.bold)
                     }
             }
-                        
+            
             ToolbarItem(placement: .topBarTrailing) {
                 Button("Filter", systemImage: "line.3.horizontal.decrease") {
                     self.isFilterSheetVisible = true
@@ -149,32 +148,22 @@ struct OutfitView: View {
             }
         }
         .navigationDestination(for: Outfit.self) { selectedItem in
-            InfoOutfitView(
-                manager: self.$outfitManager,
-                outfit : selectedItem
-            )
-            
+            InfoOutfitView(outfit: selectedItem)
         }
         .sheet(isPresented: self.$isAddOutfitSheetVisible) {
             NavigationStack {
-                OutfitEditorView(outfitManager: self.$outfitManager)
+                OutfitEditorView()
             }
         }
         .sheet(item: self.$selectedItem) { outfit in
-            
             NavigationStack {
-                OutfitEditorView(
-                    outfitManager: self.$outfitManager,
-                    outfit       : outfit
-                )
+                OutfitEditorView(outfit: outfit)
             }
         }
         .sheet(isPresented: self.$isFilterSheetVisible) {
             FilterOutfitView(filter: self.$filter)
         }
-        
     }
-    
     
     
     // MARK: - Views
@@ -184,72 +173,41 @@ struct OutfitView: View {
         ScrollView(.vertical) {
             LazyVGrid(columns: Self.columns, spacing: 20) {
                 
-                ForEach(self.groupedOutfits[season] ?? []) { item in
+                ForEach(self.outfitManager.groupedOutfits[season] ?? [], id: \.id) { item in
                     
                     let subTitle = item.garments.count <= 1 ?
-                                   "Incomplete outfit" : nil
+                    "Incomplete outfit" : nil
                     OutfitContextCard(
                         outfit       : item,
                         manager      : self.outfitManager,
                         subTitleAlert: subTitle,
                         selectedItem : self.$selectedItem
                     )
+                    .equatable()
+                    .id(item.id)
                 }
             }
             .padding(.horizontal, 16)
         }
         .contentMargins(.top, 150, for: .scrollContent)
         .scrollIndicators(.hidden)
-        
-        
     }
-        
     
     
     // MARK: - Handlers
     
-    
     @inline(__always)
-    private func updateSeason() {
-        let uniqueSeasons = Set(self.outfits.lazy.map {
-            $0.season.title
-        })
-        let newSeasons = ["All"] + uniqueSeasons.sorted()
+    private func updateData() {
+        self.outfitManager.processOutfits(self.outfits, with: self.filter)
         
-        if self.seasonsState.items != newSeasons {
-            print("Diff found: Updating season pointer")
-            self.seasonsState.items = newSeasons
-            
-        } else {
-            print("No changes season, skipping update to save cycles")
+        if self.seasonsState.items != outfitManager.availableSeasons {
+            self.seasonsState.items = outfitManager.availableSeasons
         }
-    }
-    
-    @inline(__always)
-    private func updateFilteredOutfits() {
-        self.visibleOutfits = FilterOutfitConfig.filterOutfits(
-            allOutfits : self.outfits,
-            config     : self.filter
-        )
-        
-        var newGrouped: [String: [Outfit]] = [:]
-        newGrouped["All"] = self.visibleOutfits
-        
-        let groupedByCategory = Dictionary(
-            grouping: self.visibleOutfits,
-            by: { $0.season.title }
-        )
-        
-        for (category, items) in groupedByCategory {
-            newGrouped[category] = items
-        }
-        
-        self.groupedOutfits = newGrouped
     }
 }
 
 fileprivate
-struct OutfitContextCard: View {
+struct OutfitContextCard: View, Equatable {
     let outfit       : Outfit
     let manager      : OutfitManager?
     let subTitleAlert: String?
@@ -257,11 +215,17 @@ struct OutfitContextCard: View {
     @Binding
     var selectedItem: Outfit?
     
-    
-    
     // MARK: - Deleted target
     @State
     private var taskDeletedCompleted: Bool = false
+    
+    static func == (lhs: OutfitContextCard, rhs: OutfitContextCard) -> Bool {
+        return lhs.outfit.id == rhs.outfit.id &&
+        lhs.outfit.name == rhs.outfit.name &&
+        lhs.outfit.fullLookImagePath == rhs.outfit.fullLookImagePath &&
+        lhs.subTitleAlert == rhs.subTitleAlert &&
+        lhs.outfit.garments.count == rhs.outfit.garments.count
+    }
     
     var body: some View {
         NavigationLink(value: self.outfit) {
@@ -270,7 +234,6 @@ struct OutfitContextCard: View {
                 subheadline: self.subTitleAlert,
                 imagePath  : self.outfit.fullLookImagePath
             )
-            .equatable()
             .opacity(self.subTitleAlert != nil ? 0.7 : 1)
             .contextMenu {
                 self.contextMenuButtons(for: self.outfit)
@@ -280,13 +243,10 @@ struct OutfitContextCard: View {
         .sensoryFeedback(.success, trigger: self.taskDeletedCompleted)
     }
     
-    
-    
     @ViewBuilder
     private func contextMenuButtons(for item: Outfit) -> some View {
         Button {
             self.selectedItem = item
-            
         } label: {
             Label("Edit Details", systemImage: "pencil")
         }
@@ -294,7 +254,6 @@ struct OutfitContextCard: View {
         Button(role: .destructive) {
             self.manager?.delete(item)
             self.taskDeletedCompleted.toggle()
-            
         } label: {
             Label("Delete", systemImage: "trash")
         }

@@ -1,5 +1,5 @@
 //
-//  Untitled.swift
+//  OutfitManager.swift
 //  Atelier
 //
 //  Created by Eliomar Alejandro Rodriguez Ferrer on 17/02/26.
@@ -13,6 +13,10 @@ import SwiftData
 final class OutfitManager: Manager {
     var context: ModelContext
     
+    var visibleOutfits  : [Outfit]           = []
+    var groupedOutfits  : [String: [Outfit]] = [:]
+    var availableSeasons: [String]           = []
+    
     init(_ context: ModelContext) {
         self.context = context
     }
@@ -20,7 +24,6 @@ final class OutfitManager: Manager {
     @inline(__always)
     func insert(_ element: Outfit) {
         context.insert(element)
-        
         save()
     }
     
@@ -37,6 +40,36 @@ final class OutfitManager: Manager {
     
     @inline(__always)
     internal func save() {
-        try? context.save()
+        do {
+            try context.save()
+        } catch {
+            print("Error DB: \(error)")
+        }
+    }
+    
+    @MainActor
+    func processOutfits(_ outfits: [Outfit], with filter: FilterOutfitConfig) {
+        let filtered = FilterOutfitConfig.filterOutfits(
+            allOutfits: outfits,
+            config    : filter
+        )
+        
+        var newGrouped: [String: [Outfit]] = ["All": filtered]
+        
+        let groupedBySeason = Dictionary(
+            grouping: filtered,
+            by      : { $0.season.title }
+        )
+        
+        for (season, items) in groupedBySeason {
+            newGrouped[season] = items
+        }
+        
+        let uniqueSeasons = Set(outfits.lazy.map { $0.season.title })
+        let newSeasons    = ["All"] + uniqueSeasons.sorted()
+        
+        self.visibleOutfits   = filtered
+        self.groupedOutfits   = newGrouped
+        self.availableSeasons = newSeasons
     }
 }

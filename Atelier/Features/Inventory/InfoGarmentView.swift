@@ -13,9 +13,6 @@ struct InfoGarmentView: View {
     
     // MARK: - Parameters Variables
         
-    @Binding
-    var garmentManager: GarmentManager?
-    
     let item: Garment
     
     
@@ -24,6 +21,12 @@ struct InfoGarmentView: View {
     
     @Environment(\.dismiss)
     private var dismiss
+    
+    @Environment(GarmentManager.self)
+    var garmentManager: GarmentManager
+    
+    
+
     
     @State
     private var isModifySheetVisible: Bool = false
@@ -75,10 +78,7 @@ struct InfoGarmentView: View {
         }
         .sheet(isPresented: self.$isModifySheetVisible) {
             NavigationStack {
-                GarmentEditorView(
-                    garmentManager: self.$garmentManager,
-                    garment       : self.item
-                )
+                GarmentEditorView(garment: self.item)
             }
         }
         .alert(
@@ -88,7 +88,7 @@ struct InfoGarmentView: View {
             
             Button("Delete", role: .destructive) {
                 withAnimation {
-                    self.garmentManager?.delete(self.item)
+                    self.garmentManager.delete(self.item)
                     isDeleted.toggle()
                 }
                 
@@ -224,11 +224,6 @@ struct InfoGarmentView: View {
 
 #Preview {
     
-    @Previewable
-    @State
-    var manager: GarmentManager? = nil
-    
-    
     let garment = Garment(
         name: "Maglia",
         brand: "Levi`s",
@@ -240,8 +235,5 @@ struct InfoGarmentView: View {
         style: .casual
     )
     
-    InfoGarmentView(
-        garmentManager: $manager,
-        item: garment
-    )
+    InfoGarmentView(item: garment)
 }

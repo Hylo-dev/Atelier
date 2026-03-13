@@ -13,11 +13,10 @@ struct OutfitEditorView: View {
     @Environment(\.dismiss)
     private var dismiss
     
-    @Environment(\.modelContext)
-    private var modelContext
+    @Environment(OutfitManager.self)
+    private var outfitManager: OutfitManager
     
-    @Binding
-    var outfitManager: OutfitManager?
+    
     
     let outfit: Outfit?
     
@@ -70,11 +69,7 @@ struct OutfitEditorView: View {
     @State
     private var showImageSourceDialog: Bool
     
-    init(
-        outfitManager: Binding<OutfitManager?>,
-        outfit       : Outfit? = nil
-    ) {
-        self._outfitManager    = outfitManager
+    init(outfit: Outfit? = nil) {
         self.outfit            = outfit
         
         _isSaved               = State(initialValue: false)
@@ -311,11 +306,7 @@ struct OutfitEditorView: View {
             style            : self.selectedStyle
         )
         
-        if let manager = self.outfitManager {
-            manager.insert(newOutfit)
-            
-        } else { print("Outfit manager is nil") }
-        
+        outfitManager.insert(newOutfit)
         dismiss()
     }
     
@@ -329,11 +320,7 @@ struct OutfitEditorView: View {
         self.outfit!.garments          = Array(self.garments)
         
         
-        if let manager = self.outfitManager {
-            manager.update()
-            
-        } else { print("ERROR: Manager is not available") }
-        
+        outfitManager.update()
         dismiss()
     }
 }

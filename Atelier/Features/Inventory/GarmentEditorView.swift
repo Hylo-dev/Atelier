@@ -14,21 +14,19 @@ struct GarmentEditorView: View {
     @Environment(\.dismiss)
     var dismiss
     
-    @Environment(\.modelContext)
-    private var modelContext
-    
     @Environment(ApplianceManager.self)
     private var applianceManager
+    
+    @Environment(GarmentManager.self)
+    var garmentManager: GarmentManager
+    
     
     @Query(
         sort : \LaundrySession.dateCreated,
         order: .forward
     )
     private var laundrySessions: [LaundrySession]
-    
-    @Binding
-    var garmentManager: GarmentManager?
-    
+        
     private var item: Garment?
     
     
@@ -108,10 +106,7 @@ struct GarmentEditorView: View {
         Int(selectedComposition.reduce(0) { $0 + $1.percentual })
     }
     
-    init(
-        garmentManager: Binding<GarmentManager?>,
-        garment       : Garment? = nil
-    ) {
+    init(garment: Garment? = nil) {
         self.item            = garment
         
         _name                = State(initialValue: garment?.name ?? "")
@@ -144,9 +139,7 @@ struct GarmentEditorView: View {
            let path = garment.imagePath,
            let image = ImageStorage.loadImage(from: path) {
             _selectedImage = State(initialValue: Image(uiImage: image))
-        }
-        
-        self._garmentManager = garmentManager
+        }        
     }
     
     var body: some View {
@@ -568,11 +561,7 @@ struct GarmentEditorView: View {
             imagePath     : self.imagePath
         )
                 
-        if let manager = self.garmentManager {
-            manager.insert(newGarment)
-            
-        } else { print("Manager is nil") }
-        
+        garmentManager.insert(newGarment)
         return newGarment
     }
     
@@ -599,19 +588,10 @@ struct GarmentEditorView: View {
         self.item!.purchaseDate   = self.purchaseDate
         self.item!.imagePath      = self.imagePath
         
-        if let manager = self.garmentManager {
-            manager.update()
-            
-        } else { print("Manager is nil") }
+        garmentManager.update()
     }
 }
 
 #Preview {
-    @Previewable
-    @State
-    var manager: GarmentManager? = nil
-    
-    GarmentEditorView(
-        garmentManager: $manager
-    )
+    GarmentEditorView()
 }

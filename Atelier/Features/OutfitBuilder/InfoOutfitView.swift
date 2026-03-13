@@ -13,9 +13,6 @@ struct InfoOutfitView: View {
     
     
     // MARK: - Parameters Variables
-        
-    @Binding
-    var manager: OutfitManager?
     
     let outfit: Outfit
     
@@ -25,6 +22,9 @@ struct InfoOutfitView: View {
     
     @Environment(\.dismiss)
     private var dismiss
+    
+    @Environment(OutfitManager.self)
+    private var outfitManager: OutfitManager
     
     @State
     private var isModifySheetVisible: Bool = false
@@ -73,10 +73,7 @@ struct InfoOutfitView: View {
             onDismiss: { self.isModifySheetVisible = false }
         ) {
             NavigationStack {
-                OutfitEditorView(
-                    outfitManager: self.$manager,
-                    outfit       : self.outfit
-                )
+                OutfitEditorView(outfit: self.outfit)
             }
         }
         .alert(
@@ -86,7 +83,7 @@ struct InfoOutfitView: View {
             
             Button("Delete", role: .destructive) {
                 withAnimation {
-                    self.manager?.delete(self.outfit)
+                    outfitManager.delete(self.outfit)
                     isDeleted.toggle()
                 }
                 
