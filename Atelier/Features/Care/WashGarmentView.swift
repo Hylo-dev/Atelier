@@ -42,15 +42,11 @@ struct WashGarmentView: View {
                     let contained = selectedGarments.contains(garment.id)
                     
                     ModelCardView(
-                        title    : garment.name,
-                        imagePath: garment.imagePath
+                        title     : garment.name,
+                        imagePath : garment.imagePath,
+                        isSelected: contained
                     )
                     .equatable()
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 26)
-                            .stroke(contained ? Color.accentColor : Color.clear, lineWidth: 2)
-                    )
-                    .id(garment.id)
                     .onTapGesture {
                         
                         if isSelectionMode {

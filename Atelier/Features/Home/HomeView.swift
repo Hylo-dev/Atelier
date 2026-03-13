@@ -12,20 +12,6 @@ struct HomeView: View {
     
     
     
-    @Query(
-        sort : \Garment.name,
-        order: .forward
-    )
-    private var garments: [Garment]
-    
-    @Query(
-        sort : \LaundrySession.dateCreated,
-        order: .forward
-    )
-    private var laundrySessions: [LaundrySession]
-    
-    
-    
     // MARK: - Screen values
     
     @Environment(\.horizontalSizeClass)
@@ -72,19 +58,25 @@ struct HomeView: View {
 			
             self.sidebarLayout
                 .onAppear {
-                    applianceManager.processUnassignedGarments(
-                        garments,
-                        laundrySessions
-                    )
+                    let garmentDescriptor = FetchDescriptor<Garment>()
+                    let laundryDescriptor = FetchDescriptor<LaundrySession>()
+                    
+                    if let fetchedGarments = try? context.fetch(garmentDescriptor),
+                       let fetchedSessions = try? context.fetch(laundryDescriptor) {
+                        applianceManager.processUnassignedGarments(fetchedGarments, fetchedSessions)
+                    }
                 }
             
         } else {
             self.tabLayout
                 .onAppear {
-                    applianceManager.processUnassignedGarments(
-                        garments,
-                        laundrySessions
-                    )
+                    let garmentDescriptor = FetchDescriptor<Garment>()
+                    let laundryDescriptor = FetchDescriptor<LaundrySession>()
+                    
+                    if let fetchedGarments = try? context.fetch(garmentDescriptor),
+                       let fetchedSessions = try? context.fetch(laundryDescriptor) {
+                        applianceManager.processUnassignedGarments(fetchedGarments, fetchedSessions)
+                    }
                 }
         }
     }
@@ -179,9 +171,8 @@ struct HomeView: View {
 		
 		case .care:
 			CareView(
-				title          : title,
-				laundrySessions: laundrySessions,
-				laundryState   : laundryState
+				title       : title,
+				laundryState: laundryState
 			)
 			
 		case .search:

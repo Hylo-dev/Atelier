@@ -6,20 +6,18 @@ struct AvatarView: View {
     let pathImage: String?
     let color: Color
     let icon: String
-    
+        
     let uiImage: UIImage?
     
     
     
+    private static let documentsDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+    
     private var imageURL: URL? {
-        
         if let path = self.pathImage {
             guard !path.isEmpty else { return nil }
-            let documentsURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
-            
-            return documentsURL.appendingPathComponent(path)
+            return Self.documentsDirectory.appendingPathComponent(path)
         }
-        
         return nil
     }
     
@@ -64,7 +62,6 @@ struct AvatarView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .clipped()
-        //.shadow(color: Color.black.opacity(0.15), radius: 10, x: 0, y: 5)
     }
     
     private var fallbackView: some View {

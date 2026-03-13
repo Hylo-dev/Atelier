@@ -13,12 +13,15 @@ struct CareView: View {
     
     
     
+    @Query(sort : \LaundrySession.dateCreated, order: .forward)
+    private var laundrySessions: [LaundrySession]
+    
+    
+    
     // MARK: - Struct attributes
         
     let title: String
-    
-    var laundrySessions: [LaundrySession]
-    
+        
     @Bindable
     var laundryState: TabFilterState
     
@@ -70,6 +73,7 @@ struct CareView: View {
                 VStack(spacing: 20) {
                     if isWidgetVisible {
                         WeatherView(weather)
+                            .equatable()
                             .transition(.move(edge: .top).combined(with: .opacity))
                     }
                     

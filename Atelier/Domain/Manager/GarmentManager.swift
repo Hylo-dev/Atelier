@@ -13,6 +13,11 @@ import SwiftData
 final class GarmentManager: Manager {
     var context: ModelContext
     
+    var visibleGarments: [Garment]           = []
+    var groupedGarments: [String: [Garment]] = [:]
+    var availableBrands: [String]            = []
+    var availableCategories: [String]        = []
+    
     
     
     init(_ context: ModelContext) {
@@ -52,5 +57,37 @@ final class GarmentManager: Manager {
         } catch {
             print("Error DB: \(error)")
         }
+    }
+    
+    
+    
+    @MainActor
+    func processGarments(_ garments: [Garment], with filter: FilterGarmentConfig) {        
+        let filtered = FilterGarmentConfig.filterGarments(
+            allGarments: garments,
+            config     : filter
+        )
+        
+        var newGrouped: [String: [Garment]] = ["All": filtered]
+        
+        let groupedByCategory = Dictionary(
+            grouping: filtered,
+            by      : { $0.category.title }
+        )
+        
+        for (category, items) in groupedByCategory {
+            newGrouped[category] = items
+        }
+        
+        let rawBrands    = Set(garments.compactMap { $0.brand })
+        let sortedBrands = rawBrands.sorted()
+        
+        let uniqueCategories = Set(garments.lazy.map { $0.category.title })
+        let newCategories    = ["All"] + uniqueCategories.sorted()
+        
+        self.visibleGarments     = filtered
+        self.groupedGarments     = newGrouped
+        self.availableBrands     = sortedBrands
+        self.availableCategories = newCategories
     }
 }

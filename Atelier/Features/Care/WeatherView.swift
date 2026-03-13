@@ -9,9 +9,9 @@ import SwiftUI
 import CoreLocation
 import WeatherKit
 
-struct WeatherView: View {
+struct WeatherView: View, Equatable{
     let weather: WeatherState?
-    
+        
     init(_ weather: WeatherState?) {
         self.weather = weather
     }

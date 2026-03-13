@@ -41,6 +41,10 @@ struct FilterGarmentConfig: Equatable {
         config     : Self
     ) -> [Garment] {
         
+        guard config.isFiltering else {
+            return allGarments
+        }
+        
         return allGarments.filter { garment in
 
             if let brandToFind = config.selectedBrand,
@@ -98,6 +102,10 @@ struct FilterOutfitConfig: Equatable {
         allOutfits: [Outfit],
         config    : Self
     ) -> [Outfit] {
+        
+        guard config.isFiltering else {
+            return allOutfits
+        }
         
         var outfits = allOutfits.filter { outfit in
             

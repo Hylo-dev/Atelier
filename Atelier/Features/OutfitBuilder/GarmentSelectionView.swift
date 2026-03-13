@@ -49,20 +49,13 @@ struct GarmentSelectionView: View {
                 let isSelected = self.selectedGarments.contains(item)
 
                 
-                ZStack {
-                    ModelCardView(
-                        title      : item.name,
-                        subheadline: item.brand,
-                        imagePath  : item.imagePath
-                    )
-                    
-                    RoundedRectangle(cornerRadius: 26, style: .continuous)
-                        .fill(isSelected ? Color.accentColor.opacity(0.15) : .clear)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 26)
-                                .stroke(isSelected ? Color.accentColor : Color.clear, lineWidth: 2)
-                        )
-                }
+                ModelCardView(
+                    title      : item.name,
+                    subheadline: item.brand,
+                    imagePath  : item.imagePath,
+                    isSelected : isSelected
+                )
+                .equatable()
                 .onTapGesture {
                     if self.selectedGarments.contains(item) {
                         self.selectedGarments.remove(item)

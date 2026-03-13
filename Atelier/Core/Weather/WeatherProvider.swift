@@ -8,7 +8,7 @@
 import CoreLocation
 import WeatherKit
 
-struct WeatherState {
+struct WeatherState: Equatable {
     let locationName : String
     let temperature  : Double
     let condition    : WeatherCondition

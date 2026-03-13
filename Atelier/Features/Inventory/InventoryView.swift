@@ -40,9 +40,6 @@ struct InventoryView: View {
     @State
     private var garmentManager: GarmentManager?
     
-    @State
-    private var groupedGarments: [String: [Garment]] = [:]
-    
     
     
     // MARK: - Add Garment Sheet values
@@ -67,16 +64,6 @@ struct InventoryView: View {
     @State
     private var isFilterSheetVisible: Bool = false
     
-    @State
-    private var availableBrands: [String] = []
-    
-    
-    
-    // MARK: - Variables private
-        
-    @State
-    private var visibleGarments: [Garment] = []
-    
     
     
     // MARK: - Static property
@@ -84,6 +71,25 @@ struct InventoryView: View {
     static private let columns = [
         GridItem(.adaptive(minimum: 150), spacing: 20)
     ]
+    
+    
+    
+    private var garmentsUpdateTrigger: Int {
+        var hasher = Hasher()
+        
+        for garment in garments {
+            hasher.combine(garment.id)
+            hasher.combine(garment.state)
+            hasher.combine(garment.category.title)
+            hasher.combine(garment.brand)
+
+            hasher.combine(garment.subCategory)
+            hasher.combine(garment.season)
+            hasher.combine(garment.style)
+        }
+        
+        return hasher.finalize()
+    }
     
     var body: some View {
 //        let _ = Self._printChanges()
@@ -114,28 +120,17 @@ struct InventoryView: View {
                 
             }
         }
+        .onChange(of: garmentsUpdateTrigger) {
+            updateData()
+        }
+        .onChange(of: filter) {
+            updateData()
+        }
         .onAppear {
             if self.garmentManager == nil {
                 self.garmentManager = GarmentManager(context)
             }
-            
-            
-                        
-            self.updateBrands()
-            self.updateCategories()
-            self.updateFilteredGarments()
-        }
-        .onChange(of: self.garments) {
-            
-            withAnimation {
-                self.updateCategories()
-            }
-            
-            self.updateBrands()
-            self.updateFilteredGarments()
-        }
-        .onChange(of: self.filter) {
-            self.updateFilteredGarments()
+            updateData()
         }
         .toolbar {
             ToolbarItem(placement: .title) {
@@ -183,7 +178,7 @@ struct InventoryView: View {
         .sheet(isPresented: self.$isFilterSheetVisible) {
             FilterGarmentView(
                 filters: self.$filter,
-                brands : self.$availableBrands
+                brands : .constant(garmentManager?.availableBrands ?? [])
             )
         }
     }
@@ -195,14 +190,15 @@ struct InventoryView: View {
         ScrollView(.vertical) {
             
             LazyVGrid(columns: Self.columns, spacing: 20) {
-                ForEach(self.groupedGarments[category] ?? [], id: \.id) { item in
+                ForEach(garmentManager?.groupedGarments[category] ?? [], id: \.id) { item in
                     
                     GarmentContextCard(
                         item        : item,
                         manager     : garmentManager,
                         selectedItem: $selectedItem
-                        
                     )
+                    .equatable()
+                    .id(item.id)
                 }
             }
             .padding(.horizontal, 16)
@@ -216,63 +212,19 @@ struct InventoryView: View {
     
     // MARK: - Handlers
     
-    
     @inline(__always)
-    private func updateBrands() {
-        let rawBrands = Set(self.garments.compactMap { $0.brand })
-        let newBrands = rawBrands.sorted()
+    private func updateData() {
+        garmentManager?.processGarments(garments, with: filter)
         
-        if self.availableBrands != newBrands {
-            print("Diff found: Updating brands pointer")
-            self.availableBrands = newBrands
-            
-        } else { print("No changes in brands, skipping update to save cycles") }
-    }
-    
-    
-    
-    @inline(__always)
-    private func updateCategories() {
-        let uniqueCategories = Set(self.garments.lazy.map {
-            $0.category.title
-        })
-        let newCategories = ["All"] + uniqueCategories.sorted()
-        
-        if self.categoryState.items != newCategories {
-            print("Diff found: Updating categories pointer")
+        if let newCategories = garmentManager?.availableCategories,
+           self.categoryState.items != newCategories {
             self.categoryState.items = newCategories
-            
-        } else {
-            print("No changes in categories, skipping update to save cycles")
         }
-    }
-    
-    
-    @inline(__always)
-    private func updateFilteredGarments() {
-        self.visibleGarments = FilterGarmentConfig.filterGarments(
-            allGarments: self.garments,
-            config     : self.filter
-        )
-        
-        var newGrouped: [String: [Garment]] = [:]
-        newGrouped["All"] = self.visibleGarments
-        
-        let groupedByCategory = Dictionary(
-            grouping: self.visibleGarments,
-            by: { $0.category.title }
-        )
-        
-        for (category, items) in groupedByCategory {
-            newGrouped[category] = items
-        }
-        
-        self.groupedGarments = newGrouped
     }
 }
 
 fileprivate
-struct GarmentContextCard: View {
+struct GarmentContextCard: View, Equatable {
     let item   : Garment
     let manager: GarmentManager?
     
@@ -282,6 +234,14 @@ struct GarmentContextCard: View {
     @State
     private var isDeleted: Bool = false
     
+    static func == (lhs: GarmentContextCard, rhs: GarmentContextCard) -> Bool {
+        return lhs.item.id == rhs.item.id &&
+        lhs.item.name == rhs.item.name &&
+        lhs.item.brand == rhs.item.brand &&
+        lhs.item.imagePath == rhs.item.imagePath &&
+        lhs.item.state == rhs.item.state
+    }
+    
     var body: some View {
         NavigationLink(value: self.item) {
             ModelCardView(
@@ -289,8 +249,6 @@ struct GarmentContextCard: View {
                 subheadline: self.item.brand,
                 imagePath  : self.item.imagePath
             )
-            .equatable()
-            .id(self.item.id)
             .contextMenu {
                 self.contextMenuButtons(for: self.item)
             }

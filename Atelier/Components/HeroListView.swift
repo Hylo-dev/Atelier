@@ -56,31 +56,33 @@ struct HeroListView<TitleContent: View, BodyContent: View>: View {
     
     @ViewBuilder
     private var heroImageSection: some View {
-        GeometryReader { proxy in
+        AvatarView(
+            imagePath,
+            color: colorPlaceholder,
+            icon: iconPlaceholder
+        )
+        .frame(height: 560)
+        .visualEffect { content, proxy in
             let minY = proxy.frame(in: .global).minY
             let isScrollingDown = minY > 0
             
-            AvatarView(
-                imagePath,
-                color: colorPlaceholder,
-                icon: iconPlaceholder
-            )
-            .frame(
-                width: proxy.size.width,
-                height: proxy.size.height + (isScrollingDown ? minY : 0)
-            )
-            .offset(y: isScrollingDown ? -minY : 0)
+            let scale = isScrollingDown ? 1.0 + (minY / proxy.size.height) : 1.0
+            
+            return content
+                .scaleEffect(
+                    x: scale,
+                    y: scale,
+                    anchor: .bottom
+                )
         }
-        .frame(height: 560)
-        .clipped()
         .overlay(alignment: .bottom) {
             LinearGradient(
-                stops: [
-                    .init(color: Color(uiColor: .systemBackground), location: 0),
-                    .init(color: Color(uiColor: .systemBackground).opacity(0.9), location: 0.2),
-                    .init(color: Color(uiColor: .systemBackground).opacity(0.5), location: 0.5),
-                    .init(color: Color(uiColor: .systemBackground).opacity(0.2), location: 0.8),
-                    .init(color: .clear, location: 1.0)
+                colors: [
+                    Color(uiColor: .systemBackground),
+                    Color(uiColor: .systemBackground).opacity(0.8),
+                    Color(uiColor: .systemBackground).opacity(0.4),
+                    Color(uiColor: .systemBackground).opacity(0.1),
+                    .clear
                 ],
                 startPoint: .bottom,
                 endPoint  : .top

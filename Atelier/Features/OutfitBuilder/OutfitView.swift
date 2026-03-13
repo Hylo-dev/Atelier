@@ -271,7 +271,6 @@ struct OutfitContextCard: View {
                 imagePath  : self.outfit.fullLookImagePath
             )
             .equatable()
-            .id(self.outfit.id)
             .opacity(self.subTitleAlert != nil ? 0.7 : 1)
             .contextMenu {
                 self.contextMenuButtons(for: self.outfit)

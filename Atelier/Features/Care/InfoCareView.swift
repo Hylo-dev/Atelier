@@ -164,7 +164,6 @@ struct InfoCareView: View {
                             imagePath: garment.imagePath
                         )
                         .equatable()
-                        .id(garment.id)
                         .frame(width: 125, height: 125)
                     }
                     

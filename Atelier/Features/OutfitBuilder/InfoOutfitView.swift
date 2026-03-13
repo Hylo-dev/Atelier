@@ -192,7 +192,6 @@ struct InfoOutfitView: View {
                             imagePath: garment.imagePath
                         )
                         .equatable()
-                        .id(garment.id)
                         .frame(width: 150, height: 150)
                         
                     }

@@ -11,15 +11,18 @@ struct ModelCardView: Equatable, View {
     let title      : String
     let subheadline: String?
     let imagePath  : String?
+    let isSelected : Bool
     
     init(
         title      : String,
         subheadline: String? = nil,
-        imagePath  : String?
+        imagePath  : String?,
+        isSelected : Bool = false
     ) {
         self.title       = title
         self.subheadline = subheadline
         self.imagePath   = imagePath
+        self.isSelected  = isSelected
     }
     
     var body: some View {
@@ -41,6 +44,10 @@ struct ModelCardView: Equatable, View {
                         maxHeight: .infinity
                     )
             }
+        }
+        .overlay {
+            RoundedRectangle(cornerRadius: 26)
+                .stroke(isSelected ? Color.accentColor : Color.clear, lineWidth: 2)
         }
     }
 }
