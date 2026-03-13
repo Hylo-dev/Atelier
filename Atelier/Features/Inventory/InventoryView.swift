@@ -74,25 +74,8 @@ struct InventoryView: View {
     
     
     
-    private var garmentsUpdateTrigger: Int {
-        var hasher = Hasher()
-        
-        for garment in garments {
-            hasher.combine(garment.id)
-            hasher.combine(garment.state)
-            hasher.combine(garment.category.title)
-            hasher.combine(garment.brand)
-
-            hasher.combine(garment.subCategory)
-            hasher.combine(garment.season)
-            hasher.combine(garment.style)
-        }
-        
-        return hasher.finalize()
-    }
-    
     var body: some View {
-//        let _ = Self._printChanges()
+        let _ = Self._printChanges()
         
         Group {
             if self.garments.isEmpty {
@@ -120,7 +103,7 @@ struct InventoryView: View {
                 
             }
         }
-        .onChange(of: garmentsUpdateTrigger) {
+        .onChange(of: garments) {
             updateData()
         }
         .onChange(of: filter) {
@@ -169,7 +152,7 @@ struct InventoryView: View {
         .sheet(isPresented: self.$isFilterSheetVisible) {
             FilterGarmentView(
                 filters: self.$filter,
-                brands : .constant(garmentManager.availableBrands)
+                brands : garmentManager.availableBrands
             )
         }
     }

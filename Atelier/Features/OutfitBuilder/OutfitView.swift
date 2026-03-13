@@ -147,8 +147,8 @@ struct OutfitView: View {
                 Button("Add", systemImage: "plus") { self.isAddOutfitSheetVisible = true }
             }
         }
-        .navigationDestination(for: Outfit.self) { selectedItem in
-            InfoOutfitView(outfit: selectedItem)
+        .navigationDestination(for: Outfit.self) { selectedOutfit in
+            InfoOutfitView(selectedOutfit)
         }
         .sheet(isPresented: self.$isAddOutfitSheetVisible) {
             NavigationStack {
@@ -157,7 +157,7 @@ struct OutfitView: View {
         }
         .sheet(item: self.$selectedItem) { outfit in
             NavigationStack {
-                OutfitEditorView(outfit: outfit)
+                OutfitEditorView(outfit)
             }
         }
         .sheet(isPresented: self.$isFilterSheetVisible) {

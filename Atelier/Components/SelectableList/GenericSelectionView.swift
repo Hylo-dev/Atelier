@@ -1,20 +1,11 @@
 //
-//  LaundrySymbolSelectionView.swift
+//  GenericSelectionView.swift
 //  Atelier
 //
-//  Created by Eliomar Alejandro Rodriguez Ferrer on 17/02/26.
+//  Created by Eliomar Alejandro Rodriguez Ferrer on 13/03/26.
 //
 
 import SwiftUI
-
-protocol SelectableItem: CaseIterable, Hashable, Identifiable {
-    associatedtype CategoryType: Identifiable & CaseIterable & RawRepresentable where CategoryType.RawValue == String
-    
-    var id      : String       { get }
-    var title   : String       { get }
-    var category: CategoryType { get }
-    var iconName: String?      { get }
-}
 
 struct GenericSelectionView<Item: SelectableItem>: View {
     
@@ -120,79 +111,6 @@ struct GenericSelectionView<Item: SelectableItem>: View {
                 
             } else {
                 selection.insert(item)
-            }
-        }
-    }
-}
-
-struct StringSelectionView: View {
-    
-    let title: String
-    let items: [String]
-    
-    @Binding
-    var selection: Set<String>
-    
-    private let columns = [
-        GridItem(.adaptive(minimum: 80, maximum: 100))
-    ]
-    
-    var body: some View {
-        List {
-            Section {
-                LazyVGrid(columns: columns, spacing: 20) {
-                    ForEach(self.items, id: \.self) { item in
-                        VStack {
-                            self.selectionCell(for: item)
-                        }
-                        .onTapGesture {
-                            self.toggleSelection(item)
-                        }
-                    }
-                }
-                .padding(.vertical, 8)
-            }
-        }
-        .navigationTitle(self.title)
-    }
-    
-    @ViewBuilder
-    private func selectionCell(for item: String) -> some View {
-        let isSelected = self.selection.contains(item)
-        
-        VStack {
-            ZStack {
-                RoundedRectangle(cornerRadius: 10)
-                    .fill(isSelected ? Color.accentColor.opacity(0.15) : Color(uiColor: .secondarySystemFill))
-                    .frame(height: 60)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 10)
-                            .stroke(isSelected ? Color.accentColor : Color.clear, lineWidth: 2)
-                    )
-                
-                Text(String(item.prefix(2)).uppercased())
-                    .font(.title2)
-                    .fontWeight(.black)
-                    .foregroundStyle(isSelected ? Color.accentColor : .gray.opacity(0.5))
-            }
-            
-            Text(item)
-                .font(.caption)
-                .fontWeight(isSelected ? .medium : .regular)
-                .multilineTextAlignment(.center)
-                .lineLimit(2)
-                .foregroundStyle(isSelected ? .primary : .secondary)
-                .frame(minHeight: 30, alignment: .top)
-        }
-    }
-    
-    private func toggleSelection(_ item: String) {
-        withAnimation(.easeInOut(duration: 0.1)) {
-            if self.selection.contains(item) {
-                self.selection.remove(item)
-                
-            } else {
-                self.selection.insert(item)
             }
         }
     }

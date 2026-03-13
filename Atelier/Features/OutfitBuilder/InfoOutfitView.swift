@@ -27,13 +27,22 @@ struct InfoOutfitView: View {
     private var outfitManager: OutfitManager
     
     @State
-    private var isModifySheetVisible: Bool = false
+    private var isModifySheetVisible: Bool
     
     @State
-    private var deleteItem: Bool = false
+    private var deleteItem: Bool
     
     @State
-    private var isDeleted: Bool = false
+    private var isDeleted: Bool
+    
+    
+    init(_ outfit: Outfit) {
+        self.outfit = outfit
+        
+        self.isModifySheetVisible = false
+        self.deleteItem           = false
+        self.isDeleted            = false
+    }
     
     
     
@@ -73,7 +82,7 @@ struct InfoOutfitView: View {
             onDismiss: { self.isModifySheetVisible = false }
         ) {
             NavigationStack {
-                OutfitEditorView(outfit: self.outfit)
+                OutfitEditorView(outfit)
             }
         }
         .alert(

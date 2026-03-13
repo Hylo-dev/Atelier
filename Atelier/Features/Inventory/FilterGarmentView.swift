@@ -15,10 +15,13 @@ struct FilterGarmentView: View {
     @Binding
     var filters: FilterGarmentConfig
     
-    @Binding
     var brands: [String]
     
+    
+    
     var body: some View {
+        let _ = Self._printChanges()
+        
         NavigationStack {
             Form {
                 
@@ -115,29 +118,33 @@ struct FilterGarmentView: View {
         Section("Style & Category") {
             
             self.filterNavigationLink(
-                title      : "Model",
-                selection  : self.setBinding(for: \.selectedSubCategory),
-                destination: GenericSelectionView<GarmentSubCategory>(
+                title    : "Model",
+                selection: self.setBinding(for: \.selectedSubCategory)
+            ) {
+                GenericSelectionView<GarmentSubCategory>(
                     selection: self.setBinding(for: \.selectedSubCategory)
                 )
-            )
+            }
             
             self.filterNavigationLink(
-                title      : "Season",
-                selection  : self.setBinding(for: \.selectedSeason),
-                destination: GenericSelectionView<Season>(
+                title    : "Season",
+                selection: self.setBinding(for: \.selectedSeason)
+            ) {
+                GenericSelectionView<Season>(
                     selection    : self.setBinding(for: \.selectedSeason),
                     useSystemIcon: true
                 )
-            )
+            }
+            
             
             self.filterNavigationLink(
-                title      : "Style",
-                selection  : self.setBinding(for: \.selectedStyle),
-                destination: GenericSelectionView<GarmentStyle>(
+                title    : "Style",
+                selection: self.setBinding(for: \.selectedStyle)
+            ) {
+                GenericSelectionView<GarmentStyle>(
                     selection: self.setBinding(for: \.selectedStyle)
                 )
-            )
+            }
         }
         
     }
@@ -148,12 +155,13 @@ struct FilterGarmentView: View {
             Toggle("Only garment clean", isOn: self.$filters.onlyClean)
             
             self.filterNavigationLink(
-                title      : "State",
-                selection  : self.setBinding(for: \.selectedState),
-                destination: GenericSelectionView<GarmentState>(
+                title    : "State",
+                selection: self.setBinding(for: \.selectedState)
+            ) {
+                GenericSelectionView<GarmentState>(
                     selection: self.setBinding(for: \.selectedState)
                 )
-            )
+            }
         }
     }
     
@@ -174,12 +182,13 @@ struct FilterGarmentView: View {
     private func filterNavigationLink<T, Destination: View>(
         title      : String,
         selection  : Binding<Set<T>>,
-        destination: Destination
-    ) -> some View {
+        @ViewBuilder destination: () -> Destination
         
+    ) -> some View {
         NavigationLink {
-            destination
+            destination()
                 .navigationTitle(title)
+            
         } label: {
             HStack {
                 Text(title)

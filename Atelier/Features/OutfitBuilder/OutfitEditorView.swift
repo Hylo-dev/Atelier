@@ -69,7 +69,7 @@ struct OutfitEditorView: View {
     @State
     private var showImageSourceDialog: Bool
     
-    init(outfit: Outfit? = nil) {
+    init(_ outfit: Outfit? = nil) {
         self.outfit            = outfit
         
         _isSaved               = State(initialValue: false)

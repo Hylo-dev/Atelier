@@ -46,34 +46,37 @@ struct FilterGarmentConfig: Equatable {
         }
         
         return allGarments.filter { garment in
-
-            if let brandToFind = config.selectedBrand,
-                    garment.brand == nil || !brandToFind.contains(garment.brand!) {
+            
+            // 1. Controlli Booleani Diretti (i più veloci da calcolare)
+            if config.onlyClean && garment.state != .available {
                 return false
             }
             
-            if let subCategoryToFind = config.selectedSubCategory,
-                   !subCategoryToFind.contains(garment.subCategory) {
+            // 2. Filtri di Set
+            if let stateToFind = config.selectedState,
+               !stateToFind.contains(garment.state) {
                 return false
             }
             
             if let seasonToFind = config.selectedSeason,
-                   !seasonToFind.contains(garment.season) {
+               !seasonToFind.contains(garment.season) {
                 return false
             }
             
             if let styleToFind = config.selectedStyle,
-                   !styleToFind.contains(garment.style) {
+               !styleToFind.contains(garment.style) {
                 return false
             }
             
-            if let stateToFind = config.selectedState,
-                   !stateToFind.contains(garment.state) {
+            if let subCategoryToFind = config.selectedSubCategory,
+               !subCategoryToFind.contains(garment.subCategory) {
                 return false
             }
             
-            if config.onlyClean && garment.state != .available {
-                return false
+            if let brandToFind = config.selectedBrand {
+                guard let garmentBrand = garment.brand, brandToFind.contains(garmentBrand) else {
+                    return false
+                }
             }
             
             return true
@@ -109,12 +112,12 @@ struct FilterOutfitConfig: Equatable {
         
         var outfits = allOutfits.filter { outfit in
             
-            if let styleToFind = config.selectedStyle,
-               !styleToFind.contains(outfit.style) {
+            if config.onlyClean && !outfit.isReadyToWear {
                 return false
             }
             
-            if config.onlyClean && !outfit.isReadyToWear {
+            if let styleToFind = config.selectedStyle,
+               !styleToFind.contains(outfit.style) {
                 return false
             }
             
@@ -129,7 +132,6 @@ struct FilterOutfitConfig: Equatable {
                 return date0 > date1
             }
         }
-        
         
         return outfits
     }

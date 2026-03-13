@@ -62,7 +62,7 @@ final class GarmentManager: Manager {
     
     
     @MainActor
-    func processGarments(_ garments: [Garment], with filter: FilterGarmentConfig) {        
+    func processGarments(_ garments: [Garment], with filter: FilterGarmentConfig) {
         let filtered = FilterGarmentConfig.filterGarments(
             allGarments: garments,
             config     : filter
@@ -79,15 +79,24 @@ final class GarmentManager: Manager {
             newGrouped[category] = items
         }
         
+
         let rawBrands    = Set(garments.compactMap { $0.brand })
         let sortedBrands = rawBrands.sorted()
         
         let uniqueCategories = Set(garments.lazy.map { $0.category.title })
         let newCategories    = ["All"] + uniqueCategories.sorted()
         
-        self.visibleGarments     = filtered
-        self.groupedGarments     = newGrouped
-        self.availableBrands     = sortedBrands
-        self.availableCategories = newCategories
+        
+        
+        self.visibleGarments = filtered
+        self.groupedGarments = newGrouped
+        
+        if self.availableBrands != sortedBrands {
+            self.availableBrands = sortedBrands
+        }
+        
+        if self.availableCategories != newCategories {
+            self.availableCategories = newCategories
+        }
     }
 }
