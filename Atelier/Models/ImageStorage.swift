@@ -8,10 +8,37 @@
 import UIKit
 
 struct ImageStorage {
-    static func saveImage(_ image: UIImage) -> String? {
-        guard let data = image.jpegData(compressionQuality: 0.8) else { return nil }
+    static func saveImage(_ image: UIImage, maxDimension: CGFloat = 1024) -> String? {
+        let size = image.size
+        let aspectRatio = size.width / size.height
+        var newSize: CGSize
         
-        let filename = UUID().uuidString + ".jpg"
+        if size.width > size.height {
+            newSize = CGSize(width: maxDimension, height: maxDimension / aspectRatio)
+        } else {
+            newSize = CGSize(width: maxDimension * aspectRatio, height: maxDimension)
+        }
+        
+        if size.width <= maxDimension && size.height <= maxDimension {
+            newSize = size
+        }
+        
+        let renderer = UIGraphicsImageRenderer(size: newSize)
+        let resizedImage = renderer.image { _ in
+            image.draw(in: CGRect(origin: .zero, size: newSize))
+        }
+        
+        guard let data = resizedImage.heicData() else {
+            print("Errore: Impossible convert to HEIC")
+            return nil
+        }
+        
+        let sizeKB = Double(data.count) / 1024.0
+        let sizeMB = sizeKB / 1024.0
+        
+        print("File HEIC Size: \(String(format: "%.2f", sizeKB)) KB (\(String(format: "%.2f", sizeMB)) MB)")
+        
+        let filename = UUID().uuidString + ".heic"
         
         guard let documentsURL = FileManager.default.urls(
             for: .documentDirectory,
@@ -23,8 +50,9 @@ struct ImageStorage {
         do {
             try data.write(to: fileURL)
             return filename
+            
         } catch {
-            print("Errore salvataggio: \(error)")
+            print("Error to save file: \(error)")
             return nil
         }
     }
@@ -48,6 +76,27 @@ struct ImageStorage {
         } catch {
             print("Error to load image: \(error)")
             return nil
+        }
+    }
+    
+    static func deleteImage(filename: String?) {
+        guard let filename = filename, !filename.isEmpty else { return }
+        
+        guard let documentsURL = FileManager.default.urls(
+            for: .documentDirectory,
+            in: .userDomainMask
+        ).first else { return }
+        
+        let fileURL = documentsURL.appendingPathComponent(filename)
+        
+        if FileManager.default.fileExists(atPath: fileURL.path) {
+            do {
+                try FileManager.default.removeItem(at: fileURL)
+                print("Delete image: \(filename)")
+                
+            } catch {
+                print("Error to delete image: \(error)")
+            }
         }
     }
 }

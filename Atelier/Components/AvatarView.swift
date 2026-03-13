@@ -3,11 +3,12 @@ import Nuke
 import NukeUI
 
 struct AvatarView: View {
-    let pathImage: String?
-    let color: Color
-    let icon: String
+    private let pathImage: String?
+    
+    private let color: Color
+    private let icon: String
         
-    let uiImage: UIImage?
+    private let uiImage: UIImage?
     
     
     
@@ -25,35 +26,44 @@ struct AvatarView: View {
     
     init(
         _ pathImage: String?,
-        color: Color = .accentColor,
-        icon: String,
-        uiImage: UIImage? = nil
+        color      : Color = .accentColor,
+        icon       : String,
+        uiImage    : UIImage? = nil
     ) {
-        self.pathImage = pathImage
-        self.color     = color
-        self.icon      = icon
-        self.uiImage   = uiImage
+        self.pathImage    = pathImage
+        self.color        = color
+        self.icon         = icon
+        self.uiImage      = uiImage
     }
     
     var body: some View {
         
         Group {
             if let uiImage = self.uiImage {
-                Image(uiImage: uiImage)
-                    .resizable()
-                    .scaledToFill()
-                
-            } else if let url = self.imageURL{
-                LazyImage(url: url) { state in
-                    if let image = state.image {
-                        image
+                Color.clear
+                    .overlay(
+                        Image(uiImage: uiImage)
                             .resizable()
                             .scaledToFill()
-                            .transition(.opacity.animation(.easeOut(duration: 0.3)))
-                    }
-                }
-                .priority(.veryHigh)
-                .pipeline(AtelierEnvironment.ephemeralPipeline)
+                    )
+                    .clipped()
+                    .transition(.opacity.animation(.easeOut(duration: 0.3)))
+                
+            } else if let url = self.imageURL{
+                Color.clear
+                    .overlay(
+                        LazyImage(url: url) { state in
+                            if let image = state.image {
+                                image
+                                    .resizable()
+                                    .scaledToFill()
+                                    .transition(.opacity.animation(.easeOut(duration: 0.3)))
+                            }
+                        }
+                        .priority(.veryHigh)
+                        .pipeline(AtelierEnvironment.ephemeralPipeline)
+                    )
+                    .clipped()
                 
             } else {
                 self.fallbackView

@@ -32,17 +32,31 @@
 		1F83185A2F4241E500713CCA /* Exceptions for "Atelier" folder in "Atelier" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
+				"Extensions/UIImage+Heic.swift",
+				"Features/Inventory/UImage+Heic.swift",
 				Info.plist,
 			);
 			target = 1F8318332F422D3B00713CCA /* Atelier */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
+/* Begin PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
+		1FA9EA9F2F64C0CF00EBDED6 /* Exceptions for "Atelier" folder in "Copy Bundle Resources" phase from "Atelier" target */ = {
+			isa = PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet;
+			buildPhase = 1F8318322F422D3B00713CCA /* Resources */;
+			membershipExceptions = (
+				"Extensions/UIImage+Heic.swift",
+				"Features/Inventory/UImage+Heic.swift",
+			);
+		};
+/* End PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		1F8318362F422D3B00713CCA /* Atelier */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
 				1F83185A2F4241E500713CCA /* Exceptions for "Atelier" folder in "Atelier" target */,
+				1FA9EA9F2F64C0CF00EBDED6 /* Exceptions for "Atelier" folder in "Copy Bundle Resources" phase from "Atelier" target */,
 			);
 			path = Atelier;
 			sourceTree = "<group>";

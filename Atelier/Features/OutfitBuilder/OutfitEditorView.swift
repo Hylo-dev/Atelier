@@ -55,9 +55,6 @@ struct OutfitEditorView: View {
     private var selectedItem: PhotosPickerItem?
     
     @State
-    private var selectedImage: Image?
-    
-    @State
     private var uiImageToSave: UIImage?
     
     @State
@@ -90,6 +87,7 @@ struct OutfitEditorView: View {
                 
         HeroListView(
             fullLookImagePath,
+            previewImage  : uiImageToSave,
             isImageClicked: $showImageSourceDialog
         ) {
             
@@ -246,9 +244,8 @@ struct OutfitEditorView: View {
             self.showGalleryPicker = true
         }
         
-        if self.selectedImage != nil {
+        if self.uiImageToSave != nil || self.fullLookImagePath != nil {
             Button("Remove Photo", role: .destructive) {
-                self.selectedImage     = nil
                 self.uiImageToSave     = nil
                 self.fullLookImagePath = nil
             }
@@ -261,7 +258,6 @@ struct OutfitEditorView: View {
     private func sheetPhotoHandler() -> some View {
         CameraView(
             onImageCaptured: { filename, image in
-                self.selectedImage = Image(uiImage: image)
                 self.uiImageToSave = image
                 self.fullLookImagePath = (filename as NSString).lastPathComponent
             },
@@ -280,11 +276,8 @@ struct OutfitEditorView: View {
             if let data = try? await selectedItem?.loadTransferable(type: Data.self),
                let uiImage = UIImage(data: data) {
                 
-                self.uiImageToSave = uiImage
-                self.selectedImage = Image(uiImage: uiImage)
-                
-                if let filename = ImageStorage.saveImage(uiImage) {
-                    self.fullLookImagePath = filename
+                await MainActor.run {
+                    self.uiImageToSave = uiImage
                 }
             }
         }
@@ -297,7 +290,7 @@ struct OutfitEditorView: View {
            let filename = ImageStorage.saveImage(imageToSave) {
             self.fullLookImagePath = (filename as NSString).lastPathComponent
         }
-                
+                        
         let newOutfit = Outfit(
             name             : self.name,
             garments         : Array(self.garments),
@@ -311,6 +304,18 @@ struct OutfitEditorView: View {
     }
     
     private func updateOutfit() {
+        
+        if let imageToSave = self.uiImageToSave {
+            
+            if let oldPath = self.outfit?.fullLookImagePath {
+                ImageStorage.deleteImage(filename: oldPath)
+            }
+            
+            if let filename = ImageStorage.saveImage(imageToSave) {
+                self.fullLookImagePath = filename
+            }
+        }
+        
         self.outfit!.name              = self.name
         self.outfit!.season            = self.selectedSeason
         self.outfit!.style             = self.selectedStyle

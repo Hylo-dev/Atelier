@@ -10,6 +10,7 @@ import SwiftUI
 struct HeroListView<TitleContent: View, BodyContent: View>: View {
     
     private let imagePath       : String?
+    private let previewImage    : UIImage?
     
     @Binding
     private var isImageClicked  : Bool
@@ -22,6 +23,7 @@ struct HeroListView<TitleContent: View, BodyContent: View>: View {
     
     init(
         _ imagePath       : String?,
+        previewImage      : UIImage? = nil,
         isImageClicked    : Binding<Bool> = .constant(false),
         colorPlaceholder  : Color  = .accentColor,
         iconPlaceholder   : String = "hanger",
@@ -30,6 +32,7 @@ struct HeroListView<TitleContent: View, BodyContent: View>: View {
         @ViewBuilder content      : () -> BodyContent
     ) {
         self.imagePath        = imagePath
+        self.previewImage     = previewImage
         self._isImageClicked  = isImageClicked
         self.colorPlaceholder = colorPlaceholder
         self.iconPlaceholder  = iconPlaceholder
@@ -58,8 +61,9 @@ struct HeroListView<TitleContent: View, BodyContent: View>: View {
     private var heroImageSection: some View {
         AvatarView(
             imagePath,
-            color: colorPlaceholder,
-            icon: iconPlaceholder
+            color  : colorPlaceholder,
+            icon   : iconPlaceholder,
+            uiImage: previewImage
         )
         .frame(height: 560)
         .visualEffect { content, proxy in

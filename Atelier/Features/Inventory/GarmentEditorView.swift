@@ -82,9 +82,6 @@ struct GarmentEditorView: View {
     private var selectedItem: PhotosPickerItem?
     
     @State
-    private var selectedImage: Image?
-    
-    @State
     private var uiImageToSave: UIImage?
     
     @State
@@ -135,17 +132,14 @@ struct GarmentEditorView: View {
         _purchaseDate        = State(initialValue: garment?.purchaseDate ?? .now)
         _imagePath           = State(initialValue: garment?.imagePath)
         
-        if let garment = garment,
-           let path = garment.imagePath,
-           let image = ImageStorage.loadImage(from: path) {
-            _selectedImage = State(initialValue: Image(uiImage: image))
-        }        
+        
     }
     
     var body: some View {
                 
         HeroListView(
             imagePath,
+            previewImage    : uiImageToSave,
             isImageClicked  : $showImageSourceDialog,
             colorPlaceholder: color
         ) {
@@ -459,11 +453,11 @@ struct GarmentEditorView: View {
             self.showGalleryPicker = true
         }
         
-        if self.selectedImage != nil {
+        if self.imagePath != nil || self.uiImageToSave != nil {
             Button("Remove Photo", role: .destructive) {
-                self.selectedImage = nil
+                //self.selectedImage = nil
                 self.uiImageToSave = nil
-                self.imagePath = nil
+                self.imagePath     = nil
             }
         }
     }
@@ -472,7 +466,7 @@ struct GarmentEditorView: View {
     private func sheetPhotoHandler() -> some View {
         CameraView(
             onImageCaptured: { filename, image in
-                self.selectedImage = Image(uiImage: image)
+                //self.selectedImage = Image(uiImage: image)
                 self.uiImageToSave = image
                 self.imagePath = (filename as NSString).lastPathComponent
             },
@@ -521,11 +515,9 @@ struct GarmentEditorView: View {
             if let data = try? await self.selectedItem?.loadTransferable(type: Data.self),
                let uiImage = UIImage(data: data) {
                 
-                self.uiImageToSave = uiImage
-                self.selectedImage = Image(uiImage: uiImage)
-                
-                if let filename = ImageStorage.saveImage(uiImage) {
-                    self.imagePath = filename
+                await MainActor.run {
+                    self.uiImageToSave = uiImage
+                    //self.selectedImage = Image(uiImage: uiImage)
                 }
             }
         }
@@ -567,9 +559,15 @@ struct GarmentEditorView: View {
     
     func updateGarment() {
         
-        if let imageToSave = self.uiImageToSave,
-           let filename = ImageStorage.saveImage(imageToSave) {
-            self.imagePath = (filename as NSString).lastPathComponent
+        if let imageToSave = self.uiImageToSave {
+            
+            if let oldPath = self.item?.imagePath {
+                ImageStorage.deleteImage(filename: oldPath)
+            }
+            
+            if let filename = ImageStorage.saveImage(imageToSave) {
+                self.imagePath = filename
+            }
         }
         
         self.item!.name           = self.name

@@ -43,6 +43,7 @@ final class GarmentManager: Manager {
     
     @inline(__always)
     func delete(_ garment: Garment) {
+        ImageStorage.deleteImage(filename: garment.imagePath)
         self.context.delete(garment)
         save()
     }
