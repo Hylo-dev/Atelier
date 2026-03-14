@@ -23,7 +23,14 @@ struct ImageStorage {
             newSize = size
         }
         
-        let renderer = UIGraphicsImageRenderer(size: newSize)
+        let format = UIGraphicsImageRendererFormat()
+        format.opaque = true
+        format.scale  = 1.0
+        
+        let renderer = UIGraphicsImageRenderer(
+            size  : newSize,
+            format: format
+        )
         let resizedImage = renderer.image { _ in
             image.draw(in: CGRect(origin: .zero, size: newSize))
         }

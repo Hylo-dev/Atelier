@@ -195,7 +195,7 @@ struct GarmentEditorView: View {
         }
         .confirmationDialog(
             "Choose Image",
-            isPresented: self.$showImageSourceDialog,
+            isPresented: $showImageSourceDialog,
             actions: confirmationDialogHandler,
             message: { Text("Select how you want to add the photo") }
         )
