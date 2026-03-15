@@ -66,6 +66,28 @@ struct OutfitEditorView: View {
     @State
     private var showImageSourceDialog: Bool
     
+    
+    
+    // MARK: - Alert Management
+    
+    @State
+    private var alertErrorMessage: String = ""
+    
+    @State
+    private var isAlertErrorVisible: Bool = false
+    
+    
+    
+    // MARK: - Validation
+    private var isFormValid: Bool {
+        let isNameValid       = !name.trimmingCharacters(in: .whitespaces).isEmpty
+        let hasEnoughGarments = garments.count >= 2
+        
+        return isNameValid && hasEnoughGarments
+    }
+
+    
+    
     init(_ outfit: Outfit? = nil) {
         self.outfit            = outfit
         
@@ -110,15 +132,10 @@ struct OutfitEditorView: View {
             
             ToolbarItem(placement: .confirmationAction) {
                 Button("Finish", systemImage: "checkmark") {
-                    if outfit == nil {
-                        saveOutfit()
-                        
-                    } else { updateOutfit() }
-                    
-                    isSaved.toggle()
+                    handleFinishAction()
                 }
                 .fontWeight(.bold)
-                .disabled(self.name.isEmpty || self.garments.count < 2)
+                .disabled(!isFormValid)
             }
         }
         .confirmationDialog(
@@ -136,6 +153,12 @@ struct OutfitEditorView: View {
             selection  : $selectedItem,
             matching   : .images
         )
+        .alert("Ops! Something went wrong", isPresented: $isAlertErrorVisible) {
+            Button("Ok", role: .cancel) { }
+            
+        } message: {
+            Text(alertErrorMessage)
+        }
         .onChange(
             of: self.selectedItem,
             selectedItemChanged
@@ -230,10 +253,8 @@ struct OutfitEditorView: View {
     
     
 
-    // MARK: - Handlers
-    
-    
-    
+    // MARK: - Views
+        
     @ViewBuilder
     private func confirmationDialogHandler() -> some View {
         Button("Camera") {
@@ -284,11 +305,40 @@ struct OutfitEditorView: View {
     }
     
     
-    private func saveOutfit() {
+    
+    // MARK: - Handlers
+    
+    private func handleFinishAction() {
+        let success = if outfit == nil {
+            saveOutfit()
+            
+        } else { updateOutfit() }
         
-        if let imageToSave = self.uiImageToSave,
-           let filename = ImageStorage.saveImage(imageToSave) {
-            self.fullLookImagePath = (filename as NSString).lastPathComponent
+        if success {
+            isSaved.toggle()
+            
+            Task {
+                try await Task.sleep(for: .seconds(0.2))
+                dismiss()
+            }
+        }
+    }
+    
+    
+    private func saveOutfit() -> Bool {
+        
+        if let imageToSave = self.uiImageToSave {
+            let result = ImageStorage.saveImage(imageToSave)
+            
+            switch result {
+                case .success(let filename):
+                    fullLookImagePath = (filename as NSString).lastPathComponent
+                    
+                case .failure(let error):
+                    alertErrorMessage   = error.localizedDescription
+                    isAlertErrorVisible = true
+                    return false
+            }
         }
                         
         let newOutfit = Outfit(
@@ -300,10 +350,11 @@ struct OutfitEditorView: View {
         )
         
         outfitManager.insert(newOutfit)
-        dismiss()
+        return true
     }
     
-    private func updateOutfit() {
+    private func updateOutfit() -> Bool {
+        guard let outfit = outfit else { return false }
         
         if let imageToSave = self.uiImageToSave {
             
@@ -311,21 +362,27 @@ struct OutfitEditorView: View {
                 ImageStorage.deleteImage(filename: oldPath)
             }
             
-            if let filename = ImageStorage.saveImage(imageToSave) {
-                self.fullLookImagePath = filename
+            switch ImageStorage.saveImage(imageToSave) {
+                case .success(let filename):
+                    fullLookImagePath = (filename as NSString).lastPathComponent
+                    
+                case .failure(let error):
+                    alertErrorMessage   = error.localizedDescription
+                    isAlertErrorVisible = true
+                    return false
             }
         }
         
-        self.outfit!.name              = self.name
-        self.outfit!.season            = self.selectedSeason
-        self.outfit!.style             = self.selectedStyle
-        self.outfit!.lastWornDate      = self.lastWornDate
-        self.outfit!.fullLookImagePath = self.fullLookImagePath
-        self.outfit!.wearCount         = self.wearCount
-        self.outfit!.garments          = Array(self.garments)
+        outfit.name              = self.name
+        outfit.season            = self.selectedSeason
+        outfit.style             = self.selectedStyle
+        outfit.lastWornDate      = self.lastWornDate
+        outfit.fullLookImagePath = self.fullLookImagePath
+        outfit.wearCount         = self.wearCount
+        outfit.garments          = Array(self.garments)
         
         
         outfitManager.update()
-        dismiss()
+        return true
     }
 }

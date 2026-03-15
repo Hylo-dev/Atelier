@@ -7,8 +7,38 @@
 
 import UIKit
 
+enum ImageSaveError: Error {
+    case conversionFailed
+    case folderNotFound
+    case writeFailed(String)
+    
+    var localizedDescription: String {
+        return switch self {
+            case .conversionFailed:
+                "We couldn't process this photo. Please try taking it again."
+                
+            case .folderNotFound:
+                "Something went wrong while accessing your phone's storage. Please restart the app."
+                
+            case .writeFailed(let details):
+                
+                if details.contains("out of space") {
+                    "Your iPhone storage is full. Please make some space to save new items."
+
+                } else {
+                    "The photo couldn't be saved. Please try again in a moment."
+                }
+                
+        }
+    }
+}
+
 struct ImageStorage {
-    static func saveImage(_ image: UIImage, maxDimension: CGFloat = 1024) -> String? {
+    static func saveImage(
+        _ image       : UIImage,
+          maxDimension: CGFloat = 1024
+    ) -> Result<String, ImageSaveError> {
+        
         let size = image.size
         let aspectRatio = size.width / size.height
         var newSize: CGSize
@@ -37,7 +67,7 @@ struct ImageStorage {
         
         guard let data = resizedImage.heicData() else {
             print("Errore: Impossible convert to HEIC")
-            return nil
+            return .failure(.conversionFailed)
         }
         
         let sizeKB = Double(data.count) / 1024.0
@@ -50,17 +80,17 @@ struct ImageStorage {
         guard let documentsURL = FileManager.default.urls(
             for: .documentDirectory,
             in: .userDomainMask
-        ).first else { return nil }
+        ).first else { return .failure(.folderNotFound) }
         
         let fileURL = documentsURL.appendingPathComponent(filename)
         
         do {
             try data.write(to: fileURL)
-            return filename
+            return .success(filename)
             
         } catch {
-            print("Error to save file: \(error)")
-            return nil
+            print("Error to save file: \(error.localizedDescription)")
+            return .failure(.writeFailed(error.localizedDescription))
         }
     }
     

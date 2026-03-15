@@ -18,6 +18,9 @@ struct InventoryView: View {
     @Environment(GarmentManager.self)
     private var garmentManager: GarmentManager
     
+    @Environment(ApplianceManager.self)
+    private var applianceManager: ApplianceManager
+    
     
     
     // MARK: - Parameters Val
@@ -39,6 +42,12 @@ struct InventoryView: View {
         order: .reverse
     )
     private var garments: [Garment]
+    
+    @Query(
+        sort : \LaundrySession.dateCreated,
+        order: .forward
+    )
+    private var laundrySessions: [LaundrySession]
     
         
     
@@ -167,9 +176,11 @@ struct InventoryView: View {
                 ForEach(garmentManager.groupedGarments[category] ?? [], id: \.id) { item in
                     
                     GarmentContextCard(
-                        item        : item,
-                        manager     : garmentManager,
-                        selectedItem: $selectedItem
+                        item            : item,
+                        sessions        : laundrySessions,
+                        manager         : garmentManager,
+                        applianceManager: applianceManager,
+                        selectedItem    : $selectedItem
                     )
                     .equatable()
                     .id(item.id)
@@ -198,8 +209,11 @@ struct InventoryView: View {
 
 fileprivate
 struct GarmentContextCard: View, Equatable {
-    let item   : Garment
-    let manager: GarmentManager
+    let item            : Garment
+    let sessions        : [LaundrySession]
+    let manager         : GarmentManager
+    let applianceManager: ApplianceManager
+    
     
     @Binding
     var selectedItem: Garment?
@@ -234,17 +248,28 @@ struct GarmentContextCard: View, Equatable {
     
     @ViewBuilder
     private func contextMenuButtons(for item: Garment) -> some View {
-        let washingState = item.state == .toWash
-        let loanState    = item.state == .onLoan
+        let loanState = item.state == .onLoan
+        let isToWash  = item.state == .toWash
         
         Button {
-            item.state = washingState ? .drying : .washing
-            self.manager.update()
+            if isToWash {
+                // Se è nel cesto e clicco "Mark as Clean", resetto tutto
+                manager.resetWear(for: item)
+                
+            } else {
+                manager.logWear(
+                    for : item,
+                    in  : sessions,
+                    used: applianceManager,
+                    each: 20 // Force wash
+                )
+                self.manager.update()
+            }
             
         } label: {
             Label(
-                washingState ? "Mark as Clean" : "Move to Wash",
-                systemImage: washingState ? "sparkle" : "washer"
+                isToWash ? "Mark as Clean" : "Move to Wash",
+                systemImage: isToWash ? "sparkle" : "washer"
             )
         }
 //        .disabled(!item.state.readyToWash)
@@ -268,7 +293,11 @@ struct GarmentContextCard: View, Equatable {
         
         
         Button {
-            item.wearCount += 1
+            manager.logWear(
+                for : item,
+                in  : sessions,
+                used: applianceManager
+            )
             
         } label: {
             Label("Log wear", systemImage: "checkmark.seal")

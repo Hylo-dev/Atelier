@@ -103,6 +103,25 @@ struct GarmentEditorView: View {
         Int(selectedComposition.reduce(0) { $0 + $1.percentual })
     }
     
+    private var isFormValid: Bool {
+        let isNameValid = !name.trimmingCharacters(in: .whitespaces).isEmpty
+        let isCompositionValid = currentTotalComposition <= 100
+        
+        return isNameValid && isCompositionValid
+    }
+    
+    
+    
+    // MARK: - Alert Management
+    
+    @State
+    private var alertErrorMessage: String = ""
+    
+    @State
+    private var isAlertErrorVisible: Bool = false
+    
+    
+    
     init(garment: Garment? = nil) {
         self.item            = garment
         
@@ -170,27 +189,10 @@ struct GarmentEditorView: View {
             
             ToolbarItem(placement: .confirmationAction) {
                 Button("Finish", systemImage: "checkmark") {
-                    let garmentToProcess: Garment
-                    
-                    if self.item == nil {
-                        garmentToProcess = self.saveGarment()
-                        
-                    } else {
-                        
-                        self.updateGarment()
-                        garmentToProcess = item!
-                        applianceManager.unassignGarment(garmentToProcess)
-                    }
-                    
-                    applianceManager.processUnassignedGarments(
-                        [garmentToProcess],
-                        laundrySessions
-                    )
-                    
-                    dismiss()
+                    handleFinishAction()
                 }
                 .fontWeight(.bold)
-                .disabled(self.name.isEmpty)
+                .disabled(!isFormValid)
             }
         }
         .confirmationDialog(
@@ -212,6 +214,12 @@ struct GarmentEditorView: View {
             selection  : self.$selectedItem,
             matching   : .images
         )
+        .alert("Ops! Something went wrong", isPresented: $isAlertErrorVisible) {
+            Button("Ok", role: .cancel) { }
+            
+        } message: {
+            Text(alertErrorMessage)
+        }
         .onChange(
             of: self.selectedFabrics,
             selectedFabricsChanged
@@ -441,7 +449,9 @@ struct GarmentEditorView: View {
         }
     }
     
-    // MARK: - Handlers
+    
+    
+    // MARK: - Views
     
     @ViewBuilder
     private func confirmationDialogHandler() -> some View {
@@ -466,7 +476,6 @@ struct GarmentEditorView: View {
     private func sheetPhotoHandler() -> some View {
         CameraView(
             onImageCaptured: { filename, image in
-                //self.selectedImage = Image(uiImage: image)
                 self.uiImageToSave = image
                 self.imagePath = (filename as NSString).lastPathComponent
             },
@@ -490,7 +499,10 @@ struct GarmentEditorView: View {
         )
         .ignoresSafeArea()
     }
-
+    
+    
+    
+    // MARK: - Handlers
     
     private func selectedFabricsChanged(_ oldValue: Set<GarmentFabric>, _ newValue: Set<GarmentFabric>) {
         var newCompositionList: [GarmentComposition] = []
@@ -524,17 +536,41 @@ struct GarmentEditorView: View {
     }
     
     
-    // MARK: - Tools
     
-    private var isFormValid: Bool {
-        !self.name.isEmpty && self.color == Color.clear
+    private func handleFinishAction() {
+        let garmentToProcess: Garment?
+        
+        if self.item == nil {
+            garmentToProcess = saveGarment()
+            
+        } else {
+            garmentToProcess = updateGarment()            
+            if let g = garmentToProcess {
+                applianceManager.unassignGarment(g)
+            }
+        }
+
+        if let finalGarment = garmentToProcess {
+            applianceManager.processUnassignedGarments([finalGarment], laundrySessions)
+            dismiss()
+        }
     }
     
-    private func saveGarment() -> Garment {
-        
-        if let imageToSave = self.uiImageToSave,
-           let filename = ImageStorage.saveImage(imageToSave) {
-            self.imagePath = (filename as NSString).lastPathComponent
+    
+    
+    private func saveGarment() -> Garment? {
+        if let imageToSave = self.uiImageToSave {
+            
+            let result = ImageStorage.saveImage(imageToSave)
+            switch result {
+                case .success(let filename):
+                    imagePath = (filename as NSString).lastPathComponent
+                    
+                case .failure(let error):
+                    alertErrorMessage   = error.localizedDescription
+                    isAlertErrorVisible = true
+                    return nil
+            }
         }
         
         let newGarment = Garment(
@@ -557,36 +593,45 @@ struct GarmentEditorView: View {
         return newGarment
     }
     
-    func updateGarment() {
+    func updateGarment() -> Garment? {
+        guard let garment = item else { return nil }
         
         if let imageToSave = self.uiImageToSave {
             
-            if let oldPath = self.item?.imagePath {
+            if let oldPath = garment.imagePath {
                 ImageStorage.deleteImage(filename: oldPath)
             }
             
-            if let filename = ImageStorage.saveImage(imageToSave) {
-                self.imagePath = filename
+            let result = ImageStorage.saveImage(imageToSave)
+            switch result {
+                case .success(let filename):
+                    self.imagePath = (filename as NSString).lastPathComponent
+                    
+                case .failure(let error):
+                    alertErrorMessage   = error.localizedDescription
+                    isAlertErrorVisible = true
+                    return nil
             }
         }
         
-        self.item!.name           = self.name
-        self.item!.brand          = self.brand.isEmpty ? nil : self.brand
-        self.item!.color          = self.color.toHex() ?? "nil"
+        garment.name           = self.name
+        garment.brand          = self.brand.isEmpty ? nil : self.brand
+        garment.color          = self.color.toHex() ?? "nil"
         
         // Updated properties
-        self.item!.composition    = Array(self.selectedComposition)
-        self.item!.category       = self.selectedCategory
-        self.item!.subCategory    = self.selectedSubCategory
-        self.item!.season         = self.selectedSeason
-        self.item!.style          = self.selectedStyle
-        self.item!.wearCount      = self.wearCount
+        garment.composition    = Array(self.selectedComposition)
+        garment.category       = self.selectedCategory
+        garment.subCategory    = self.selectedSubCategory
+        garment.season         = self.selectedSeason
+        garment.style          = self.selectedStyle
+        garment.wearCount      = self.wearCount
         
-        self.item!.washingSymbols = Array(self.washingSymbols)
-        self.item!.purchaseDate   = self.purchaseDate
-        self.item!.imagePath      = self.imagePath
+        garment.washingSymbols = Array(self.washingSymbols)
+        garment.purchaseDate   = self.purchaseDate
+        garment.imagePath      = self.imagePath
         
         garmentManager.update()
+        return garment
     }
 }
 

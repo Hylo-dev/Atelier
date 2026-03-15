@@ -7,6 +7,7 @@
 
 import Observation
 import SwiftData
+import Foundation
 
 @Observable
 @MainActor
@@ -46,6 +47,70 @@ final class OutfitManager: Manager {
             print("Error DB: \(error)")
         }
     }
+    
+    
+    
+    func logOutfitWear(
+        for outfit      : Outfit,
+        garmentManager  : GarmentManager,
+        in sessions     : [LaundrySession],
+        applianceManager: ApplianceManager,
+        each count      : Int = 1
+    ) {
+        outfit.wearCount    += count
+        outfit.lastWornDate  = .now
+        
+        for garment in outfit.garments {
+            garmentManager.logWear(
+                for : garment,
+                in  : sessions,
+                used: applianceManager
+            )
+        }
+        
+        self.update()
+    }
+    
+    
+    
+    func moveOutfitToWash(
+        for outfit: Outfit,
+        garmentManager: GarmentManager,
+        in sessions: [LaundrySession],
+        applianceManager: ApplianceManager
+    ) {
+        for garment in outfit.garments {
+            garmentManager.logWear(
+                for : garment,
+                in  : sessions,
+                used: applianceManager,
+                each: 20
+            )
+        }
+        
+        garmentManager.update()
+    }
+    
+    
+    
+    func toggleOutfitLoan(
+        _ outfit      : Outfit,
+        garmentManager: GarmentManager
+    ) {
+        let newState: GarmentState = outfit.isOnLoan ? .available : .onLoan
+        
+        for garment in outfit.garments {
+            garment.state = newState
+            
+            if newState == .onLoan {
+                garmentManager.resetWear(for: garment)
+            }
+        }
+        
+        garmentManager.update()
+    }
+    
+    
     
     @MainActor
     func processOutfits(_ outfits: [Outfit], with filter: FilterOutfitConfig) {

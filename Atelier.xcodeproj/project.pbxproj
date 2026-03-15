@@ -33,7 +33,6 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				"Extensions/UIImage+Heic.swift",
-				"Features/Inventory/UImage+Heic.swift",
 				Info.plist,
 			);
 			target = 1F8318332F422D3B00713CCA /* Atelier */;
@@ -46,7 +45,6 @@
 			buildPhase = 1F8318322F422D3B00713CCA /* Resources */;
 			membershipExceptions = (
 				"Extensions/UIImage+Heic.swift",
-				"Features/Inventory/UImage+Heic.swift",
 			);
 		};
 /* End PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */

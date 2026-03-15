@@ -7,6 +7,7 @@
 
 import Observation
 import SwiftData
+import Foundation
 
 @Observable
 @MainActor
@@ -58,6 +59,37 @@ final class GarmentManager: Manager {
         } catch {
             print("Error DB: \(error)")
         }
+    }
+    
+    
+    
+    func logWear(
+        for  item    : Garment,
+        in   sessions: [LaundrySession],
+        used manager : ApplianceManager,
+        each count   : Int = 1
+    ) {
+        item.wearCount += count
+        
+        if item.hasReachedWashingLimits {
+            manager.processUnassignedGarments(
+                [item],
+                sessions
+            )
+        }
+        
+        self.update()
+    }
+    
+    
+    
+    func resetWear(for item: Garment) {
+        item.wearCount       = 0
+        item.lastWashingDate = .now
+        item.isBinAssigned   = false
+        item.state           = .available
+        
+        self.update()
     }
     
     

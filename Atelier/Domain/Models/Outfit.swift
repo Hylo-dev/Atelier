@@ -34,6 +34,10 @@ extension AtelierSchemaV1 {
             return self.garments.allSatisfy { $0.state == .available }
         }
         
+        var isOnLoan: Bool {
+            garments.contains { $0.state == .onLoan }
+        }
+        
         var stateWear: String {
             isReadyToWear ? "Yes" : "No"
         }

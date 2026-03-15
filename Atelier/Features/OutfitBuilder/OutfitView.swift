@@ -40,11 +40,25 @@ struct OutfitView: View {
     @Environment(OutfitManager.self)
     private var outfitManager: OutfitManager
     
+    @Environment(GarmentManager.self)
+    private var garmentManager: GarmentManager
+    
+    @Environment(ApplianceManager.self)
+    private var applianceManager: ApplianceManager
+    
+    
+    
     @Query(
         sort : \Outfit.lastWornDate,
         order: .reverse
     )
     private var outfits: [Outfit]
+    
+    @Query(
+        sort : \LaundrySession.dateCreated,
+        order: .reverse
+    )
+    private var laundrySessions: [LaundrySession]
     
     
     
@@ -178,10 +192,13 @@ struct OutfitView: View {
                     let subTitle = item.garments.count <= 1 ?
                     "Incomplete outfit" : nil
                     OutfitContextCard(
-                        outfit       : item,
-                        manager      : self.outfitManager,
-                        subTitleAlert: subTitle,
-                        selectedItem : self.$selectedItem
+                        outfit          : item,
+                        sessions        : laundrySessions,
+                        garmentManager  : garmentManager,
+                        applianceManager: applianceManager,
+                        manager         : self.outfitManager,
+                        subTitleAlert   : subTitle,
+                        selectedItem    : self.$selectedItem
                     )
                     .equatable()
                     .id(item.id)
@@ -208,9 +225,12 @@ struct OutfitView: View {
 
 fileprivate
 struct OutfitContextCard: View, Equatable {
-    let outfit       : Outfit
-    let manager      : OutfitManager?
-    let subTitleAlert: String?
+    let outfit          : Outfit
+    let sessions        : [LaundrySession]
+    let garmentManager  : GarmentManager
+    let applianceManager: ApplianceManager
+    let manager         : OutfitManager
+    let subTitleAlert   : String?
     
     @Binding
     var selectedItem: Outfit?
@@ -245,17 +265,70 @@ struct OutfitContextCard: View, Equatable {
     
     @ViewBuilder
     private func contextMenuButtons(for item: Outfit) -> some View {
+        
+        Button {
+            manager.moveOutfitToWash(
+                for             : outfit,
+                garmentManager  : garmentManager,
+                in              : sessions,
+                applianceManager: applianceManager
+            )
+        } label: {
+            Label("Wash Entire Outfit", systemImage: "washer")
+        }
+        
+        
+        Button {
+            manager.toggleOutfitLoan(
+                outfit,
+                garmentManager: garmentManager
+            )
+            
+        } label: {
+            let isOnLoan = outfit.isOnLoan
+            Label(
+                isOnLoan ? "Mark Outfit as Returned" : "Lend Entire Outfit",
+                systemImage: isOnLoan ? "arrow.uturn.backward" : "person.2"
+            )
+        }
+        
+        
+        
+        Divider()
+        
+        
+        
+        Button {
+            manager.logOutfitWear(
+                for: item,
+                garmentManager: garmentManager,
+                in: sessions,
+                applianceManager: applianceManager
+            )
+            
+        } label: {
+            Label("Log wear", systemImage: "checkmark.seal")
+        }
+        
+        
+        
+        Divider()
+        
+        
+        
         Button {
             self.selectedItem = item
         } label: {
             Label("Edit Details", systemImage: "pencil")
         }
         
+        
         Button(role: .destructive) {
-            self.manager?.delete(item)
+            self.manager.delete(item)
             self.taskDeletedCompleted.toggle()
         } label: {
             Label("Delete", systemImage: "trash")
         }
+        
     }
 }
