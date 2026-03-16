@@ -11,6 +11,9 @@ import SwiftData
 
 struct CareView: View {
     
+    @Environment(\.scenePhase)
+    private var scenePhase
+    
     
     
     @Query(sort : \LaundrySession.dateCreated, order: .forward)
@@ -141,6 +144,11 @@ struct CareView: View {
             updateBins()
             updateFilteredGarments()
         }
+        .onChange(of: scenePhase) { _, newPhase in
+            if newPhase == .active {
+                checkPendingCancellations()
+            }
+        }
     }
     
     
@@ -159,6 +167,7 @@ struct CareView: View {
                     
                     ItemCareView(
                         item    : item,
+                        manager : manager,
                         garments: garmentsWithImage[item.id] ?? []
                     )
                 }
@@ -240,11 +249,29 @@ struct CareView: View {
             print("No changes in bins, skipping update to save cycles")
         }
     }
+    
+    
+    
+    private func checkPendingCancellations() {
+        guard let sharedDefaults = UserDefaults(suiteName: "group.com.hylo.team.Atelier") else { return }
+        
+        if let canceledIDString = sharedDefaults.string(forKey: "canceledSessionID") {
+            if let sessionToCancel = laundrySessions.first(
+                where: { $0.id.uuidString == canceledIDString }
+            ) {
+                manager.cancelWashing(sessionToCancel)
+                print("Cancel session with success")
+            }
+            
+            sharedDefaults.removeObject(forKey: "canceledSessionID")
+        }
+    }
 }
 
 fileprivate struct ItemCareView: View {
     
     let item    : LaundrySession
+    let manager : ApplianceManager
     let garments: [Garment]
     
     var body: some View {
@@ -258,6 +285,45 @@ fileprivate struct ItemCareView: View {
             .id(item.id)
         }
         .buttonStyle(.plain)
+        .contextMenu {
+            actionButton
+        }
+        .onAppear {
+            if item.status == .washing {
+                manager.resumeWashing(item)
+            }
+        }
+    }
+    
+    private var actionButton: some View {
+        Group {
+            switch item.status {
+                case .planned:
+                    Button {
+                        manager.startWashing(item)
+                    } label: {
+                        Label("Start Washing", systemImage: "washer.fill")
+                    }
+                    
+                case .washing:
+                    Button {
+                        manager.cancelWashing(item)
+                    } label: {
+                        Label("Cancel Washing", systemImage: "stop.fill")
+                    }
+                    
+                case .completed, .drying:
+                    Button {
+                        manager.markAsClean(item)
+                    } label: {
+                        Label("Set clean all", systemImage: "checkmark.seal.fill")
+                    }
+                    .tint(.green)
+                    
+                default:
+                    EmptyView()
+            }
+        }
     }
 }
 

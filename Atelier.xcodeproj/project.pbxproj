@@ -9,7 +9,20 @@
 /* Begin PBXBuildFile section */
 		1FDB2D752F4669E800D02704 /* Nuke in Frameworks */ = {isa = PBXBuildFile; productRef = 1FDB2D742F4669E800D02704 /* Nuke */; };
 		1FDB2D772F4669E800D02704 /* NukeUI in Frameworks */ = {isa = PBXBuildFile; productRef = 1FDB2D762F4669E800D02704 /* NukeUI */; };
+		1FED73E72F6868AC00F5FBEB /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1FED73E62F6868AC00F5FBEB /* WidgetKit.framework */; };
+		1FED73E92F6868AC00F5FBEB /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1FED73E82F6868AC00F5FBEB /* SwiftUI.framework */; };
+		1FED73FA2F6868AD00F5FBEB /* AtelierWidgetsExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 1FED73E52F6868AC00F5FBEB /* AtelierWidgetsExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		1FED73F82F6868AD00F5FBEB /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 1F83182C2F422D3B00713CCA /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 1FED73E42F6868AC00F5FBEB;
+			remoteInfo = AtelierWidgetsExtension;
+		};
+/* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
 		1F8318662F42635900713CCA /* Embed Frameworks */ = {
@@ -22,10 +35,25 @@
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		1FED73FF2F6868AD00F5FBEB /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				1FED73FA2F6868AD00F5FBEB /* AtelierWidgetsExtension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		1F8318342F422D3B00713CCA /* Atelier.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Atelier.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		1FED73E52F6868AC00F5FBEB /* AtelierWidgetsExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = AtelierWidgetsExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		1FED73E62F6868AC00F5FBEB /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
+		1FED73E82F6868AC00F5FBEB /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
+		1FED74192F68A4CE00F5FBEB /* AtelierWidgetsExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = AtelierWidgetsExtension.entitlements; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -36,6 +64,29 @@
 				Info.plist,
 			);
 			target = 1F8318332F422D3B00713CCA /* Atelier */;
+		};
+		1FED73FE2F6868AD00F5FBEB /* Exceptions for "AtelierWidgets" folder in "AtelierWidgetsExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 1FED73E42F6868AC00F5FBEB /* AtelierWidgetsExtension */;
+		};
+		1FED74082F686BAB00F5FBEB /* Exceptions for "AtelierWidgets" folder in "Atelier" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				CancelLaundryIntent.swift,
+				LaundryAttributes.swift,
+				ToggleLaundryIntent.swift,
+			);
+			target = 1F8318332F422D3B00713CCA /* Atelier */;
+		};
+		1FED74182F68A10B00F5FBEB /* Exceptions for "Atelier" folder in "AtelierWidgetsExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Domain/Manager/LaundryActivityManager.swift,
+			);
+			target = 1FED73E42F6868AC00F5FBEB /* AtelierWidgetsExtension */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
@@ -55,8 +106,18 @@
 			exceptions = (
 				1F83185A2F4241E500713CCA /* Exceptions for "Atelier" folder in "Atelier" target */,
 				1FA9EA9F2F64C0CF00EBDED6 /* Exceptions for "Atelier" folder in "Copy Bundle Resources" phase from "Atelier" target */,
+				1FED74182F68A10B00F5FBEB /* Exceptions for "Atelier" folder in "AtelierWidgetsExtension" target */,
 			);
 			path = Atelier;
+			sourceTree = "<group>";
+		};
+		1FED73EA2F6868AC00F5FBEB /* AtelierWidgets */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				1FED74082F686BAB00F5FBEB /* Exceptions for "AtelierWidgets" folder in "Atelier" target */,
+				1FED73FE2F6868AD00F5FBEB /* Exceptions for "AtelierWidgets" folder in "AtelierWidgetsExtension" target */,
+			);
+			path = AtelierWidgets;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -71,13 +132,24 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		1FED73E22F6868AC00F5FBEB /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1FED73E92F6868AC00F5FBEB /* SwiftUI.framework in Frameworks */,
+				1FED73E72F6868AC00F5FBEB /* WidgetKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
 		1F83182B2F422D3B00713CCA = {
 			isa = PBXGroup;
 			children = (
+				1FED74192F68A4CE00F5FBEB /* AtelierWidgetsExtension.entitlements */,
 				1F8318362F422D3B00713CCA /* Atelier */,
+				1FED73EA2F6868AC00F5FBEB /* AtelierWidgets */,
 				1F8318622F42635900713CCA /* Frameworks */,
 				1F8318352F422D3B00713CCA /* Products */,
 			);
@@ -87,6 +159,7 @@
 			isa = PBXGroup;
 			children = (
 				1F8318342F422D3B00713CCA /* Atelier.app */,
+				1FED73E52F6868AC00F5FBEB /* AtelierWidgetsExtension.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -94,6 +167,8 @@
 		1F8318622F42635900713CCA /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				1FED73E62F6868AC00F5FBEB /* WidgetKit.framework */,
+				1FED73E82F6868AC00F5FBEB /* SwiftUI.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -109,10 +184,12 @@
 				1F8318312F422D3B00713CCA /* Frameworks */,
 				1F8318322F422D3B00713CCA /* Resources */,
 				1F8318662F42635900713CCA /* Embed Frameworks */,
+				1FED73FF2F6868AD00F5FBEB /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				1FED73F92F6868AD00F5FBEB /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				1F8318362F422D3B00713CCA /* Atelier */,
@@ -126,6 +203,28 @@
 			productReference = 1F8318342F422D3B00713CCA /* Atelier.app */;
 			productType = "com.apple.product-type.application";
 		};
+		1FED73E42F6868AC00F5FBEB /* AtelierWidgetsExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 1FED73FB2F6868AD00F5FBEB /* Build configuration list for PBXNativeTarget "AtelierWidgetsExtension" */;
+			buildPhases = (
+				1FED73E12F6868AC00F5FBEB /* Sources */,
+				1FED73E22F6868AC00F5FBEB /* Frameworks */,
+				1FED73E32F6868AC00F5FBEB /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				1FED73EA2F6868AC00F5FBEB /* AtelierWidgets */,
+			);
+			name = AtelierWidgetsExtension;
+			packageProductDependencies = (
+			);
+			productName = AtelierWidgetsExtension;
+			productReference = 1FED73E52F6868AC00F5FBEB /* AtelierWidgetsExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -133,11 +232,14 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
-				LastSwiftUpdateCheck = 2620;
+				LastSwiftUpdateCheck = 2630;
 				LastUpgradeCheck = 2630;
 				TargetAttributes = {
 					1F8318332F422D3B00713CCA = {
 						CreatedOnToolsVersion = 26.2;
+					};
+					1FED73E42F6868AC00F5FBEB = {
+						CreatedOnToolsVersion = 26.3;
 					};
 				};
 			};
@@ -159,12 +261,20 @@
 			projectRoot = "";
 			targets = (
 				1F8318332F422D3B00713CCA /* Atelier */,
+				1FED73E42F6868AC00F5FBEB /* AtelierWidgetsExtension */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		1F8318322F422D3B00713CCA /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		1FED73E32F6868AC00F5FBEB /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -181,7 +291,22 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		1FED73E12F6868AC00F5FBEB /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		1FED73F92F6868AD00F5FBEB /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 1FED73E42F6868AC00F5FBEB /* AtelierWidgetsExtension */;
+			targetProxy = 1FED73F82F6868AD00F5FBEB /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		1F83183F2F422D3C00713CCA /* Debug */ = {
@@ -337,6 +462,7 @@
 				INFOPLIST_KEY_CFBundleDisplayName = Atelier;
 				INFOPLIST_KEY_NSAppleMusicUsageDescription = "Media for Models 3D";
 				INFOPLIST_KEY_NSCameraUsageDescription = "Use camera for scanning garment";
+				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -348,6 +474,8 @@
 				);
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = team.hylo.Atelier;
+				"PRODUCT_BUNDLE_IDENTIFIER[sdk=iphoneos*]" = hylo.team.Atelier;
+				"PRODUCT_BUNDLE_IDENTIFIER[sdk=macosx*]" = hylo.team.Atelier;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				REGISTER_APP_GROUPS = YES;
@@ -395,6 +523,7 @@
 				INFOPLIST_KEY_CFBundleDisplayName = Atelier;
 				INFOPLIST_KEY_NSAppleMusicUsageDescription = "Media for Models 3D";
 				INFOPLIST_KEY_NSCameraUsageDescription = "Use camera for scanning garment";
+				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -406,6 +535,8 @@
 				);
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = team.hylo.Atelier;
+				"PRODUCT_BUNDLE_IDENTIFIER[sdk=iphoneos*]" = hylo.team.Atelier;
+				"PRODUCT_BUNDLE_IDENTIFIER[sdk=macosx*]" = hylo.team.Atelier;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				REGISTER_APP_GROUPS = YES;
@@ -416,6 +547,70 @@
 				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		1FED73FC2F6868AD00F5FBEB /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_ENTITLEMENTS = AtelierWidgetsExtension.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 8KZQJ4JUGS;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = AtelierWidgets/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = AtelierWidgets;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = hylo.team.Atelier.AtelierWidgets;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		1FED73FD2F6868AD00F5FBEB /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_ENTITLEMENTS = AtelierWidgetsExtension.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 8KZQJ4JUGS;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = AtelierWidgets/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = AtelierWidgets;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = hylo.team.Atelier.AtelierWidgets;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
@@ -440,6 +635,15 @@
 			buildConfigurations = (
 				1F8318422F422D3C00713CCA /* Debug */,
 				1F8318432F422D3C00713CCA /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		1FED73FB2F6868AD00F5FBEB /* Build configuration list for PBXNativeTarget "AtelierWidgetsExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1FED73FC2F6868AD00F5FBEB /* Debug */,
+				1FED73FD2F6868AD00F5FBEB /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

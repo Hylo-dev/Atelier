@@ -13,6 +13,8 @@ import Foundation
 @Observable
 final class ApplianceManager: Manager {
     var context: ModelContext
+    
+    let activityManager = LaundryActivityManager()
 
     
     
@@ -67,16 +69,55 @@ final class ApplianceManager: Manager {
         session.startDate        = .now
         
         let minutes = session.suggestedProgram.washingTime
-        session.completationDate = Calendar.current.date(
-            byAdding: .minute,
-            value   : minutes,
-            to      : .now
-        )
+        let targetDate = Calendar.current.date(byAdding: .minute, value: minutes, to: .now) ?? .now
+        session.completationDate = targetDate
         
         for garment in session.garments {
             garment.state = .washing
         }
         
+        activityManager.start(
+            programName: session.suggestedProgram.displayName,
+            startDate  : session.startDate ?? .now,
+            targetDate : targetDate,
+            sessionId  : session.id.uuidString,
+            temperature: session.targetTemperature
+        )
+        
+        save()
+    }
+    
+    
+    // ApplianceManager.swift
+    
+    func resumeWashing(_ session: LaundrySession) {
+        guard let targetDate = session.completationDate,
+              let startDate  = session.startDate else { return }
+        
+        activityManager.start(
+            programName: session.suggestedProgram.displayName,
+            startDate  : startDate,
+            targetDate : targetDate,
+            sessionId  : session.id.uuidString,
+            temperature: session.targetTemperature
+        )
+        
+        save()
+    }
+    
+    
+    
+    func cancelWashing(_ session: LaundrySession) {
+        session.status           = .planned
+        session.startDate        = nil
+        session.completationDate = nil
+        
+        for garment in session.garments {
+            garment.state = .toWash
+        }
+        
+        // --- STOP LIVE ACTIVITY ---
+        stopLiveActivity()
         save()
     }
     
@@ -89,7 +130,14 @@ final class ApplianceManager: Manager {
             garment.state = .drying
         }
         
+        stopLiveActivity()
         save()
+    }
+    
+    
+    
+    func stopLiveActivity() {
+        activityManager.stop()
     }
     
     
