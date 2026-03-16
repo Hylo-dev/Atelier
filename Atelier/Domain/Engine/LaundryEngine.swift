@@ -29,16 +29,47 @@ struct LaundryEngine {
             .compactMap { $0.maxWashingTemperature }
             .min() ?? 40
         
-        let levels = garment.washingSymbols.map { $0.agitationLevel }
-        var idealAgitation: WashingAgitation = .normal
+        var suggestedProgram: Program = .standard
+        let symbols = garment.washingSymbols
         
-        if levels.contains(.gentle) {
-            idealAgitation = .gentle
-            
-        } else if levels.contains(.reduced) {
-            idealAgitation = .reduced
+        if symbols.contains(where: { $0 == .doNotMachineWash }) {
+            return (targetBin, idealTemp, .notWash)
         }
         
-        return (targetBin, idealTemp, idealAgitation.program)
+        if symbols.contains(where: { $0 == .handWash }) {
+            return (targetBin, idealTemp, .handWash)
+        }
+        
+        let animalFiberPct = garment.composition
+            .filter { $0.fabric == .wool || $0.fabric == .cashmere }
+            .reduce(0) { $0 + $1.percentual }
+        
+        if animalFiberPct >= 15 {
+            return (targetBin, idealTemp, .wool)
+        }
+        
+        let delicateFiberPct = garment.composition
+            .filter { $0.fabric == .silk ||
+                $0.fabric == .acrylic ||
+                $0.fabric == .nylon ||
+                $0.fabric == .polyester ||
+                $0.fabric == .spandex ||
+                $0.fabric == .viscose
+            }
+            .reduce(0) { $0 + $1.percentual }
+        
+        if symbols.contains(
+            where: { $0.agitationLevel == .gentle }
+        ) || delicateFiberPct > 30 {
+            suggestedProgram = .delicate
+            
+        } else if symbols.contains(where: { $0.agitationLevel == .reduced }) {
+            suggestedProgram = .mix
+            
+        } else if WashingColorGroup.classify(garment.color) == .darks {
+            suggestedProgram = .darks
+        }
+        
+        return (targetBin, idealTemp, suggestedProgram)
     }
 }

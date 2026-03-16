@@ -418,11 +418,34 @@ enum LaundryBin: String, Codable, CaseIterable, Identifiable {
         }
     }
     
+    
+    
     var isDelicate: Bool {
         self == .darkDelicate    ||
         self == .pastelDelicate  ||
         self == .vibrantDelicate ||
         self == .whiteDelicate
+    }
+    
+    
+    
+    var colorGroup: WashingColorGroup {
+        switch self {
+            case .whiteHeavyDuty, .whiteNormal, .whiteDelicate:
+                .whites
+                
+            case .darkNormal, .darkDelicate, .denim:
+                .darks
+                
+            case .pastelNormal, .pastelDelicate:
+                .pastels
+                
+            case .vibrantNormal, .vibrantDelicate, .activewear, .woolAndCashmere:
+                .vibrant
+                
+            case .professionalCare:
+                .vibrant
+        }
     }
 }
 
@@ -431,8 +454,29 @@ enum LaundryBin: String, Codable, CaseIterable, Identifiable {
 enum LaundrySessionStatus: String, Codable, CaseIterable {
     case planned   = "Planed"
     case washing   = "On Washing"
-    case drying    = "On Drying"
     case completed = "Complete"
+    case drying    = "On Drying"
+    case clean     = "Clean"
+}
+
+
+
+enum LaundryWarning: String, CaseIterable, Codable {
+    case meshBagRequired     = "Delicate items detected: use a mesh laundry bag."
+    case handWashOnly        = "Hand-wash only items detected in a machine cycle."
+    case temperatureTooHigh  = "Temperature Alert: Some items in this session cannot handle the current heat."
+    case colorBleedingRisk   = "Color Mix Alert: Dark or vibrant items may bleed into lighter garments."
+    case emptySession        = "This session is currently empty."
+    
+    var isCritical: Bool {
+        switch self {
+            case .temperatureTooHigh, .colorBleedingRisk, .handWashOnly:
+                true
+                
+            default:
+                false
+        }
+    }
 }
 
 
@@ -441,21 +485,38 @@ enum Program: String, Codable, CaseIterable {
     case standard = "Cotton/Standard"
     case mix      = "Mix"
     case delicate = "Delicate"
+    case wool     = "Wool"
+    case quick    = "Quick"
+    case eco      = "Eco"
+    case darks    = "Darks"
+    case handWash = "Hand Wash"
     case notWash  = "Not Wash"
     
     var displayName: String {
         switch self {
-            case .standard:
-                "Standard"
-                
-            case .mix:
-                "Mix"
-                
-            case .delicate:
-                "Delicate"
-                
-            case .notWash:
-                "Not Wash"
+            case .standard: "Standard"
+            case .mix:      "Mix"
+            case .delicate: "Delicate"
+            case .wool:     "Wool"
+            case .quick:    "Quick"
+            case .eco:      "Eco"
+            case .darks:    "Darks"
+            case .handWash: "Hand Wash"
+            case .notWash:  "Not Wash"
+        }
+    }
+    
+    var washingTime: Int {
+        switch self {
+            case .standard: 100
+            case .mix     : 60
+            case .delicate: 45
+            case .wool    : 50
+            case .quick   : 20
+            case .eco     : 180
+            case .darks   : 75
+            case .handWash: 40
+            case .notWash : 0
         }
     }
 }

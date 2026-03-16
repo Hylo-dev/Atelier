@@ -62,6 +62,61 @@ final class ApplianceManager: Manager {
     
     
     
+    func startWashing(_ session: LaundrySession) {
+        session.status           = .washing
+        session.startDate        = .now
+        
+        let minutes = session.suggestedProgram.washingTime
+        session.completationDate = Calendar.current.date(
+            byAdding: .minute,
+            value   : minutes,
+            to      : .now
+        )
+        
+        for garment in session.garments {
+            garment.state = .washing
+        }
+        
+        save()
+    }
+    
+    
+    
+    func finishWashing(_ session: LaundrySession) {
+        session.status = .completed
+        
+        for garment in session.garments {
+            garment.state = .drying
+        }
+        
+        save()
+    }
+    
+    
+    
+    func startDrying(_ session: LaundrySession) {
+        session.status = .drying
+        save()
+    }
+    
+    
+    
+    func markAsClean(_ session: LaundrySession) {
+        session.status = .clean
+        
+        for garment in session.garments {
+            garment.state                = .available
+            garment.isBinAssigned        = false
+            garment.activeLaundrySession = nil
+            garment.wearCount            = 0
+            garment.lastWashingDate      = .now
+        }
+        
+        save()
+    }
+    
+    
+    
     func processUnassignedGarments(
         _ garments: [Garment],
         _ laundrySessions: [LaundrySession]
@@ -87,9 +142,17 @@ final class ApplianceManager: Manager {
             if let exactSession = activeSessions.first(where: {
                 $0.status == .planned &&
                 $0.bin == decision.bin &&
-                $0.targetTemperature == decision.targetTemperature &&
                 $0.suggestedProgram == decision.suggestedProgram
             }) {
+                let garmentMaxTemp = garment.washingSymbols.compactMap {
+                    $0.maxWashingTemperature
+                }.min() ?? 40
+                
+                exactSession.targetTemperature = min(
+                    exactSession.targetTemperature,
+                    garmentMaxTemp
+                )
+                
                 exactSession.garments.append(garment)
                 exactSession.laundrySymbols.formUnion(garment.washingSymbols)
                 exactSession.updateWarnings()

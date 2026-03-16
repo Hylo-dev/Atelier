@@ -15,8 +15,10 @@ extension AtelierSchemaV1 {
     final class LaundrySession {
         @Attribute(.unique) var id: UUID
         
-        var dateCreated: Date
-        var status: LaundrySessionStatus
+        var dateCreated     : Date
+        var startDate       : Date?
+        var completationDate: Date?
+        var status          : LaundrySessionStatus
         
         @Relationship
         var garments: [Garment]
@@ -27,7 +29,7 @@ extension AtelierSchemaV1 {
         
         var laundrySymbols: Set<LaundrySymbol>
         
-        var warnings: [String]
+        var warnings: [LaundryWarning]
         
         init(
             bin              : LaundryBin,
@@ -49,18 +51,42 @@ extension AtelierSchemaV1 {
         }
         
         func updateWarnings() {
-            var newWarnings: [String] = []
+            var newWarnings: Set<LaundryWarning> = []
             
-            for garment in garments {
+            if garments.contains(where: { $0.category == .lingerie }) {
+                newWarnings.insert(.meshBagRequired)
+            }
+            
+            if garments.contains(
+                where: {
+                    let maxTemp = $0.washingSymbols.compactMap {
+                        $0.maxWashingTemperature
+                    }.min() ?? 40
+                    
+                    return self.targetTemperature > maxTemp
+                }
+            ) {
+                newWarnings.insert(.temperatureTooHigh)
+            }
+            
+            let sessionColor = self.bin.colorGroup
+            if sessionColor == .whites || sessionColor == .pastels {
                 
-                if garment.subCategory.rawValue == "Bra" || garment.subCategory.rawValue == "Underwear" {
-                    if !newWarnings.contains("Usa sacchetto a rete") {
-                        newWarnings.append("Usa sacchetto a rete")
-                    }
+                let hasDarkItems = garments.contains {
+                    let itemColorGroup = WashingColorGroup.classify($0.color)
+                    return itemColorGroup == .darks || itemColorGroup == .vibrant
+                }
+                
+                if hasDarkItems {
+                    newWarnings.insert(.colorBleedingRisk)
                 }
             }
             
-            self.warnings = newWarnings
+            if suggestedProgram != .handWash && garments.contains(where: { $0.washingSymbols.contains(.handWash) }) {
+                newWarnings.insert(.handWashOnly)
+            }
+            
+            self.warnings = Array(newWarnings)
         }
     }
 }
