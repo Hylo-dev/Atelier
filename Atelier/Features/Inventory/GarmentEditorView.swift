@@ -504,15 +504,72 @@ struct GarmentEditorView: View {
     
     // MARK: - Handlers
     
-    private func selectedFabricsChanged(_ oldValue: Set<GarmentFabric>, _ newValue: Set<GarmentFabric>) {
+    private func selectedFabricsChanged(
+        _ oldValue: Set<GarmentFabric>,
+        _ newValue: Set<GarmentFabric>
+    ) {
+        guard !newValue.isEmpty else {
+            self.selectedComposition = []
+            return
+        }
+        
+        let keptFabrics = newValue.intersection(oldValue)
+        let addedFabrics = newValue.subtracting(oldValue)
+        
+        var keptCompositions: [GarmentComposition] = []
+        var currentKeptSum: Double = 0.0
+        
+        for fabric in keptFabrics {
+            if let existing = self.selectedComposition.first(where: { $0.fabric == fabric }) {
+                keptCompositions.append(existing)
+                currentKeptSum += existing.percentual
+            }
+        }
+        
         var newCompositionList: [GarmentComposition] = []
         
-        for fabric in newValue {
-            if let existing = self.selectedComposition.first(where: { $0.fabric == fabric }) {
-                newCompositionList.append(existing)
+        if !addedFabrics.isEmpty {
+            let availableSpace = 100.0 - currentKeptSum
+            
+            if availableSpace > 0.1 {
+                let shareForNew = availableSpace / Double(addedFabrics.count)
+                newCompositionList.append(contentsOf: keptCompositions)
+                
+                for fabric in addedFabrics {
+                    newCompositionList.append(GarmentComposition(fabric: fabric, percentual: shareForNew))
+                }
                 
             } else {
-                newCompositionList.append(GarmentComposition(fabric: fabric, percentual: 0))
+                let equalShare         = 100.0 / Double(newValue.count)
+                let totalSpaceForAdded = equalShare * Double(addedFabrics.count)
+                let spaceForKept       = 100.0 - totalSpaceForAdded
+                
+                for var composition in keptCompositions {
+                    if currentKeptSum > 0 {
+                        composition.percentual = (composition.percentual / currentKeptSum) * spaceForKept
+                        
+                    } else {
+                        composition.percentual = spaceForKept / Double(keptCompositions.count)
+                    }
+                    
+                    newCompositionList.append(composition)
+                }
+                
+                for fabric in addedFabrics {
+                    newCompositionList.append(GarmentComposition(fabric: fabric, percentual: equalShare))
+                }
+            }
+            
+        } else {
+            for var composition in keptCompositions {
+                if currentKeptSum > 0 {
+                    composition.percentual = (composition.percentual / currentKeptSum) * 100.0
+                    
+                } else {
+                    composition.percentual = 100.0 / Double(keptCompositions.count)
+                }
+                
+                newCompositionList.append(composition)
             }
         }
         

@@ -322,11 +322,13 @@ enum GarmentFabric: String, Codable, SelectableItem {
     var category: FabricCategory {
         switch self {
             case .cotton, .wool, .silk, .linen, .hemp, .leather, .suede, .cashmere:
-                return .natural
+                .natural
+                
             case .polyester, .nylon, .spandex, .viscose, .acrylic:
-                return .synthetic
+                .synthetic
+                
             case .denim, .velvet, .fleece, .jersey:
-                return .mix
+                .mix
         }
     }
 }
