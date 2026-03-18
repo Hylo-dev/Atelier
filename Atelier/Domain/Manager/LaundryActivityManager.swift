@@ -13,7 +13,7 @@ import UserNotifications
 @MainActor
 final class LaundryActivityManager {
     static  let shared = LaundryActivityManager()
-    private var activity: Activity<LaundryAttributes>?
+//    private var activity: Activity<LaundryAttributes>?
     
     
     
@@ -24,40 +24,41 @@ final class LaundryActivityManager {
         sessionId  : String,
         temperature: Int
     ) {
-        let interval     = startDate...targetDate
-        let initialState = LaundryAttributes.ContentState(interval: interval)
+//        let interval     = startDate...targetDate
+//        let initialState = LaundryAttributes.ContentState(interval: interval)
         
-        let attributes = LaundryAttributes(
-            programName: programName,
-            temperature: temperature,
-            sessionID  : sessionId
-        )
+//        let attributes = LaundryAttributes(
+//            programName: programName,
+//            temperature: temperature,
+//            sessionID  : sessionId
+//        )
         
         Task {
-            for existingActivity in Activity<LaundryAttributes>.activities {
-                await existingActivity.end(nil, dismissalPolicy: .immediate)
+//            for existingActivity in Activity<LaundryAttributes>.activities {
+//                await existingActivity.end(nil, dismissalPolicy: .immediate)
+//            }
+            
+            let timeRemaining = targetDate.timeIntervalSince(Date.now)
+            if timeRemaining > 0 {
+                scheduleNotification(
+                    for    : sessionId,
+                    in     : timeRemaining,
+                    program: programName
+                )
             }
             
-            do {
-                let currentActivity = try Activity.request(
-                    attributes: attributes,
-                    content: .init(state: initialState, staleDate: targetDate)
-                )
-                self.activity = currentActivity
+//            do {
+//                let currentActivity = try Activity.request(
+//                    attributes: attributes,
+//                    content: .init(state: initialState, staleDate: targetDate)
+//                )
+//                self.activity = currentActivity
                 
-                let timeRemaining = targetDate.timeIntervalSince(Date.now)
-                if timeRemaining > 0 {
-                    scheduleNotification(
-                        for      : currentActivity.id,
-                        in       : timeRemaining,
-                        program  : programName,
-                        sessionId: sessionId
-                    )
-                }
                 
-            } catch {
-                print("Error: \(error.localizedDescription)")
-            }
+                
+//            } catch {
+//                print("Error: \(error.localizedDescription)")
+//            }
         }
     }
     
@@ -76,45 +77,50 @@ final class LaundryActivityManager {
     
     
     private func scheduleNotification(
-        for activityId: String,
+        for id: String,
         in  seconds   : TimeInterval,
-            program   : String,
-            sessionId : String
+            program   : String
     ) {
         let content = UNMutableNotificationContent()
         
         content.title              = "Cycle Complete"
         content.body               = "The \(program) cycle has finished"
         content.categoryIdentifier = "LAUNDRY_CATEGORY"
-        content.userInfo           = ["ACTIVITY_ID": activityId, "SESSION_ID": sessionId]
+//        content.userInfo           = ["ACTIVITY_ID": activityId, "SESSION_ID": sessionId]
+        content.userInfo           = ["SESSION_ID": id]
         content.sound              = .default
         
-        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: seconds, repeats: false)
-        let request = UNNotificationRequest(identifier: activityId, content: content, trigger: trigger)
+        let trigger = UNTimeIntervalNotificationTrigger(
+            timeInterval: seconds,
+            repeats     : false
+        )
+        let request = UNNotificationRequest(
+            identifier: id,
+            content: content,
+            trigger: trigger
+        )
         
         UNUserNotificationCenter.current().add(request)
     }
     
     
     func updateNotification(
-        for activityId   : String,
-        isPaused     : Bool,
-        remainingTime: TimeInterval?,
-        programName  : String,
-        sessionId    : String
+        for id            : String,
+            isPaused      : Bool,
+            remainingTime : TimeInterval?,
+            programName   : String
     ) {
         if isPaused {
             UNUserNotificationCenter.current().removePendingNotificationRequests(
-                withIdentifiers: [activityId]
+                withIdentifiers: [id]
             )
             print("Paused Notification")
             
         } else if let remaining = remainingTime, remaining > 0 {
             scheduleNotification(
-                for: activityId,
-                in: remaining,
-                program: programName,
-                sessionId: sessionId
+                for    : id,
+                in     : remaining,
+                program: programName
             )
             print("Reprogramed Notification")
         }

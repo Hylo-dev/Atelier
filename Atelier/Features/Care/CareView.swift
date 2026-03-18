@@ -8,6 +8,7 @@
 import SwiftUI
 import CoreLocation
 import SwiftData
+internal import Combine
 
 struct CareView: View {
     
@@ -16,7 +17,11 @@ struct CareView: View {
     
     
     
-    @Query(sort : \LaundrySession.dateCreated, order: .forward)
+    @Query( // TODO: This is for testing, completed laundry appears on history section or filter toggle
+        filter: #Predicate<LaundrySession> { !$0.isCompleted },
+        sort : \LaundrySession.dateCreated,
+        order: .forward
+    )
     private var laundrySessions: [LaundrySession]
     
     
@@ -272,8 +277,28 @@ fileprivate struct ItemCareView: View {
     let manager : ApplianceManager
     let garments: [Garment]
     
+    @State
+    private var timeRemaining: TimeInterval = 0
+    
+    let timer = Timer.publish(
+        every: 1, on: .main, in: .common
+    ).autoconnect()
+    
+        
+    init(
+        item    : LaundrySession,
+        manager : ApplianceManager,
+        garments: [Garment]
+    ) {
+        self.item     = item
+        self.manager  = manager
+        self.garments = garments
+        
+    }
+    
     var body: some View {
         
+        // TODO: When item status is `completed` change card UI
         NavigationLink(value: item) {
             MultipleCardView(
                 title: "\(item.targetTemperature)° \(item.suggestedProgram.displayName)",
@@ -283,12 +308,15 @@ fileprivate struct ItemCareView: View {
             .id(item.id)
         }
         .buttonStyle(.plain)
-        .contextMenu {
-            actionButton
-        }
-        .onAppear {
-            if item.status == .washing {
-                manager.resumeWashing(item)
+        .contextMenu { actionButton }
+        .onReceive(timer) { _ in
+            guard item.status == .washing else { return }
+            
+            updateTimeRemaining()
+            
+            if timeRemaining <= 0 {
+                timer.upstream.connect().cancel()
+                manager.finishWashing(item)
             }
         }
     }
@@ -305,8 +333,30 @@ fileprivate struct ItemCareView: View {
                     
                     
                 case .washing:
+                    
+                    Label(
+                        formatDuration(timeRemaining),
+                        systemImage: "timer"
+                    )
+                    .onAppear {
+                        if timeRemaining == 0 {
+                            updateTimeRemaining()
+                        }
+                    }
+                    
+                    Button {
+                        manager.pauseWashing(item)
+                    } label: {
+                        Label("Pause Wash", systemImage: "pause.fill")
+                    }
+                    
+                    
+                    Divider()
+                    
+                    
                     Button {
                         manager.finishWashing(item)
+                        
                     } label: {
                         Label("Finish Wash", systemImage: "checkmark.circle")
                     }
@@ -323,6 +373,33 @@ fileprivate struct ItemCareView: View {
                         manager.startDrying(item)
                     } label: {
                         Label("Start Drying", systemImage: "sun.max.fill")
+                    }
+                    
+                    
+                case .paused:
+                    Label(
+                        formatDuration(item.remainingTime ?? 0),
+                        systemImage: "pause.circle"
+                    )
+                    
+                    Button {
+                        manager.resumeWashing(item)
+                    } label: {
+                        Label("Resume Wash", systemImage: "play.fill")
+                    }
+                    
+                    Divider()
+                    
+                    Button {
+                        manager.finishWashing(item)
+                    } label: {
+                        Label("Finish Wash", systemImage: "checkmark.circle")
+                    }
+                    
+                    Button(role: .destructive) {
+                        manager.cancelWashing(item)
+                    } label: {
+                        Label("Cancel Wash", systemImage: "xmark.circle")
                     }
                 
                     
@@ -344,6 +421,25 @@ fileprivate struct ItemCareView: View {
                     EmptyView()
             }
         }
+    }
+    
+    private func updateTimeRemaining() {
+        guard let endDate = item.completationDate else {
+            timeRemaining = 0
+            return
+        }
+        
+        let remaining = endDate.timeIntervalSinceNow
+        timeRemaining = max(0, remaining)
+    }
+    
+    
+    private func formatDuration(_ seconds: TimeInterval) -> String {
+        let interval = Int(seconds)
+        let mins = (interval % 3600) / 60
+        let secs = interval % 60
+        
+        return String(format: "%02d:%02d", mins, secs)
     }
 }
 

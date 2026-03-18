@@ -219,9 +219,13 @@ struct GarmentContextCard: View, Equatable {
     var selectedItem: Garment?
     
     @State
-    private var isDeleted: Bool = false
+    private var didTriggerDelete: Bool = false
     
     static func == (lhs: GarmentContextCard, rhs: GarmentContextCard) -> Bool {
+        guard !lhs.item.isDeleted && !rhs.item.isDeleted else {
+            return lhs.item.id == rhs.item.id
+        }
+        
         return lhs.item.id == rhs.item.id &&
         lhs.item.name == rhs.item.name &&
         lhs.item.brand == rhs.item.brand &&
@@ -240,7 +244,7 @@ struct GarmentContextCard: View, Equatable {
                 self.contextMenuButtons(for: self.item)
             }
         }
-        .sensoryFeedback(.success, trigger: isDeleted)
+        .sensoryFeedback(.success, trigger: didTriggerDelete)
         .buttonStyle(.plain)
     }
     
@@ -253,17 +257,17 @@ struct GarmentContextCard: View, Equatable {
         
         Button {
             if isToWash {
-                // Se è nel cesto e clicco "Mark as Clean", resetto tutto
-                manager.resetWear(for: item)
+                manager.resetWear(
+                    for : item,
+                    used: applianceManager
+                )
                 
             } else {
-                manager.logWear(
+                manager.setWashState(
                     for : item,
                     in  : sessions,
-                    used: applianceManager,
-                    each: 20 // Force wash
+                    used: applianceManager
                 )
-                self.manager.update()
             }
             
         } label: {
@@ -324,7 +328,7 @@ struct GarmentContextCard: View, Equatable {
         }
         
         Button(role: .destructive) {
-            isDeleted.toggle()
+            didTriggerDelete.toggle()
             manager.delete(item)
             
         } label: {

@@ -103,7 +103,7 @@ final class OutfitManager: Manager {
             garment.state = newState
             
             if newState == .onLoan {
-                garmentManager.resetWear(for: garment)
+                //garmentManager.resetWear(for: garment)
             }
         }
         

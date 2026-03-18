@@ -25,7 +25,8 @@ struct InfoGarmentView: View {
     @Environment(GarmentManager.self)
     var garmentManager: GarmentManager
     
-    
+    @Environment(ApplianceManager.self)
+    var applianceManager: ApplianceManager
 
     
     @State
@@ -88,7 +89,7 @@ struct InfoGarmentView: View {
             
             Button("Delete", role: .destructive) {
                 withAnimation {
-                    self.garmentManager.delete(self.item)
+                    self.garmentManager.delete(item)
                     isDeleted.toggle()
                 }
                 

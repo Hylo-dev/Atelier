@@ -38,6 +38,7 @@ extension AtelierSchemaV1 {
         
         // MARK: Handler Washing
         var isBinAssigned: Bool
+        var forceWash    : Bool
         
         
         // MARK: - Washing Info
@@ -57,7 +58,9 @@ extension AtelierSchemaV1 {
         var laundryHistory: [LaundrySession] = []
         
         var activeLaundrySession: LaundrySession? {
-            laundryHistory.first { $0.status != .completed }
+            laundryHistory.first {
+                $0.status != .completed
+            }
         }
         
         init(
@@ -86,7 +89,10 @@ extension AtelierSchemaV1 {
             self.season         = season
             self.style          = style
             self.purchaseDate   = purchaseDate
+            
             self.isBinAssigned  = isBinAssigned
+            self.forceWash      = false
+            
             self.state          = .available
             
             self.washingSymbols = washingSymbols
@@ -116,7 +122,7 @@ extension AtelierSchemaV1 {
         }
         
         var isReadyToWash: Bool {
-            return state.readyToWash && hasReachedWashingLimits
+            (state.readyToWash && hasReachedWashingLimits) || forceWash
         }
         
         func totalPercentage(of category: FabricCategory) -> Double {

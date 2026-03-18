@@ -177,25 +177,47 @@ final class ApplianceManager: Manager {
     }
     
     
-    func resumeWashing(_ session: LaundrySession) {
-        guard let targetDate = session.completationDate,
-              let startDate  = session.startDate else { return }
+    func pauseWashing(_ item: LaundrySession) {
+        guard let endDate = item.completationDate else { return }
         
-        
-        if targetDate.timeIntervalSinceNow > 10 {
-            LaundryActivityManager.shared.start(
-                programName: session.suggestedProgram.displayName,
-                startDate  : startDate,
-                targetDate : targetDate,
-                sessionId  : session.id.uuidString,
-                temperature: session.targetTemperature
+        let remaining = endDate.timeIntervalSinceNow
+        if remaining > 0 {
+            item.remainingTime = remaining
+            
+            LaundryActivityManager.shared.updateNotification(
+                for          : item.id.uuidString,
+                isPaused     : true,
+                remainingTime: item.remainingTime,
+                programName  : item.suggestedProgram.displayName
+                
             )
             
-        } else { finishWashing(session) }
+        } else { item.remainingTime = 0 }
+        
+        item.completationDate = nil
+        item.status = .paused
         
         save()
     }
     
+    
+    func resumeWashing(_ item: LaundrySession) {
+        let timeToWash = item.remainingTime ?? 0
+        
+        item.completationDate = Date.now.addingTimeInterval(timeToWash)
+        
+        LaundryActivityManager.shared.updateNotification(
+            for          : item.id.uuidString,
+            isPaused     : false,
+            remainingTime: timeToWash,
+            programName  : item.suggestedProgram.displayName
+        )
+        
+        item.remainingTime = nil
+        item.status        = .washing
+        
+        save()
+    }
     
     
     func cancelWashing(_ session: LaundrySession) {
@@ -243,10 +265,12 @@ final class ApplianceManager: Manager {
     
     // TODO: Set logic for delete the session or save the history garments
     func markAsComplete(_ session: LaundrySession) {
-        session.status = .completed
+        session.status      = .completed
+        session.isCompleted = true
         
         for garment in session.garments {
             garment.state                = .available
+            garment.forceWash            = false
             garment.isBinAssigned        = false
             garment.wearCount            = 0
             garment.lastWashingDate      = .now

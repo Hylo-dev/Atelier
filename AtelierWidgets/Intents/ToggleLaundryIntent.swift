@@ -67,7 +67,6 @@ struct ToggleLaundryIntent: LiveActivityIntent {
             isPaused     : willPause,
             remainingTime: remaining,
             programName  : activity.attributes.programName,
-            sessionId    : sessionID
         )
         
         return .result()

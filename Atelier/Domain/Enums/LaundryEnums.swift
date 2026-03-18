@@ -457,6 +457,7 @@ enum LaundrySessionStatus: String, Codable, CaseIterable {
     case completed = "Complete"
     case drying    = "On Drying"
     case clean     = "Clean"
+    case paused    = "Paused"
 }
 
 

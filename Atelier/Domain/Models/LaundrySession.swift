@@ -13,11 +13,13 @@ extension AtelierSchemaV1 {
     
     @Model
     final class LaundrySession {
-        @Attribute(.unique) var id: UUID
+        @Attribute(.unique)
+        var id: UUID
         
         var dateCreated     : Date
         var startDate       : Date?
         var completationDate: Date?
+        var remainingTime   : TimeInterval?
         var status          : LaundrySessionStatus
         
         @Relationship
@@ -30,6 +32,11 @@ extension AtelierSchemaV1 {
         var laundrySymbols: Set<LaundrySymbol>
         
         var warnings: [LaundryWarning]
+        var isCompleted: Bool
+        
+        var isCancel: Bool {
+            !isCompleted && garments.allSatisfy { !$0.isBinAssigned }
+        }
         
         init(
             bin              : LaundryBin,
@@ -48,6 +55,7 @@ extension AtelierSchemaV1 {
             self.targetTemperature = targetTemperature
             self.suggestedProgram  = suggestedProgram
             self.laundrySymbols    = laundrySymbols
+            self.isCompleted       = false
         }
         
         func updateWarnings() {

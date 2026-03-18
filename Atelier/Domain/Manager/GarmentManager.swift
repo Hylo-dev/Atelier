@@ -40,12 +40,23 @@ final class GarmentManager: Manager {
         save()
     }
     
-    
-    
     @inline(__always)
-    func delete(_ garment: Garment) {
-        ImageStorage.deleteImage(filename: garment.imagePath)
-        self.context.delete(garment)
+    func delete(_ item: Garment) {
+        ImageStorage.deleteImage(filename: item.imagePath)
+        
+        if let session = item.activeLaundrySession {
+            let remainingGarments = session.garments.filter {
+                $0.id != item.id
+            }
+            
+            let shouldCancelSession = !session.isCompleted && remainingGarments.allSatisfy { !$0.isBinAssigned }
+            
+            if shouldCancelSession {
+                context.delete(session)
+            }
+        }
+        
+        context.delete(item)
         save()
     }
     
@@ -82,12 +93,40 @@ final class GarmentManager: Manager {
     }
     
     
+    func setWashState(
+        for  item    : Garment,
+        in   sessions: [LaundrySession],
+        used manager : ApplianceManager
+    ) {
+        item.forceWash = true
+        
+        manager.processUnassignedGarments(
+            [item],
+            sessions
+        )
+        
+        self.update()
+    }
     
-    func resetWear(for item: Garment) {
+    
+    
+    func resetWear(
+        for  item: Garment,
+        used manager: ApplianceManager
+    ) {
         item.wearCount       = 0
         item.lastWashingDate = .now
+        item.forceWash       = false
         item.isBinAssigned   = false
         item.state           = .available
+        
+        
+        if let session = item.activeLaundrySession,
+           session.isCancel {
+            
+            manager.delete(session)
+        }
+        
         
         self.update()
     }
