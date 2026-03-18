@@ -60,18 +60,19 @@ final class ApplianceManager: Manager {
     
     func unassignGarment(_ garment: Garment) {
         
-        if let oldSession = garment.activeLaundrySession {
+        if let session = garment.activeLaundrySession {
             
-            garment.activeLaundrySession = nil
-            garment.isBinAssigned        = false
+            garment.laundryHistory.removeAll(where: { $0.id == session.id })
             
-            if oldSession.garments.isEmpty {
-                context.delete(oldSession)
+            garment.isBinAssigned = false
+            garment.state         = .available
+            
+            if session.garments.isEmpty {
+                context.delete(session)
                 
             } else {
-                oldSession.updateWarnings()
+                session.updateWarnings()
             }
-            
             save()
         }
     }
@@ -114,7 +115,9 @@ final class ApplianceManager: Manager {
                     garmentMaxTemp
                 )
                 
-                exactSession.garments.append(garment)
+                if !garment.laundryHistory.contains(exactSession) {
+                    garment.laundryHistory.append(exactSession)
+                }
                 exactSession.laundrySymbols.formUnion(garment.washingSymbols)
                 exactSession.updateWarnings()
                 
@@ -127,9 +130,11 @@ final class ApplianceManager: Manager {
                     laundrySymbols   : Set(garment.washingSymbols)
                 )
                 
+                context.insert(newSession)
+                
+                garment.laundryHistory.append(newSession)
                 newSession.updateWarnings()
                 activeSessions.append(newSession)
-                context.insert(newSession)
             }
             
             garment.isBinAssigned = true
@@ -243,7 +248,6 @@ final class ApplianceManager: Manager {
         for garment in session.garments {
             garment.state                = .available
             garment.isBinAssigned        = false
-            garment.activeLaundrySession = nil
             garment.wearCount            = 0
             garment.lastWashingDate      = .now
         }

@@ -195,7 +195,7 @@ struct AtelierWidgetsLiveActivity: Widget {
                         )
                     }
                 }
-                .frame(minWidth: 40, maxWidth: 100)
+                .frame(minWidth: 40, maxWidth: 60)
                 .font(.caption)
                 .fontWeight(.bold)
                 .monospacedDigit()

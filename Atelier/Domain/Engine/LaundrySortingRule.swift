@@ -44,7 +44,6 @@ struct DenimRule: LaundrySortingRule {
 struct ColorMatrixRule: LaundrySortingRule {
     func evaluate(_ garment: Garment) -> LaundryBin? {
         
-        // Calcoli "on the fly" presi dalle tue vecchie computed properties
         let hasCriticalDelicateFibers = garment.totalPercentage(of: [.silk, .wool, .cashmere]) >= 10.0
         let isDelicate = garment.washingSymbols.contains(where: { $0.isDelicate }) ||
         hasCriticalDelicateFibers ||

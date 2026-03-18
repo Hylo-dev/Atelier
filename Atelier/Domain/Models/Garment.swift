@@ -54,7 +54,11 @@ extension AtelierSchemaV1 {
         var outfits: [Outfit]
         
         @Relationship(inverse: \AtelierSchemaV1.LaundrySession.garments)
-        var activeLaundrySession: LaundrySession?
+        var laundryHistory: [LaundrySession] = []
+        
+        var activeLaundrySession: LaundrySession? {
+            laundryHistory.first { $0.status != .completed }
+        }
         
         init(
             id            : UUID = UUID(),
@@ -92,7 +96,7 @@ extension AtelierSchemaV1 {
             self.model3DPath    = model3DPath
             
             self.outfits        = []
-            self.activeLaundrySession = .none
+            self.laundryHistory = []
         }
         
         var requiresWashing: Bool {
