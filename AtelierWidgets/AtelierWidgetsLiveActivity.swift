@@ -66,22 +66,17 @@ struct AtelierWidgetsLiveActivity: Widget {
                         
                         Group {
                             if context.state.isPaused, let timeLeft = context.state.pausedTimeLeft {
-                                Text("-")
-                                +
                                 Text(formatTimeMinutes(timeLeft))
-                                    .monospacedDigit()
                                 
                             } else {
-                                Text("-")
-                                +
                                 Text(
                                     timerInterval: context.state.interval,
                                     countsDown: true,
                                     showsHours: false
                                 )
-                                .monospacedDigit()
                             }
                         }
+                        .monospacedDigit()
                         .font(.headline)
                         .fontWeight(.bold)
                         .frame(height: 24, alignment: .leading)
@@ -99,21 +94,34 @@ struct AtelierWidgetsLiveActivity: Widget {
                 
                 DynamicIslandExpandedRegion(.trailing) {
                     HStack(spacing: 8) {
-                        Button(intent: ToggleLaundryIntent(sessionID: context.attributes.sessionID)) {
-                            Image(systemName: context.state.isPaused ? "play.fill" : "pause.fill")
+                        
+                        if !context.isStale {
+                            Button(intent: ToggleLaundryIntent(sessionID: context.attributes.sessionID)) {
+                                Image(systemName: context.state.isPaused ? "play.fill" : "pause.fill")
+                            }
+                            .buttonStyle(.automatic)
+                            .buttonBorderShape(.circle)
+                            .font(.title)
                         }
-                        .buttonStyle(.automatic)
-                        .buttonBorderShape(.circle)
-                        .font(.title)
                         
                         
-                        Button(intent: CancelLaundryIntent(sessionID: context.attributes.sessionID)) {
-                            Image(systemName: "stop.fill")
+                        Group {
+                            if context.isStale {
+                                Button(intent: CancelLaundryIntent(sessionID: context.attributes.sessionID)) {
+                                    Image(systemName: "checkmark")
+                                }
+                                
+                            } else {
+                                Button(intent: CancelLaundryIntent(sessionID: context.attributes.sessionID)) {
+                                    Image(systemName: "stop.fill")
+                                }
+                            }
                         }
                         .buttonStyle(.automatic)
                         .buttonBorderShape(.circle)
                         .tint(.secondary)
                         .font(.title)
+                        
                     }
                     .padding(.top, 8)
                     .padding(.trailing, 8)
@@ -149,7 +157,7 @@ struct AtelierWidgetsLiveActivity: Widget {
             } compactLeading: {
                 
                 Group {
-                    if context.state.isPaused {
+                    if context.state.isPaused || context.isStale {
                         ProgressView(value: context.state.pausedProgress, total: 1.0) {
                             Image(systemName: "washer.fill")
                                 .foregroundStyle(.tint)
@@ -173,18 +181,21 @@ struct AtelierWidgetsLiveActivity: Widget {
             } compactTrailing: {
                 
                 Group {
-                    if context.state.isPaused, let timeLeft = context.state.pausedTimeLeft {
+                    if context.isStale {
+                        Text("Fine")
+                        
+                    } else if context.state.isPaused, let timeLeft = context.state.pausedTimeLeft {
                         Text(formatTime(timeLeft))
                             
                         
                     } else {
                         Text(
-                            context.state.interval.upperBound,
-                            style: .timer
+                            timerInterval: context.state.interval,
+                            countsDown: true
                         )
                     }
                 }
-                .frame(width: 40)
+                .frame(minWidth: 40, maxWidth: 100)
                 .font(.caption)
                 .fontWeight(.bold)
                 .monospacedDigit()
@@ -219,7 +230,6 @@ struct AtelierWidgetsLiveActivity: Widget {
         }
     }
     
-    // AtelierWidgetsLiveActivity.swift
     
     func formatTime(_ seconds: TimeInterval) -> String {
         let totalSeconds = Int(ceil(seconds))
@@ -239,10 +249,3 @@ struct AtelierWidgetsLiveActivity: Widget {
         return String(format: "%02d:%02d", m, s)
     }
 }
-
-//#Preview("Notification", as: .content, using: AtelierWidgetsAttributes.preview) {
-//   AtelierWidgetsLiveActivity()
-//} contentStates: {
-//    AtelierWidgetsAttributes.ContentState.smiley
-//    AtelierWidgetsAttributes.ContentState.starEyes
-//}

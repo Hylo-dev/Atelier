@@ -75,9 +75,9 @@
 		1FED74082F686BAB00F5FBEB /* Exceptions for "AtelierWidgets" folder in "Atelier" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
-				CancelLaundryIntent.swift,
+				Intents/CancelLaundryIntent.swift,
+				Intents/ToggleLaundryIntent.swift,
 				LaundryAttributes.swift,
-				ToggleLaundryIntent.swift,
 			);
 			target = 1F8318332F422D3B00713CCA /* Atelier */;
 		};
@@ -85,6 +85,7 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Domain/Manager/LaundryActivityManager.swift,
+				"Extensions/View+If.swift",
 			);
 			target = 1FED73E42F6868AC00F5FBEB /* AtelierWidgetsExtension */;
 		};
@@ -473,9 +474,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = team.hylo.Atelier;
-				"PRODUCT_BUNDLE_IDENTIFIER[sdk=iphoneos*]" = hylo.team.Atelier;
-				"PRODUCT_BUNDLE_IDENTIFIER[sdk=macosx*]" = hylo.team.Atelier;
+				PRODUCT_BUNDLE_IDENTIFIER = hylo.team.Atelier;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				REGISTER_APP_GROUPS = YES;
@@ -534,9 +533,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = team.hylo.Atelier;
-				"PRODUCT_BUNDLE_IDENTIFIER[sdk=iphoneos*]" = hylo.team.Atelier;
-				"PRODUCT_BUNDLE_IDENTIFIER[sdk=macosx*]" = hylo.team.Atelier;
+				PRODUCT_BUNDLE_IDENTIFIER = hylo.team.Atelier;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				REGISTER_APP_GROUPS = YES;

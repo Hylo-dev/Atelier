@@ -8,11 +8,13 @@
 
 import Foundation
 import ActivityKit
+import UserNotifications
 
 @MainActor
 final class LaundryActivityManager {
-    static let shared = LaundryActivityManager()
+    static  let shared = LaundryActivityManager()
     private var activity: Activity<LaundryAttributes>?
+    
     
     
     func start(
@@ -22,8 +24,9 @@ final class LaundryActivityManager {
         sessionId  : String,
         temperature: Int
     ) {
-        let interval = startDate...targetDate
+        let interval     = startDate...targetDate
         let initialState = LaundryAttributes.ContentState(interval: interval)
+        
         let attributes = LaundryAttributes(
             programName: programName,
             temperature: temperature,
@@ -36,32 +39,87 @@ final class LaundryActivityManager {
             }
             
             do {
-                self.activity = try Activity.request(
+                let currentActivity = try Activity.request(
                     attributes: attributes,
-                    content: .init(state: initialState, staleDate: nil)
+                    content: .init(state: initialState, staleDate: targetDate)
                 )
-                                
+                self.activity = currentActivity
+                
                 let timeRemaining = targetDate.timeIntervalSince(Date.now)
                 if timeRemaining > 0 {
-                    try? await Task.sleep(nanoseconds: UInt64(timeRemaining * 1_000_000_000))
-                    
-                    let alertConfig = AlertConfiguration(
-                        title: "Lavatrice Terminata",
-                        body: "Il programma \(programName) è finito!",
-                        sound: .default
-                    )
-                                        
-                    await self.activity?.update(
-                        ActivityContent(state: initialState, staleDate: nil),
-                        alertConfiguration: alertConfig
+                    scheduleNotification(
+                        for      : currentActivity.id,
+                        in       : timeRemaining,
+                        program  : programName,
+                        sessionId: sessionId
                     )
                 }
                 
             } catch {
-                print("Error Live Activity: \(error.localizedDescription)")
+                print("Error: \(error.localizedDescription)")
             }
         }
     }
+    
+    
+    
+    func setupNotifications() {
+        let category = UNNotificationCategory(
+            identifier       : "LAUNDRY_CATEGORY",
+            actions          : [],
+            intentIdentifiers: [],
+            options          : []
+        )
+        
+        UNUserNotificationCenter.current().setNotificationCategories([category])
+    }
+    
+    
+    private func scheduleNotification(
+        for activityId: String,
+        in  seconds   : TimeInterval,
+            program   : String,
+            sessionId : String
+    ) {
+        let content = UNMutableNotificationContent()
+        
+        content.title              = "Cycle Complete"
+        content.body               = "The \(program) cycle has finished"
+        content.categoryIdentifier = "LAUNDRY_CATEGORY"
+        content.userInfo           = ["ACTIVITY_ID": activityId, "SESSION_ID": sessionId]
+        content.sound              = .default
+        
+        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: seconds, repeats: false)
+        let request = UNNotificationRequest(identifier: activityId, content: content, trigger: trigger)
+        
+        UNUserNotificationCenter.current().add(request)
+    }
+    
+    
+    func updateNotification(
+        for activityId   : String,
+        isPaused     : Bool,
+        remainingTime: TimeInterval?,
+        programName  : String,
+        sessionId    : String
+    ) {
+        if isPaused {
+            UNUserNotificationCenter.current().removePendingNotificationRequests(
+                withIdentifiers: [activityId]
+            )
+            print("Paused Notification")
+            
+        } else if let remaining = remainingTime, remaining > 0 {
+            scheduleNotification(
+                for: activityId,
+                in: remaining,
+                program: programName,
+                sessionId: sessionId
+            )
+            print("Reprogramed Notification")
+        }
+    }
+    
     
     func stop() {
         Task {
@@ -70,5 +128,4 @@ final class LaundryActivityManager {
             }
         }
     }
-
 }

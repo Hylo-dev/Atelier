@@ -8,14 +8,12 @@
 import Observation
 import SwiftData
 import Foundation
+import UserNotifications
 
 @MainActor
 @Observable
 final class ApplianceManager: Manager {
     var context: ModelContext
-    
-    let activityManager = LaundryActivityManager()
-
     
     
     init(_ context: ModelContext) {
@@ -23,6 +21,8 @@ final class ApplianceManager: Manager {
     }
     
     
+    
+    // MARK: - Database CRUD handler
     
     func insert(_ element: LaundrySession) {
         context.insert(element)
@@ -44,6 +44,20 @@ final class ApplianceManager: Manager {
     
     
     
+    @inline(__always)
+    internal func save() {
+        do {
+            try context.save()
+            
+        } catch {
+            print("Error DB: \(error)")
+        }
+    }
+    
+    
+    
+    // MARK: Garment handlers
+    
     func unassignGarment(_ garment: Garment) {
         
         if let oldSession = garment.activeLaundrySession {
@@ -60,107 +74,6 @@ final class ApplianceManager: Manager {
             
             save()
         }
-    }
-    
-    
-    
-    func startWashing(_ session: LaundrySession) {
-        session.status           = .washing
-        session.startDate        = .now
-        
-        let minutes = session.suggestedProgram.washingTime
-        let targetDate = Calendar.current.date(byAdding: .minute, value: minutes, to: .now) ?? .now
-        session.completationDate = targetDate
-        
-        for garment in session.garments {
-            garment.state = .washing
-        }
-        
-        activityManager.start(
-            programName: session.suggestedProgram.displayName,
-            startDate  : session.startDate ?? .now,
-            targetDate : targetDate,
-            sessionId  : session.id.uuidString,
-            temperature: session.targetTemperature
-        )
-        
-        save()
-    }
-    
-    
-    // ApplianceManager.swift
-    
-    func resumeWashing(_ session: LaundrySession) {
-        guard let targetDate = session.completationDate,
-              let startDate  = session.startDate else { return }
-        
-        activityManager.start(
-            programName: session.suggestedProgram.displayName,
-            startDate  : startDate,
-            targetDate : targetDate,
-            sessionId  : session.id.uuidString,
-            temperature: session.targetTemperature
-        )
-        
-        save()
-    }
-    
-    
-    
-    func cancelWashing(_ session: LaundrySession) {
-        session.status           = .planned
-        session.startDate        = nil
-        session.completationDate = nil
-        
-        for garment in session.garments {
-            garment.state = .toWash
-        }
-        
-        // --- STOP LIVE ACTIVITY ---
-        stopLiveActivity()
-        save()
-    }
-    
-    
-    
-    func finishWashing(_ session: LaundrySession) {
-        session.status = .completed
-        
-        for garment in session.garments {
-            garment.state = .drying
-        }
-        
-        stopLiveActivity()
-        save()
-    }
-    
-    
-    
-    func stopLiveActivity() {
-        activityManager.stop()
-    }
-    
-    
-    
-    func startDrying(_ session: LaundrySession) {
-        session.status = .drying
-        save()
-    }
-    
-    
-    
-    func markAsClean(_ session: LaundrySession) {
-        session.status = .clean
-        
-        for garment in session.garments {
-            garment.state                = .available
-            garment.isBinAssigned        = false
-            garment.activeLaundrySession = nil
-            garment.wearCount            = 0
-            garment.lastWashingDate      = .now
-        }
-        
-        save()
     }
     
     
@@ -227,13 +140,126 @@ final class ApplianceManager: Manager {
     }
     
     
-    @inline(__always)
-    internal func save() {
-        do {
-            try context.save()
-            
-        } catch {
-            print("Error DB: \(error)")
+    
+    // MARK: - Laundry Session live
+    
+    
+    
+    // MARK: - Wash
+    
+    func startWashing(_ session: LaundrySession) {
+        session.status           = .washing
+        session.startDate        = .now
+        
+        // TODO: - Remember remove the "-99" because this is for testing
+        let minutes = session.suggestedProgram.washingTime - 99
+        let targetDate = Calendar.current.date(byAdding: .minute, value: minutes, to: .now) ?? .now
+        session.completationDate = targetDate
+        
+        for garment in session.garments {
+            garment.state = .washing
         }
+        
+        LaundryActivityManager.shared.start(
+            programName: session.suggestedProgram.displayName,
+            startDate  : session.startDate ?? .now,
+            targetDate : targetDate,
+            sessionId  : session.id.uuidString,
+            temperature: session.targetTemperature
+        )
+        
+        save()
+    }
+    
+    
+    func resumeWashing(_ session: LaundrySession) {
+        guard let targetDate = session.completationDate,
+              let startDate  = session.startDate else { return }
+        
+        
+        if targetDate.timeIntervalSinceNow > 10 {
+            LaundryActivityManager.shared.start(
+                programName: session.suggestedProgram.displayName,
+                startDate  : startDate,
+                targetDate : targetDate,
+                sessionId  : session.id.uuidString,
+                temperature: session.targetTemperature
+            )
+            
+        } else { finishWashing(session) }
+        
+        save()
+    }
+    
+    
+    
+    func cancelWashing(_ session: LaundrySession) {
+        session.status           = .planned
+        session.startDate        = nil
+        session.completationDate = nil
+        
+        for garment in session.garments {
+            garment.state = .toWash
+        }
+        
+        stopLiveActivity(session)
+        save()
+    }
+    
+    
+    
+    func finishWashing(_ session: LaundrySession) {
+        session.status = .clean
+        
+        for garment in session.garments {
+            garment.state = .drying
+        }
+        
+        stopLiveActivity(session)
+        save()
+    }
+    
+    
+    
+    // MARK: Dry
+    
+    func startDrying(_ session: LaundrySession) {
+        session.status = .drying
+        save()
+    }
+    
+    
+    
+    func cancelDrying(_ session: LaundrySession) {
+        session.status = .clean
+        save()
+    }
+    
+    
+    // TODO: Set logic for delete the session or save the history garments
+    func markAsComplete(_ session: LaundrySession) {
+        session.status = .completed
+        
+        for garment in session.garments {
+            garment.state                = .available
+            garment.isBinAssigned        = false
+            garment.activeLaundrySession = nil
+            garment.wearCount            = 0
+            garment.lastWashingDate      = .now
+        }
+        
+        save()
+    }
+    
+    
+    
+    // MARK: Handlers
+    
+    func stopLiveActivity(_ session: LaundrySession) {
+        UNUserNotificationCenter.current().removePendingNotificationRequests(
+            withIdentifiers: [session.id.uuidString]
+        )
+        
+        LaundryActivityManager.shared.stop()
     }
 }

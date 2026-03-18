@@ -126,9 +126,7 @@ struct CareView: View {
         .onAppear {
             updateBins()
             updateFilteredGarments()
-            
-            
-            
+                        
             Task { @MainActor in
                 
                 self.weather = try await weatherService.fetchWeather(
@@ -302,23 +300,45 @@ fileprivate struct ItemCareView: View {
                     Button {
                         manager.startWashing(item)
                     } label: {
-                        Label("Start Washing", systemImage: "washer.fill")
+                        Label("Start Wash", systemImage: "play.fill")
                     }
+                    
                     
                 case .washing:
                     Button {
-                        manager.cancelWashing(item)
+                        manager.finishWashing(item)
                     } label: {
-                        Label("Cancel Washing", systemImage: "stop.fill")
+                        Label("Finish Wash", systemImage: "checkmark.circle")
                     }
                     
-                case .completed, .drying:
-                    Button {
-                        manager.markAsClean(item)
+                    Button(role: .destructive) {
+                        manager.cancelWashing(item)
                     } label: {
-                        Label("Set clean all", systemImage: "checkmark.seal.fill")
+                        Label("Cancel Wash", systemImage: "xmark.circle")
                     }
-                    .tint(.green)
+                    
+                    
+                case .clean:
+                    Button {
+                        manager.startDrying(item)
+                    } label: {
+                        Label("Start Drying", systemImage: "sun.max.fill")
+                    }
+                
+                    
+                case .drying:
+                    Button {
+                        manager.markAsComplete(item)
+                    } label: {
+                        Label("Mark as Done", systemImage: "checkmark.seal.fill")
+                    }
+                    
+                    Button {
+                        manager.cancelDrying(item)
+                    } label: {
+                        Label("Cancel Drying", systemImage: "xmark.circle")
+                    }
+                    
                     
                 default:
                     EmptyView()

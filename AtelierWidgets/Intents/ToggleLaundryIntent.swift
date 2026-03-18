@@ -8,6 +8,7 @@
 
 import AppIntents
 import ActivityKit
+import UserNotifications
 
 struct ToggleLaundryIntent: LiveActivityIntent {
     static var title: LocalizedStringResource = "Pause/Resume Washing"
@@ -24,6 +25,9 @@ struct ToggleLaundryIntent: LiveActivityIntent {
         
         guard let activity = activity else { return .result() }
         let currentState = activity.content.state
+        
+        let willPause = !currentState.isPaused
+        let remaining = currentState.pausedTimeLeft
         
         var newState: LaundryAttributes.ContentState
         
@@ -57,6 +61,16 @@ struct ToggleLaundryIntent: LiveActivityIntent {
         }
         
         await activity.update(ActivityContent(state: newState, staleDate: nil))
+        
+        LaundryActivityManager.shared.updateNotification(
+            for          : activity.id,
+            isPaused     : willPause,
+            remainingTime: remaining,
+            programName  : activity.attributes.programName,
+            sessionId    : sessionID
+        )
+        
         return .result()
     }
+    
 }

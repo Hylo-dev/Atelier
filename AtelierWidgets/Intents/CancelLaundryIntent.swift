@@ -9,6 +9,7 @@
 import AppIntents
 import ActivityKit
 import Foundation
+import UserNotifications
 
 struct CancelLaundryIntent: LiveActivityIntent {
     static var title: LocalizedStringResource = "Annulla Lavatrice"
@@ -19,7 +20,6 @@ struct CancelLaundryIntent: LiveActivityIntent {
     init() {}
     init(sessionID: String) { self.sessionID = sessionID }
     
-    // AGGIUNTO @MainActor: Cruciale per ActivityKit
     @MainActor
     func perform() async throws -> some IntentResult {
         if let sharedDefaults = UserDefaults(
@@ -43,11 +43,27 @@ struct CancelLaundryIntent: LiveActivityIntent {
                 staleDate: nil
             )
             
+            stopNotification()
             await activity.end(finalContent, dismissalPolicy: .immediate)
+            
         } else {
             print("Not found activity with ID: \(sessionID)")
         }
         
         return .result()
+    }
+    
+    
+    private func stopNotification() {
+        Task { @MainActor in
+            for activity in Activity<LaundryAttributes>.activities {
+                let id = activity.id
+
+                await activity.end(nil, dismissalPolicy: .immediate)
+                UNUserNotificationCenter.current().removePendingNotificationRequests(
+                    withIdentifiers: [id]
+                )
+            }
+        }
     }
 }
