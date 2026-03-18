@@ -9,9 +9,6 @@ import SwiftUI
 
 struct GenericSelectionView<Item: SelectableItem>: View {
     
-    @State
-    private var isSelected: Bool = false
-    
     @Binding
     var selection: Set<Item>
     
@@ -43,7 +40,6 @@ struct GenericSelectionView<Item: SelectableItem>: View {
                             selectionCell(for: item)
                                 .onTapGesture {
                                     self.toggleSelection(item)
-                                    self.isSelected.toggle()
                                 }
                         }
                     }
@@ -51,8 +47,7 @@ struct GenericSelectionView<Item: SelectableItem>: View {
                 }
             }
         }
-        // TODO: Change this and test use `selection` variable
-        .sensoryFeedback(.selection, trigger: self.isSelected)
+        .sensoryFeedback(.selection, trigger: self.selection)
         .navigationTitle("Select Options")
     }
     

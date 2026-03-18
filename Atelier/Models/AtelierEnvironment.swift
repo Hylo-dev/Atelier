@@ -13,8 +13,12 @@ enum AtelierEnvironment {
     static let documentsDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first
     
     static let imagePipeline: ImagePipeline = {
-        
         var config  = ImagePipeline.Configuration()
+        
+        let cache = ImageCache.shared
+        cache.costLimit = 1024 * 1024 * 30
+        cache.countLimit = 50
+        
         let encoder = ImageEncoders.Default(compressionQuality: 0.60)
         
         config.makeImageEncoder = { _ in encoder }
@@ -28,9 +32,12 @@ enum AtelierEnvironment {
     static let ephemeralPipeline: ImagePipeline = {
         var config = ImagePipeline.Configuration()
         
-        config.imageCache      = nil
-        config.dataCache       = nil
-        config.dataCachePolicy = .automatic
+        let tinyCache = ImageCache()
+        tinyCache.costLimit  = 1024 * 1024 * 15
+        tinyCache.countLimit = 2
+        
+        config.imageCache = tinyCache        
+        config.dataCache = nil
         
         return ImagePipeline(configuration: config)
     }()

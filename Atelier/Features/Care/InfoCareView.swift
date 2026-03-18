@@ -9,7 +9,8 @@ import SwiftUI
 
 struct InfoCareView: View {
     
-    
+    @Environment(\.dismiss)
+    private var dismiss
     
     @Environment(ApplianceManager.self)
     private var manager
@@ -21,9 +22,12 @@ struct InfoCareView: View {
     // MARK: - State variables
     
     
-    
     @State
     private var isSelectionVisible: Bool
+    
+    
+    @State
+    private var didTriggerDelete: Bool = false
     
     
     
@@ -44,15 +48,18 @@ struct InfoCareView: View {
             
             settingsSection
             
-            garmentsGridSection
+            if !item.garments.isEmpty {
+                garmentsGridSection
+            }
             
             symbolsSection
         }
+        .sensoryFeedback(.success, trigger: didTriggerDelete)
         .toolbar {
             
             ToolbarItemGroup {
                 Button(role: .destructive) {
-                    // deleteItem = true
+                    didTriggerDelete = true
                     
                 } label: {
                     Label("Delete", systemImage: "trash")
@@ -67,13 +74,15 @@ struct InfoCareView: View {
             }
             
             ToolbarSpacer()
+            
+            if item.status == .planned {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        isSelectionVisible = true
                         
-            ToolbarItem(placement: .topBarTrailing) {
-                Button {
-                    isSelectionVisible = true
-                    
-                } label: {
-                    Label("Wash", systemImage: "washer.fill")
+                    } label: {
+                        Label("Wash", systemImage: "washer.fill")
+                    }
                 }
             }
         }
@@ -85,6 +94,15 @@ struct InfoCareView: View {
                 )
             }
             
+        }
+        .alert("Delete Session", isPresented: $didTriggerDelete) {
+            Button("Delete", role: .destructive) {
+                manager.delete(item)
+                dismiss()
+            }
+            
+        } message: {
+            Text("This session and its data will be permanently removed.")
         }
     }
     

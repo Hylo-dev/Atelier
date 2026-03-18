@@ -11,6 +11,15 @@ import NukeUI
 
 struct CachedImageView: View {
     let imagePath: String?
+    let targetSize: CGSize // Aggiungi questo parametro
+    
+    init(
+        imagePath : String?,
+        targetSize: CGSize = CGSize(width: 150, height: 150)
+    ) {
+        self.imagePath  = imagePath
+        self.targetSize = targetSize
+    }
     
     private var imageURL: URL? {
         guard let filename = self.imagePath, !filename.isEmpty,
@@ -22,8 +31,6 @@ struct CachedImageView: View {
     }
     
     var body: some View {
-        let thumbnailSize = CGSize(width: 300 * 1.5, height: 300 * 1.5)
-        
         LazyImage(url: self.imageURL) { state in
             if let image = state.image {
                 image
@@ -44,13 +51,12 @@ struct CachedImageView: View {
         }
         .processors([
             .resize(
-                size: thumbnailSize,
+                size: targetSize,
                 unit: .points,
                 contentMode: .aspectFill,
                 crop: true
             )
         ])
-        .priority(.high)
         .pipeline(AtelierEnvironment.imagePipeline)
     }
     

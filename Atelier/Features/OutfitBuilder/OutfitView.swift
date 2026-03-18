@@ -249,11 +249,23 @@ struct OutfitContextCard: View, Equatable {
     
     var body: some View {
         NavigationLink(value: self.outfit) {
-            ModelCardView(
-                title      : self.outfit.name,
-                subheadline: self.subTitleAlert,
-                imagePath  : self.outfit.fullLookImagePath
-            )
+            
+            Group {
+                if let image = outfit.fullLookImagePath {
+                    ModelCardView(
+                        title      : self.outfit.name,
+                        subheadline: self.subTitleAlert,
+                        imagePath  : image
+                    )
+                    
+                } else {
+                    MultipleCardView(
+                        title      : outfit.name,
+                        subheadline: self.subTitleAlert,
+                        items      : outfit.garments
+                    )
+                }
+            }
             .opacity(self.subTitleAlert != nil ? 0.7 : 1)
             .contextMenu {
                 self.contextMenuButtons(for: self.outfit)

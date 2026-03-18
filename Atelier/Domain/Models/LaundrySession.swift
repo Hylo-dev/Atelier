@@ -38,6 +38,39 @@ extension AtelierSchemaV1 {
             !isCompleted && garments.allSatisfy { !$0.isBinAssigned }
         }
         
+        var subheadline: String? {
+            switch self.status {
+                case .planned:
+                    return "\(self.garments.count) items • \(self.bin.displayName)"
+                    
+                case .washing:
+                    return self.warnings.isEmpty ? "Washing..." : "⚠️ \(self.warnings.count) warnings"
+                    
+                case .paused:
+                    return "Wash paused"
+                    
+                case .clean:
+                    return "Clean • Ready to dry"
+                    
+                case .drying:
+                    return "Drying..."
+                    
+                case .completed:
+                    guard let completionDate = self.completationDate else { return "Completed" }
+                    
+                    let time = completionDate.formatted(date: .omitted, time: .shortened)
+                    return if Calendar.current.isDateInToday(completionDate) {
+                        "Finished at \(time)"
+                        
+                    } else if Calendar.current.isDateInYesterday(completionDate) {
+                        "Finished yesterday at \(time)"
+                        
+                    } else {
+                        "Finished on \(completionDate.formatted(.dateTime.month().day()))"
+                    }
+            }
+        }
+        
         init(
             bin              : LaundryBin,
             targetTemperature: Int,

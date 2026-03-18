@@ -60,7 +60,7 @@ final class ApplianceManager: Manager {
     
     func unassignGarment(_ garment: Garment) {
         
-        if let session = garment.activeLaundrySession {
+        if let session = garment.activeLaundrySession, session.status == .planned {
             
             garment.laundryHistory.removeAll(where: { $0.id == session.id })
             
@@ -156,8 +156,7 @@ final class ApplianceManager: Manager {
         session.status           = .washing
         session.startDate        = .now
         
-        // TODO: - Remember remove the "-99" because this is for testing
-        let minutes = session.suggestedProgram.washingTime - 99
+        let minutes    = session.suggestedProgram.washingTime // - 99 This is used for testing notification
         let targetDate = Calendar.current.date(byAdding: .minute, value: minutes, to: .now) ?? .now
         session.completationDate = targetDate
         
@@ -263,7 +262,6 @@ final class ApplianceManager: Manager {
     }
     
     
-    // TODO: Set logic for delete the session or save the history garments
     func markAsComplete(_ session: LaundrySession) {
         session.status      = .completed
         session.isCompleted = true

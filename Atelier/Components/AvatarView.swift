@@ -60,8 +60,17 @@ struct AvatarView: View {
                                     .transition(.opacity.animation(.easeOut(duration: 0.3)))
                             }
                         }
+                        .processors([
+                            .resize(
+                                size: CGSize(width: 600, height: 800),
+                                unit: .points,
+                                contentMode: .aspectFill,
+                                crop: true
+                            )
+                        ])
                         .priority(.veryHigh)
                         .pipeline(AtelierEnvironment.ephemeralPipeline)
+                        
                     )
                     .clipped()
                 

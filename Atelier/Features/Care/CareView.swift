@@ -18,9 +18,9 @@ struct CareView: View {
     
     
     @Query( // TODO: This is for testing, completed laundry appears on history section or filter toggle
-        filter: #Predicate<LaundrySession> { !$0.isCompleted },
-        sort : \LaundrySession.dateCreated,
-        order: .forward
+        // filter: #Predicate<LaundrySession> { !$0.isCompleted },
+        sort  : \LaundrySession.dateCreated,
+        order : .forward
     )
     private var laundrySessions: [LaundrySession]
     
@@ -95,7 +95,6 @@ struct CareView: View {
                         items      : laundryState.items,
                         isEnabled  : laundryState.isVisible
                     ) { binType in
-                        
                         gridView(binType)
                     }
                     .ignoresSafeArea(.container, edges: .top)
@@ -301,8 +300,9 @@ fileprivate struct ItemCareView: View {
         // TODO: When item status is `completed` change card UI
         NavigationLink(value: item) {
             MultipleCardView(
-                title: "\(item.targetTemperature)° \(item.suggestedProgram.displayName)",
-                items: garments
+                title      : "\(item.targetTemperature)° \(item.suggestedProgram.displayName)",
+                subheadline: item.subheadline,
+                items      : garments
             )
             .equatable()
             .id(item.id)
@@ -313,7 +313,6 @@ fileprivate struct ItemCareView: View {
             guard item.status == .washing else { return }
             
             updateTimeRemaining()
-            
             if timeRemaining <= 0 {
                 timer.upstream.connect().cancel()
                 manager.finishWashing(item)
