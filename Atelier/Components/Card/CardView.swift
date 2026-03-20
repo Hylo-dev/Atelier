@@ -29,7 +29,7 @@ struct CardView<Content: View>: View {
         ZStack(alignment: .bottomLeading) {
             
             Color.secondary.opacity(0.15)
-                .aspectRatio(1, contentMode: .fit)
+                .aspectRatio(2/3, contentMode: .fit)
                 .overlay(alignment: .leading) {
                     content
                 }

@@ -144,7 +144,7 @@ struct InventoryView: View {
             }
         }
         .navigationDestination(for: Garment.self) { selectedItem in
-            InfoGarmentView(item: selectedItem)
+            InfoGarmentView(selectedItem)
         
         }
         .sheet(isPresented: self.$isAddGarmentSheetVisible) {

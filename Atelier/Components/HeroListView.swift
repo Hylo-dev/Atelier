@@ -65,7 +65,7 @@ struct HeroListView<TitleContent: View, BodyContent: View>: View {
             icon   : iconPlaceholder,
             uiImage: previewImage
         )
-        .frame(height: 560)
+        .frame(height: 700)
         .visualEffect { content, proxy in
             let minY = proxy.frame(in: .global).minY
             let isScrollingDown = minY > 0

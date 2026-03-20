@@ -32,17 +32,19 @@ struct ModelCardView: Equatable, View {
             subheadline: self.subheadline,
             gradient   : .black
         ) {
-            if let path = self.imagePath {
-                CachedImageView(imagePath: path)
-                
-            } else {
-                Image(systemName: "hanger") 
-                    .font(.largeTitle)
-                    .foregroundStyle(.tertiary)
-                    .frame(
-                        maxWidth : .infinity,
-                        maxHeight: .infinity
-                    )
+            Group {
+                if let path = self.imagePath {
+                    CachedImageView(imagePath: path)
+                    
+                } else {
+                    Image(systemName: "hanger")
+                        .font(.largeTitle)
+                        .foregroundStyle(.tertiary)
+                        .frame(
+                            maxWidth : .infinity,
+                            maxHeight: .infinity
+                        )
+                }
             }
         }
         .overlay {

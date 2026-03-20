@@ -6,13 +6,14 @@
 //
 
 import SwiftUI
+import SwiftData
 
 struct InfoGarmentView: View {
     
     
     
     // MARK: - Parameters Variables
-        
+    
     let item: Garment
     
     
@@ -27,7 +28,11 @@ struct InfoGarmentView: View {
     
     @Environment(ApplianceManager.self)
     var applianceManager: ApplianceManager
-
+    
+    
+    @Query
+    private var outfits: [Outfit]
+    
     
     @State
     private var isModifySheetVisible: Bool = false
@@ -37,6 +42,22 @@ struct InfoGarmentView: View {
     
     @State
     private var isDeleted: Bool = false
+    
+    
+    init(_ item: Garment) {
+        self.item = item
+        
+        let itemId = item.id
+        self._outfits = Query(
+            filter: #Predicate<Outfit> { outfit in
+                outfit.garments.contains {
+                    $0.id == itemId
+                }
+            },
+            sort: \Outfit.name,
+            order: .forward
+        )
+    }
     
     
     
@@ -56,6 +77,11 @@ struct InfoGarmentView: View {
             }
             
             sectionCare
+            
+            if !outfits.isEmpty {
+                outfitsLazyRow
+            }
+            
         }
         .sensoryFeedback(.success, trigger: isDeleted)
         .toolbar {
@@ -220,6 +246,29 @@ struct InfoGarmentView: View {
             .padding(.vertical, 5)
         }
     }
+    
+    @ViewBuilder
+    private var outfitsLazyRow: some View {
+        SectionList(titleKey: "Outfits") {
+        
+            ScrollView(.horizontal) {
+                LazyHStack(spacing: 15) {
+                    ForEach(self.outfits, id: \.id) { outfit in
+                        
+                        ModelCardView(
+                            title    : outfit.name,
+                            imagePath: outfit.fullLookImagePath
+                        )
+                        .equatable()
+                        .frame(width: 150, height: 250)
+                        
+                    }
+                }
+            }
+        }
+        .padding(.vertical, 10)
+    }
+    
 
 }
 
@@ -236,5 +285,5 @@ struct InfoGarmentView: View {
         style: .casual
     )
     
-    InfoGarmentView(item: garment)
+    InfoGarmentView(garment)
 }

@@ -55,6 +55,10 @@ struct InfoOutfitView: View {
             self.sectionCare
             
             self.sectionStyleAndCategory
+            
+            if !outfit.garments.isEmpty {
+                garmentsLazyRow
+            }
         }
         .sensoryFeedback(.success, trigger: isDeleted)
         .toolbar {
@@ -172,8 +176,6 @@ struct InfoOutfitView: View {
             
             RowInfoView(title: "Season", value: self.outfit.season.rawValue)
             RowInfoView(title: "Style", value: self.outfit.style.rawValue)
-            
-            self.garmentsLazyRow
         }
     }
     
@@ -181,16 +183,10 @@ struct InfoOutfitView: View {
     
     @ViewBuilder
     private var garmentsLazyRow: some View {
-        VStack(alignment: .leading) {
-            
-            Text("Garments")
-                .fontWeight(.medium)
-                .fontDesign(.rounded)
-                .foregroundStyle(.secondary)
-            
+        SectionList(titleKey: "Garments") {
             
             ScrollView(.horizontal) {
-                LazyHStack {
+                LazyHStack(spacing: 15) {
                     ForEach(self.outfit.garments, id: \.id) { garment in
                         
                         ModelCardView(
@@ -198,7 +194,7 @@ struct InfoOutfitView: View {
                             imagePath: garment.imagePath
                         )
                         .equatable()
-                        .frame(width: 150, height: 150)
+                        .frame(width: 150, height: 250)
                         
                     }
                 }

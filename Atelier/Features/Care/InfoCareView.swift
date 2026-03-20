@@ -159,7 +159,6 @@ struct InfoCareView: View {
         Section("Garments") {
             
             let useTwoRows = item.garments.count > 3
-            
             let rows = Array(
                 repeating: GridItem(.fixed(125), spacing: 15),
                 count    : useTwoRows ? 2 : 1
@@ -182,14 +181,12 @@ struct InfoCareView: View {
                             imagePath: garment.imagePath
                         )
                         .equatable()
-                        .frame(width: 125, height: 125)
+                        .frame(width: 150, height: 250)
                     }
                     
                 }
-                .padding()
                 
             }
-            .listRowInsets(EdgeInsets())
         }
         
     }

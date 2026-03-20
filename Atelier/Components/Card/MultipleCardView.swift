@@ -26,7 +26,8 @@ struct MultipleCardView: Equatable, View {
         
         CardView(
             title      : self.title,
-            subheadline: self.subheadline
+            subheadline: self.subheadline,
+            gradient   : .black
         ) {
             if !items.isEmpty {
                 
@@ -40,7 +41,7 @@ struct MultipleCardView: Equatable, View {
                             imagePath : garment.imagePath!,
                             targetSize: CGSize(width: 100, height: 100)
                         )
-                        .frame(width: 75)
+                        .frame(width: 100)
                         .clipShape(RoundedRectangle(cornerRadius: 16))
                         .rotationEffect(
                             .degrees(

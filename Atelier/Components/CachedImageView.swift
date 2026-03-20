@@ -11,11 +11,11 @@ import NukeUI
 
 struct CachedImageView: View {
     let imagePath: String?
-    let targetSize: CGSize // Aggiungi questo parametro
+    let targetSize: CGSize
     
     init(
         imagePath : String?,
-        targetSize: CGSize = CGSize(width: 150, height: 150)
+        targetSize: CGSize = CGSize(width: 200, height: 300)
     ) {
         self.imagePath  = imagePath
         self.targetSize = targetSize
@@ -35,15 +35,8 @@ struct CachedImageView: View {
             if let image = state.image {
                 image
                     .resizable()
-                    .scaledToFill()
-                    .clipped()
-                    .contentShape(Rectangle())
-                    .transition(
-                        .opacity
-                        .animation(
-                            .easeIn(duration: 0.2)
-                        )
-                    )
+                    .aspectRatio(contentMode: .fill)
+                    .transition(.opacity.animation(.easeIn(duration: 0.2)))
                 
             } else {
                 self.placeholderView(isError: state.error != nil)
@@ -58,19 +51,24 @@ struct CachedImageView: View {
             )
         ])
         .pipeline(AtelierEnvironment.imagePipeline)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
     
     @ViewBuilder
     private func placeholderView(isError: Bool) -> some View {
-        Rectangle()
-            .fill(Color.gray.opacity(0.1))
-            .overlay {
-                if isError {
-                    Image(systemName: "photo.badge.exclamationmark")
-                        .foregroundStyle(.secondary)
-                } else {
-                    ProgressView()
-                }
+        ZStack {
+            Color.gray.opacity(0.1)
+            
+            if isError {
+                Image(systemName: "photo.badge.exclamationmark")
+                    .font(.largeTitle)
+                    .foregroundStyle(.secondary)
+                
+            } else {
+                ProgressView()
+                    .controlSize(.regular)
             }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
