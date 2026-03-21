@@ -32,33 +32,41 @@ struct MultipleCardView: Equatable, View {
             if !items.isEmpty {
                 
                 ZStack(alignment: .bottomLeading) {
-                    ForEach(
-                        Array(items.prefix(3).enumerated().reversed()),
-                        id: \.element.id
-                    ) { index, garment in
+                    
+                    if items.count > 1 {
+                        ForEach(
+                            Array(items.prefix(3).enumerated().reversed()),
+                            id: \.element.id
+                        ) { index, garment in
+                            
+                            CachedImageView(
+                                imagePath : garment.imagePath!,
+                                targetSize: CGSize(width: 100, height: 100)
+                            )
+                            .frame(width: 100)
+                            .clipShape(RoundedRectangle(cornerRadius: 16))
+                            .rotationEffect(
+                                .degrees(
+                                    Double(index) * 3.5
+                                ),
+                                anchor: .bottomLeading
+                            )
+                            .offset(
+                                x: CGFloat(index) * 30,
+                                y: CGFloat(index) * -5
+                            )
+                            .shadow(color: .black.opacity(0.25), radius: 3, x: 2, y: 2)
+                            .padding(.bottom, 55)
+                            .padding(.top, 17.5)
+                            .padding(.horizontal, 17.5)
+                        }
                         
-                        CachedImageView(
-                            imagePath : garment.imagePath!,
-                            targetSize: CGSize(width: 100, height: 100)
-                        )
-                        .frame(width: 100)
-                        .clipShape(RoundedRectangle(cornerRadius: 16))
-                        .rotationEffect(
-                            .degrees(
-                                Double(index) * 3.5
-                            ),
-                            anchor: .bottomLeading
-                        )
-                        .offset(
-                            x: CGFloat(index) * 30,
-                            y: CGFloat(index) * -5
-                        )
-                        .shadow(color: .black.opacity(0.25), radius: 3, x: 2, y: 2)
+                    } else {
+                        CachedImageView(imagePath: items.first?.imagePath)
                     }
+                    
+                    
                 }
-                .padding(.bottom, 55)
-                .padding(.top, 17.5)
-                .padding(.horizontal, 17.5)
                 
             } else {
                 Image(systemName: "washer")

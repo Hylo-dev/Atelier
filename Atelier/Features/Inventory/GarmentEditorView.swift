@@ -39,6 +39,9 @@ struct GarmentEditorView: View {
     private var brand: String
     
     @State
+    private var price: Double?
+    
+    @State
     private var color: Color
     
     @State
@@ -127,6 +130,7 @@ struct GarmentEditorView: View {
         
         _name                = State(initialValue: garment?.name ?? "")
         _brand               = State(initialValue: garment?.brand ?? "")
+        _price               = State(initialValue: garment?.price)
         
         var initialColor: Color
         if let hexString = garment?.color {
@@ -242,6 +246,14 @@ struct GarmentEditorView: View {
         SectionList(titleKey: "Info Garment") {
             TextField("Name", text: self.$name)
             TextField("Brand", text: self.$brand)
+            TextField(
+                "Price",
+                value: $price,
+                format: .currency(
+                    code: Locale.current.currency?.identifier ?? "EUR"
+                )
+            )
+            .keyboardType(.decimalPad)
             
             DatePicker(
                 "Purchase Date",
@@ -633,6 +645,7 @@ struct GarmentEditorView: View {
         let newGarment = Garment(
             name          : self.name,
             brand         : self.brand.isEmpty ? nil : self.brand,
+            price         : self.price,
             color         : self.color.toHex() ?? "nil",
             composition   : Array(self.selectedComposition),
             category      : self.selectedCategory,
@@ -673,6 +686,7 @@ struct GarmentEditorView: View {
         
         garment.name           = self.name
         garment.brand          = self.brand.isEmpty ? nil : self.brand
+        garment.price          = self.price
         garment.color          = self.color.toHex() ?? "nil"
         
         // Updated properties

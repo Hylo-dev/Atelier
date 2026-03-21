@@ -166,11 +166,25 @@ struct InfoGarmentView: View {
     private var sectionStyleAndCategory: some View {
         
         SectionList(titleKey: "Details") {
-            RowInfoView(title: "Type", value: self.item.category.label)
+            RowInfoView(
+                title: "Type",
+                value: self.item.category.label
+            )
             
             RowInfoView(title: "Model", value: self.item.subCategory.rawValue)
             
             RowInfoView(title: "Season", value: self.item.season.rawValue)
+            
+            if let price = item.price {
+                RowInfoView(
+                    title: "Price",
+                    value: price.formatted(
+                        .currency(
+                            code: Locale.current.currency?.identifier ?? "EUR"
+                        )
+                    )
+                )
+            }
         }
     }
     

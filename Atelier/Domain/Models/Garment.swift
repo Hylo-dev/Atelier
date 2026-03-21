@@ -27,6 +27,7 @@ extension AtelierSchemaV1 {
         // MARK: - Object Description
         var name        : String
         var brand       : String?
+        var price       : Double?
         var color       : String
         var composition : [GarmentComposition]
         var category    : GarmentCategory
@@ -67,6 +68,7 @@ extension AtelierSchemaV1 {
             id            : UUID = UUID(),
             name          : String,
             brand         : String? = nil,
+            price         : Double? = nil,
             color         : String,
             composition   : [GarmentComposition],
             category      : GarmentCategory,
@@ -82,6 +84,7 @@ extension AtelierSchemaV1 {
             self.id             = id
             self.name           = name
             self.brand          = brand
+            self.price          = price
             self.color          = color
             self.composition    = composition
             self.category       = category

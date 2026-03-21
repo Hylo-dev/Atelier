@@ -116,14 +116,17 @@ struct InfoCareView: View {
         Section("Summary") {
             
             RowInfoView(
-                title: "Date Creation",
+                title: "Created",
                 value: item.dateCreated.formatted(
                     date: .abbreviated,
                     time: .omitted
                 )
             )
             
-            RowInfoView(title: "State", value: item.status.rawValue)
+            RowInfoView(
+                title: "Status",
+                value: item.status.rawValue
+            )
         }
     }
     
@@ -136,12 +139,19 @@ struct InfoCareView: View {
             
             RowInfoView(
                 title: "Temperature",
-                value: "\(item.targetTemperature)"
+                value: "\(item.targetTemperature)°"
             )
             
             RowInfoView(
-                title: "Suggested Program",
+                title: "Program",
                 value: item.suggestedProgram.displayName
+            )
+            
+            RowInfoView(
+                title: "Washing Time",
+                value: formatWashingMachineTime(
+                    item.suggestedProgram.washingTime
+                )
             )
             
             RowInfoView(
@@ -196,11 +206,11 @@ struct InfoCareView: View {
     @ViewBuilder
     private var symbolsSection: some View {
         
-        Section("Warnings") {
+        Section("Care Instructions") {
             
             ForEach(Array(item.laundrySymbols), id: \.id) { symbol in
                 IconRowView(
-                    symbol.iconName ?? "",
+                    symbol.iconName ?? "questionmark",
                     title: symbol.title
                 )
             }
@@ -213,6 +223,21 @@ struct InfoCareView: View {
     
     // MARK: - Handlers
     
-    
+    private func formatWashingMachineTime(
+        _ totalMinutes: Int
+    ) -> String {
+        let hours   = totalMinutes / 60
+        let minutes = totalMinutes % 60
+        
+        if hours >= 1 {
+            return "\(hours)h \(minutes)m"
+        }
+        
+        if minutes >= 10 {
+            return "\(minutes)m"
+        }
+        
+        return String(format: "%d:00", minutes)
+    }
     
 }
