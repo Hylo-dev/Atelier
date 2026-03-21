@@ -27,6 +27,9 @@ struct CameraContainerView: View {
     private var triggerCapture = false
     
     @State
+    private var shotProgress: Double = .zero
+    
+    @State
     private var containerSize: CGSize = .zero
     
     
@@ -53,6 +56,7 @@ struct CameraContainerView: View {
             isFlashEnabled     : $isFlashEnabled,
             isUsingFrontCamera : $isUsingFrontCamera,
             capturePhotoTrigger: $triggerCapture,
+            progress           : $shotProgress,
             onImageCaptured    : onImageCaptured,
             onSymbolsCaptured  : onSymbolsCaptured,
             mode               : mode
@@ -102,6 +106,35 @@ struct CameraContainerView: View {
                             isFlashEnabled ? .yellow : .white
                         )
                 }
+            }
+        }
+        .overlay(alignment: .center) {
+            if shotProgress > 0 && shotProgress < 100 {
+                VStack(
+                    alignment: .leading,
+                    spacing  : 16
+                ) {
+                    VStack(
+                        alignment: .leading,
+                        spacing  : 5
+                    ) {
+                        Text("Processing Image")
+                            .font(.headline)
+                            .foregroundColor(.primary)
+                        
+                        Text("Isolating the subject and refining details.")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                    
+                    ProgressView(value: shotProgress, total: 100.0)
+                        .progressViewStyle(.linear)
+                        .tint(.accentColor)
+                        .frame(width: 200)
+                        .padding(.top, 8)
+                }
+                .padding(24)
+                .glassEffect(.regular, in: RoundedRectangle(cornerRadius: 24))
             }
         }
         .overlay(alignment: .bottom) {

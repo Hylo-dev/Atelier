@@ -12,7 +12,7 @@ import CoreML
 
 class CameraViewController: UIViewController, AVCapturePhotoCaptureDelegate, AVCaptureVideoDataOutputSampleBufferDelegate {
     weak var delegate: CameraViewControllerDelegate?
-    
+        
     var currentMode: CameraMode = .photo(removeBackground: false)
     
     private var visionModel: VNCoreMLModel?
@@ -28,6 +28,12 @@ class CameraViewController: UIViewController, AVCapturePhotoCaptureDelegate, AVC
     
     private var currentFlashMode: AVCaptureDevice.FlashMode = .off
     private var isCurrentlyFrontCamera = false
+        
+    private var progressShoting: Double = 0.0 {
+        didSet {
+            delegate?.didUpdateProgress(progressShoting)
+        }
+    }
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -246,9 +252,9 @@ class CameraViewController: UIViewController, AVCapturePhotoCaptureDelegate, AVC
     }
     
     func photoOutput(
-        _                        output: AVCapturePhotoOutput,
-        didFinishProcessingPhoto photo : AVCapturePhoto,
-                                 error : Error?
+        _ output: AVCapturePhotoOutput,
+        didFinishProcessingPhoto photo: AVCapturePhoto,
+        error: Error?
     ) {
         if let error = error {
             print("Error on shot: \(error)")
@@ -258,22 +264,37 @@ class CameraViewController: UIViewController, AVCapturePhotoCaptureDelegate, AVC
         guard let data = photo.fileDataRepresentation(),
               let originalImage = UIImage(data: data) else { return }
         
+        
+        Task { @MainActor in self.progressShoting = 15.0 }
+        
         let croppedImage = cropImageTo2By3(image: originalImage)
         
+        Task { @MainActor in self.progressShoting = 30.0 }
+        
         if case .photo(let removeBackground) = currentMode, removeBackground {
+            Task { @MainActor in self.progressShoting = 45.0 }
+            
             BackgroundManager.processImage(croppedImage) { [weak self] finalImage in
                 guard let finalImage = finalImage else { return }
                 
-                if let processedData = finalImage.heicData() {
-                    Task { @MainActor in
+                Task { @MainActor in
+                    self?.progressShoting = 75.0
+                    
+                    if let processedData = finalImage.heicData() {
+                        self?.progressShoting = 100.0
                         self?.delegate?.didTakePhoto(processedData)
                     }
                 }
             }
             
         } else {
+            Task { @MainActor in self.progressShoting = 75.0 }
+            
             if let croppedData = croppedImage.heicData() {
-                delegate?.didTakePhoto(croppedData)
+                Task { @MainActor in
+                    self.progressShoting = 100.0
+                    self.delegate?.didTakePhoto(croppedData)
+                }
             }
         }
     }

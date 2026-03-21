@@ -16,6 +16,9 @@ struct CameraView: UIViewControllerRepresentable {
     @Binding
     var capturePhotoTrigger: Bool
     
+    @Binding
+    var progress: Double
+    
     var onImageCaptured  : ((String, UIImage) -> Void)
     var onSymbolsCaptured: (([String]) -> Void)?
     
@@ -38,7 +41,7 @@ struct CameraView: UIViewControllerRepresentable {
         if capturePhotoTrigger {
             Task {
                 uiViewController.takePhoto()
-                self.capturePhotoTrigger = false 
+                self.capturePhotoTrigger = false
             }
         }
     }
@@ -67,11 +70,18 @@ struct CameraView: UIViewControllerRepresentable {
             self.parent.onSymbolsCaptured?(symbols)
             self.parent.dismiss()
         }
+        
+        func didUpdateProgress(_ progress: Double) {
+            withAnimation(.easeInOut) {
+                parent.progress = progress
+            }
+        }
     }
 }
 
 protocol CameraViewControllerDelegate: AnyObject {
     func didTakePhoto(_ photoData: Data)
     func didFindSymbols(_ symbols: [String])
+    func didUpdateProgress(_ progress: Double)
 }
 #endif
