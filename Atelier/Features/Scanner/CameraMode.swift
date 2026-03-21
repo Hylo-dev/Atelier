@@ -6,7 +6,7 @@
 //
 
 enum CameraMode {
-    case photo
+    case photo(removeBackground: Bool)
     case recognizeSymbols
     case create3DModel
 }

@@ -202,4 +202,24 @@ struct InfoOutfitView: View {
         }
         .padding(.vertical, 10)
     }
+    
+    
+    // TODO: Calc weight color for each garment  
+    @ViewBuilder
+    private var outfitColors: some View {
+        
+        HStack {
+            
+            ForEach(outfit.garments, id: \.id) { color in
+                
+                VStack {
+                    
+                    Text(color.color)
+                }
+                
+            }
+            
+        }
+        
+    }
 }

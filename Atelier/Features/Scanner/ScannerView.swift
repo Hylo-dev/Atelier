@@ -8,10 +8,9 @@ struct ScannerView: View {
 #if os(iOS) || os(ipadOS)
         ZStack {
             
-            CameraView(
-                onImageCaptured: { _, _ in },
-                mode           : .photo
-            )
+            CameraContainerView() { _, _ in
+                
+            }
             .edgesIgnoringSafeArea(.all)
             
             HStack {

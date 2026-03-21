@@ -277,13 +277,11 @@ struct OutfitEditorView: View {
     
     @ViewBuilder
     private func sheetPhotoHandler() -> some View {
-        CameraView(
-            onImageCaptured: { filename, image in
-                self.uiImageToSave = image
-                self.fullLookImagePath = (filename as NSString).lastPathComponent
-            },
-            mode: .photo
-        )
+        
+        CameraContainerView() { filename, image in
+            self.uiImageToSave = image
+            self.fullLookImagePath = (filename as NSString).lastPathComponent
+        }
         .ignoresSafeArea()
     }
     

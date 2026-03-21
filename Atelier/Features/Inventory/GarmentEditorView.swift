@@ -486,30 +486,28 @@ struct GarmentEditorView: View {
     
     @ViewBuilder
     private func sheetPhotoHandler() -> some View {
-        CameraView(
-            onImageCaptured: { filename, image in
+        
+        NavigationStack {
+            CameraContainerView(mode: .photo(removeBackground: true)) { filename, image in
                 self.uiImageToSave = image
                 self.imagePath = (filename as NSString).lastPathComponent
-            },
-            mode: .photo
-        )
-        .ignoresSafeArea()
+            }
+        }
     }
     
     @ViewBuilder
     private func sheetScanHandler() -> some View {
-        CameraView(
-            onImageCaptured  : { _, _ in },
+        
+        CameraContainerView(
+            mode: .recognizeSymbols,
             onSymbolsCaptured: { symbols in
                 for symbol in symbols {
                     if let icon = LaundrySymbol(createMLLabel: symbol) {
                         self.washingSymbols.insert(icon)
                     }
                 }
-            },
-            mode: .recognizeSymbols
-        )
-        .ignoresSafeArea()
+            }
+        ) { _, _ in }
     }
     
     
