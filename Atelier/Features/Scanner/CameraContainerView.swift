@@ -78,7 +78,7 @@ struct CameraContainerView: View {
                 let viewfinderW = containerSize.width
                 let viewfinderH = viewfinderW * 1.5
                 
-                let topOffset: CGFloat = 70
+                let topOffset: CGFloat = 115
                 
                 Color.black
                     .opacity(0.8)
@@ -192,7 +192,7 @@ struct CameraContainerView: View {
                 .buttonStyle(.glass)
             }
             .padding(.horizontal)
-            .padding(.bottom, 5)
+            .padding(.bottom, 15)
         }
         .photosPicker(
             isPresented: $showGallery,
