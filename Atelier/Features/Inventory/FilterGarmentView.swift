@@ -8,7 +8,6 @@
 import SwiftUI
 
 struct FilterGarmentView: View {
-    
     @Environment(\.dismiss)
     var dismiss
     
@@ -17,194 +16,156 @@ struct FilterGarmentView: View {
     
     var brands: [String]
     
-    
-    
     var body: some View {
-        let _ = Self._printChanges()
-        
         NavigationStack {
             Form {
                 
-                // MARK: - Section 1
-                self.detailsSection
+                Section("Style & Season") {
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        LazyHStack(spacing: 13) {
+                            ForEach(Season.allCases, id: \.self) { season in
+                                PillFilter(
+                                    item: season,
+                                    selection: $filters.selectedSeason
+                                )
+                            }
+                        }
+                        .padding(15)
+                    }
+                    .listRowInsets(EdgeInsets())
+                    
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        LazyHStack(spacing: 13) {
+                            ForEach(GarmentStyle.allCases, id: \.self) { style in
+                                PillFilter(
+                                    item: style,
+                                    selection: $filters.selectedStyle
+                                )
+                            }
+                        }
+                        .padding(15)
+                    }
+                    .listRowInsets(EdgeInsets())
+                    
+                }
                 
-                // MARK: - Section 2
-                self.syleAndCategorySection
+                if brands.count > 1 || filters.selectedSubCategory != nil {
+                    Section("Identity") {
+                        if brands.count > 1 {
+                            brandLink
+                        }
+                        
+                        modelLink
+                    }
+                }
                 
-                // MARK: - Stato
-                self.careSection
-                
+                // SECTION 3: CONDITION & CARE
+                Section("Condition & Care") {
+                    conditionLink
+                    Toggle("Show Clean Only", isOn: $filters.onlyClean)
+                }
             }
             .navigationTitle("Filters")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Close", systemImage: "xmark") {
-                        dismiss()
-                    }
+                    Button("Close", systemImage: "xmark") { dismiss() }
                 }
                 
                 if filters.isFiltering {
-                    ToolbarItem {
-                        Button("Reset", systemImage: "arrow.counterclockwise") {
-                            withAnimation {
-                                self.filters.reset()
-                            }
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button("Reset", systemImage: "arrow.trianglehead.clockwise") {
+                            withAnimation { filters.reset() }
                         }
                     }
+                    
+                    ToolbarSpacer()
                 }
                 
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Done", systemImage: "checkmark") {
-                        dismiss()
-                    }
-                    .fontWeight(.bold)
-                }
-            }
-            .onChange(of: self.filters.selectedState) { _, newStates in
-                if let states = newStates, !states.isEmpty && self.filters.onlyClean{
-                    self.filters.onlyClean = false
+                    Button("Done", systemImage: "checkmark") { dismiss() }
+                        .fontWeight(.bold)
                 }
             }
         }
     }
     
-    // MARK: - Subviews
     
-    @ViewBuilder
-    private var detailsSection: some View {
-        if !self.brands.isEmpty {
-            
-            Section("Details Garment") {
-                let selected = Binding<Set<String>>(
-                    get: { self.filters.selectedBrand ?? [] },
-                    set: { newSet in
-                        self.filters.selectedBrand = newSet.isEmpty ? nil : newSet
-                    }
-                )
-                
-                
-                NavigationLink {
-                    StringSelectionView(
-                        title    : "Brand",
-                        items    : self.brands,
-                        selection: selected
-                    )
-                    .navigationTitle("Brand")
-                    
-                } label: {
-                    HStack {
-                        Text("Brand")
-                        
-                        Spacer()
-                        
-                        if selected.wrappedValue.isEmpty {
-                            Text("All")
-                                .foregroundStyle(.secondary)
-                            
-                        } else {
-                            Text("\(selected.wrappedValue.count) selected")
-                                .foregroundStyle(Color.accentColor)
-                                .fontWeight(.medium)
-                        }
-                    }
-                }
-            }
+    
+    // MARK: - Sublinks
+    
+    private var brandLink: some View {
+        NavigationLink {
+            StringSelectionView(title: "Brand", items: brands, selection: setBinding(for: \.selectedBrand))
+        } label: {
+            filterRow(title: "Brand", count: filters.selectedBrand?.count ?? 0)
         }
     }
     
-    @ViewBuilder
-    private var syleAndCategorySection: some View {
-        Section("Style & Category") {
-            
-            self.filterNavigationLink(
-                title    : "Model",
-                selection: self.setBinding(for: \.selectedSubCategory)
-            ) {
-                GenericSelectionView<GarmentSubCategory>(
-                    selection: self.setBinding(for: \.selectedSubCategory)
-                )
-            }
-            
-            self.filterNavigationLink(
-                title    : "Season",
-                selection: self.setBinding(for: \.selectedSeason)
-            ) {
-                GenericSelectionView<Season>(
-                    selection    : self.setBinding(for: \.selectedSeason),
-                    useSystemIcon: true
-                )
-            }
-            
-            
-            self.filterNavigationLink(
-                title    : "Style",
-                selection: self.setBinding(for: \.selectedStyle)
-            ) {
-                GenericSelectionView<GarmentStyle>(
-                    selection: self.setBinding(for: \.selectedStyle)
-                )
-            }
-        }
-        
-    }
-    
-    @ViewBuilder
-    private var careSection: some View {
-        Section("Care") {
-            Toggle("Only garment clean", isOn: self.$filters.onlyClean)
-            
-            self.filterNavigationLink(
-                title    : "State",
-                selection: self.setBinding(for: \.selectedState)
-            ) {
-                GenericSelectionView<GarmentState>(
-                    selection: self.setBinding(for: \.selectedState)
-                )
-            }
+    private var modelLink: some View {
+        NavigationLink {
+            GenericSelectionView<GarmentSubCategory>(selection: setBinding(for: \.selectedSubCategory))
+        } label: {
+            filterRow(title: "Model", count: filters.selectedSubCategory?.count ?? 0)
         }
     }
     
-    // MARK: - Helpers
+    private var conditionLink: some View {
+        NavigationLink {
+            GenericSelectionView<GarmentState>(selection: setBinding(for: \.selectedState))
+        } label: {
+            filterRow(title: "Condition", count: filters.selectedState?.count ?? 0)
+        }
+    }
     
-    private func setBinding<T>(
-        for keyPath: WritableKeyPath<FilterGarmentConfig,
-        Set<T>?>
-    ) -> Binding<Set<T>> {
+    private func filterRow(title: String, count: Int) -> some View {
+        HStack {
+            Text(title)
+            Spacer()
+            Text(count == 0 ? "All" : "\(count) selected")
+                .foregroundStyle(count == 0 ? .secondary : Color.accentColor)
+        }
+    }
+    
+    private func setBinding<T>(for keyPath: WritableKeyPath<FilterGarmentConfig, Set<T>?>) -> Binding<Set<T>> {
         Binding {
             self.filters[keyPath: keyPath] ?? []
-        } set: { newValue in
-            self.filters[keyPath: keyPath] = newValue.isEmpty ? nil : newValue
+        } set: {
+            self.filters[keyPath: keyPath] = $0.isEmpty ? nil : $0
         }
     }
+}
+
+struct PillFilter<T: RawRepresentable & Hashable & Identifiable>: View where T.RawValue == String {
+    let item: T
     
-    @ViewBuilder
-    private func filterNavigationLink<T, Destination: View>(
-        title      : String,
-        selection  : Binding<Set<T>>,
-        @ViewBuilder destination: () -> Destination
+    @Binding
+    var selection: Set<T>?
+    
+    var body: some View {
+        let isSelected = selection?.contains(item) ?? false
         
-    ) -> some View {
-        NavigationLink {
-            destination()
-                .navigationTitle(title)
-            
-        } label: {
-            HStack {
-                Text(title)
+        Text(item.rawValue.capitalized)
+            .font(.system(size: 14, weight: .medium))
+            .padding(.horizontal, 16)
+            .padding(.vertical, 8)
+            .background(
+                isSelected ? Color.accentColor : Color(.tertiarySystemFill)
+            )
+            .foregroundStyle(isSelected ? .white : .primary)
+            .clipShape(Capsule())
+            .onTapGesture {
+                var currentSet = selection ?? []
                 
-                Spacer()
-                
-                if selection.wrappedValue.isEmpty {
-                    Text("All")
-                        .foregroundStyle(.secondary)
-                    
+                if currentSet.contains(item) {
+                    currentSet.remove(item)
                 } else {
-                    Text("\(selection.wrappedValue.count) selected")
-                        .foregroundStyle(Color.accentColor)
-                        .fontWeight(.medium)
+                    currentSet.insert(item)
+                }
+                
+                withAnimation {
+                    selection = currentSet.isEmpty ? nil : currentSet
                 }
             }
-        }
     }
 }
