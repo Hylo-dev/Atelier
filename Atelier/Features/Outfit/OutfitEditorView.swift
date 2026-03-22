@@ -15,37 +15,15 @@ struct OutfitEditorView: View {
     
     @Environment(OutfitManager.self)
     private var outfitManager: OutfitManager
-    
-    
-    
+        
     let outfit: Outfit?
-    
-    @State
-    private var isSaved: Bool
+
     
     
     // MARK: - Outfit Attributes
     
     @State
-    private var name: String
-    
-    @State
-    private var garments: Set<Garment>
-    
-    @State
-    private var fullLookImagePath: String?
-    
-    @State
-    private var selectedSeason: Season
-    
-    @State
-    private var selectedStyle: GarmentStyle
-    
-    @State
-    private var lastWornDate: Date
-    
-    @State
-    private var wearCount: Int
+    private var editorViewModel: OutfitEditorViewModel
     
     
     
@@ -55,49 +33,25 @@ struct OutfitEditorView: View {
     private var uiImageToSave: UIImage?
     
     @State
-    private var showCamera: Bool
-    
-    
-    
-    // MARK: - Alert Management
+    private var isSaved: Bool = false
     
     @State
-    private var alertErrorMessage: String = ""
-    
-    @State
-    private var isAlertErrorVisible: Bool = false
+    private var showCamera: Bool = false
     
     
     
-    // MARK: - Validation
-    private var isFormValid: Bool {
-        let isNameValid       = !name.trimmingCharacters(in: .whitespaces).isEmpty
-        let hasEnoughGarments = garments.count >= 2
+    init(_ item: Outfit? = nil) {
+        self.outfit = item
         
-        return isNameValid && hasEnoughGarments
-    }
-
-    
-    
-    init(_ outfit: Outfit? = nil) {
-        self.outfit            = outfit
-        
-        _isSaved               = State(initialValue: false)
-        _name                  = State(initialValue: outfit?.name ?? "")
-        _garments              = State(initialValue: Set(outfit?.garments ?? []))
-        _fullLookImagePath     = State(initialValue: outfit?.fullLookImagePath)
-        _selectedSeason        = State(initialValue: outfit?.season ?? .summer)
-        _selectedStyle         = State(initialValue: outfit?.style ?? .casual)
-        _showCamera            = State(initialValue: false)
-        _lastWornDate          = State(initialValue: outfit?.lastWornDate ?? .now)
-        _wearCount             = State(initialValue: outfit?.wearCount ?? 0)
-                
+        self._editorViewModel = State(
+            initialValue: OutfitEditorViewModel(item)
+        )
     }
     
     var body: some View {
                 
         HeroListView(
-            fullLookImagePath,
+            editorViewModel.fullLookImagePath,
             previewImage  : uiImageToSave,
             isImageClicked: $showCamera
         ) {
@@ -121,21 +75,31 @@ struct OutfitEditorView: View {
             
             ToolbarItem(placement: .confirmationAction) {
                 Button("Finish", systemImage: "checkmark") {
-                    handleFinishAction()
+                    editorViewModel.handleFinishAction(
+                        image  : uiImageToSave,
+                        manager: outfitManager
+                    ) {
+                        isSaved.toggle()
+                        
+                        Task {
+                            try await Task.sleep(for: .seconds(0.2))
+                            dismiss()
+                        }
+                    }
                 }
                 .fontWeight(.bold)
-                .disabled(!isFormValid)
+                .disabled(!editorViewModel.isFormValid)
             }
         }
         .fullScreenCover(
             isPresented: self.$showCamera,
             content    : sheetPhotoHandler
         )
-        .alert("Ops! Something went wrong", isPresented: $isAlertErrorVisible) {
+        .alert("Ops! Something went wrong", isPresented: $editorViewModel.isAlertErrorVisible) {
             Button("Ok", role: .cancel) { }
             
         } message: {
-            Text(alertErrorMessage)
+            Text(editorViewModel.alertErrorMessage)
         }
         
     }
@@ -147,12 +111,12 @@ struct OutfitEditorView: View {
     @ViewBuilder
     private var sectionInfo: some View {
         SectionList(titleKey: "Info") {
-            TextField("Name", text: self.$name)
+            TextField("Name", text: $editorViewModel.name)
             
             if outfit != nil {
                 DatePicker(
                     "Last worn date",
-                    selection: self.$lastWornDate,
+                    selection: $editorViewModel.lastWornDate,
                     displayedComponents: [.date]
                 )
             }            
@@ -164,7 +128,7 @@ struct OutfitEditorView: View {
         SectionList(titleKey: "Care") {
             
             Stepper(
-                value: self.$wearCount,
+                value: $editorViewModel.wearCount,
                 in   : 0...Int.max,
                 step : 1
             ) {
@@ -172,7 +136,7 @@ struct OutfitEditorView: View {
                     Text("Times worn:")
                         
                     
-                    Text("\(self.wearCount)")
+                    Text("\(editorViewModel.wearCount)")
                         .fontWeight(.semibold)
                         .monospacedDigit()
                 }
@@ -184,14 +148,14 @@ struct OutfitEditorView: View {
     private var sectionStyleAndCategory: some View {
         SectionList(titleKey: "Style & Category") {
             
-            PickerList("Season", selection: self.$selectedSeason) {
+            PickerList("Season", selection: $editorViewModel.selectedSeason) {
                 ForEach(Season.allCases, id: \.id) { type in
                     Text(type.rawValue).tag(type)
                 }
             }
             
             
-            PickerList("Style", selection: self.$selectedStyle) {
+            PickerList("Style", selection: $editorViewModel.selectedStyle) {
                 ForEach(GarmentStyle.allCases, id: \.id) { type in
                     Text(type.rawValue).tag(type)
                 }
@@ -199,7 +163,7 @@ struct OutfitEditorView: View {
             
             
             NavigationLink {
-                GarmentSelectionView(selectedGarments: self.$garments)
+                GarmentSelectionView(selectedGarments: $editorViewModel.garments)
                     .navigationTitle("Garments")
                 
             } label: {
@@ -212,7 +176,7 @@ struct OutfitEditorView: View {
                     
                     
                     HStack {
-                        Text(self.garments.isEmpty ? "None" : "\(self.garments.count) selected")
+                        Text(editorViewModel.garments.isEmpty ? "None" : "\(editorViewModel.garments.count) selected")
                             .foregroundStyle(.tertiary)
                         
                         Image(systemName: "chevron.forward")
@@ -228,7 +192,7 @@ struct OutfitEditorView: View {
     
     
 
-    // MARK: - Views
+    // MARK: - Views Handlers
     
     @ViewBuilder
     private func sheetPhotoHandler() -> some View {
@@ -236,90 +200,8 @@ struct OutfitEditorView: View {
         NavigationStack {
             CameraContainerView() { filename, image in
                 self.uiImageToSave = image
-                self.fullLookImagePath = (filename as NSString).lastPathComponent
+                editorViewModel.fullLookImagePath = (filename as NSString).lastPathComponent
             }
         }
-    }
-    
-    
-    
-    // MARK: - Handlers
-    
-    private func handleFinishAction() {
-        let success = if outfit == nil {
-            saveOutfit()
-            
-        } else { updateOutfit() }
-        
-        if success {
-            isSaved.toggle()
-            
-            Task {
-                try await Task.sleep(for: .seconds(0.2))
-                dismiss()
-            }
-        }
-    }
-    
-    
-    private func saveOutfit() -> Bool {
-        
-        if let imageToSave = self.uiImageToSave {
-            let result = ImageStorage.saveImage(imageToSave)
-            
-            switch result {
-                case .success(let filename):
-                    fullLookImagePath = (filename as NSString).lastPathComponent
-                    
-                case .failure(let error):
-                    alertErrorMessage   = error.localizedDescription
-                    isAlertErrorVisible = true
-                    return false
-            }
-        }
-                        
-        let newOutfit = Outfit(
-            name             : self.name,
-            garments         : Array(self.garments),
-            season           : self.selectedSeason,
-            fullLookImagePath: self.fullLookImagePath,
-            style            : self.selectedStyle
-        )
-        
-        outfitManager.insert(newOutfit)
-        return true
-    }
-    
-    private func updateOutfit() -> Bool {
-        guard let outfit = outfit else { return false }
-        
-        if let imageToSave = self.uiImageToSave {
-            
-            if let oldPath = self.outfit?.fullLookImagePath {
-                ImageStorage.deleteImage(filename: oldPath)
-            }
-            
-            switch ImageStorage.saveImage(imageToSave) {
-                case .success(let filename):
-                    fullLookImagePath = (filename as NSString).lastPathComponent
-                    
-                case .failure(let error):
-                    alertErrorMessage   = error.localizedDescription
-                    isAlertErrorVisible = true
-                    return false
-            }
-        }
-        
-        outfit.name              = self.name
-        outfit.season            = self.selectedSeason
-        outfit.style             = self.selectedStyle
-        outfit.lastWornDate      = self.lastWornDate
-        outfit.fullLookImagePath = self.fullLookImagePath
-        outfit.wearCount         = self.wearCount
-        outfit.garments          = Array(self.garments)
-        
-        
-        outfitManager.update()
-        return true
     }
 }
