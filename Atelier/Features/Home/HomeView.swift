@@ -104,7 +104,9 @@ struct HomeView: View {
                 }
             }
         }
-        .tabViewBottomAccessory(isEnabled: self.isTopAppBarVisible(self.selectedTab)) {
+        .tabViewBottomAccessory(
+            isEnabled: self.isTopAppBarVisible(self.selectedTab)
+        ) {
             switch self.selectedTab {
                 case .wardrobe:
                     LiquidCategoryBarView(state: categoryState)

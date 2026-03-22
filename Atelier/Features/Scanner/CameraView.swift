@@ -1,6 +1,7 @@
 #if os(iOS)
 import SwiftUI
 import CoreML
+import PhotosUI
 
 struct CameraView: UIViewControllerRepresentable {
     
@@ -19,6 +20,9 @@ struct CameraView: UIViewControllerRepresentable {
     @Binding
     var progress: Double
     
+    @Binding
+    var selectedPhotoPicker: PhotosPickerItem?
+    
     var onImageCaptured  : ((String, UIImage) -> Void)
     var onSymbolsCaptured: (([String]) -> Void)?
     
@@ -33,10 +37,37 @@ struct CameraView: UIViewControllerRepresentable {
         return controller
     }
     
-    func updateUIViewController(_ uiViewController: CameraViewController, context: Context) {
+    func updateUIViewController(
+        _ uiViewController: CameraViewController,
+        context: Context
+    ) {
 
         uiViewController.updateFlashMode(isFlashEnabled)
         uiViewController.updateCameraPosition(isFront: isUsingFrontCamera)
+        
+        if let photoItem = selectedPhotoPicker {
+            Task { @MainActor in
+                do {
+                    if let data = try await photoItem.loadTransferable(
+                        type: Data.self
+                    ) {
+                        let result = self.captureManager.savePhotoToDisk(data)
+                        
+                        if let filename = result.filename,
+                            let image = result.image {
+                            
+                            self.onImageCaptured(filename, image)
+                            self.dismiss()
+                        }
+                    }
+                    
+                } catch {
+                    print("Error on load photo: \(error)")
+                }
+                
+                self.selectedPhotoPicker = nil
+            }
+        }
         
         if capturePhotoTrigger {
             Task {

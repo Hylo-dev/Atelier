@@ -7,8 +7,10 @@
 
 
 import SwiftUI
+import PhotosUI
 
 struct CameraContainerView: View {
+    
     @Environment(\.dismiss)
     var dismiss
     
@@ -22,6 +24,9 @@ struct CameraContainerView: View {
     
     @State
     private var showGallery = false
+    
+    @State
+    private var selectedPhotoPicker: PhotosPickerItem?
     
     @State
     private var triggerCapture = false
@@ -57,6 +62,7 @@ struct CameraContainerView: View {
             isUsingFrontCamera : $isUsingFrontCamera,
             capturePhotoTrigger: $triggerCapture,
             progress           : $shotProgress,
+            selectedPhotoPicker: $selectedPhotoPicker,
             onImageCaptured    : onImageCaptured,
             onSymbolsCaptured  : onSymbolsCaptured,
             mode               : mode
@@ -188,5 +194,10 @@ struct CameraContainerView: View {
             .padding(.horizontal)
             .padding(.bottom, 5)
         }
+        .photosPicker(
+            isPresented: $showGallery,
+            selection  : $selectedPhotoPicker,
+            matching   : .images
+        )
     }
 }

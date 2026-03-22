@@ -48,7 +48,6 @@ struct InventoryView: View {
         order: .forward
     )
     private var laundrySessions: [LaundrySession]
-    
         
     
     // MARK: - Add Garment Sheet values
@@ -62,6 +61,9 @@ struct InventoryView: View {
     
     @State
     private var selectedItem: Garment?
+    
+    @State
+    private var navigatedGarment: Garment?
     
     
     
@@ -143,9 +145,20 @@ struct InventoryView: View {
                 }
             }
         }
-        .navigationDestination(for: Garment.self) { selectedItem in
-            InfoGarmentView(selectedItem)
-        
+        .navigationDestination(item: $navigatedGarment) { item in
+            InfoGarmentView(item)
+                .onAppear {
+                    withAnimation {
+                        categoryState.subSection = true
+                    }
+                }
+        }
+        .onChange(of: navigatedGarment) { old, newValue in
+            if newValue == nil {
+                withAnimation {
+                    categoryState.subSection = false
+                }
+            }
         }
         .sheet(isPresented: self.$isAddGarmentSheetVisible) {
             NavigationStack {
@@ -153,7 +166,6 @@ struct InventoryView: View {
             }
         }
         .sheet(item: self.$selectedItem) { germent in
-            
             NavigationStack {
                 GarmentEditorView(garment: germent)
             }
@@ -180,7 +192,8 @@ struct InventoryView: View {
                         sessions        : laundrySessions,
                         manager         : garmentManager,
                         applianceManager: applianceManager,
-                        selectedItem    : $selectedItem
+                        selectedItem    : $selectedItem,
+                        navigatedGarment: $navigatedGarment
                     )
                     .equatable()
                     .id(item.id)
@@ -218,6 +231,9 @@ struct GarmentContextCard: View, Equatable {
     @Binding
     var selectedItem: Garment?
     
+    @Binding
+    var navigatedGarment: Garment?
+    
     @State
     private var didTriggerDelete: Bool = false
     
@@ -234,11 +250,13 @@ struct GarmentContextCard: View, Equatable {
     }
     
     var body: some View {
-        NavigationLink(value: self.item) {
+        Button {
+            navigatedGarment = item
+        } label: {
             ModelCardView(
-                title      : self.item.name,
+                title: self.item.name,
                 subheadline: self.item.brand,
-                imagePath  : self.item.imagePath
+                imagePath: self.item.imagePath
             )
             .contextMenu {
                 self.contextMenuButtons(for: self.item)

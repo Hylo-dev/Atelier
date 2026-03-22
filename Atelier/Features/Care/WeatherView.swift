@@ -23,17 +23,19 @@ struct WeatherView: View, Equatable{
             
             HStack(alignment: .center) {
                 
-                VStack(alignment: .leading, spacing: 6) {
-                    HStack {
-                        Image(systemName: weather?.condition.icon ?? "sun.max.fill")
-                            .font(.title)
+                VStack(alignment: .leading) {
+                    VStack(alignment: .leading) {
+                        Text(weather?.locationName ?? "Placeholder")
+                            .font(.title2)
                             .fontWeight(.bold)
-                            .symbolRenderingMode(.multicolor)
+                            .fontDesign(.default)
+                            .foregroundColor(.primary)
+                            .lineLimit(1)
                         
-                        Text("\(Int(weather?.temperature ?? 00))°")
-                            .font(.title)
-                            .fontWeight(.bold)
-                            .fontDesign(.rounded)
+                        Text(weather?.condition.rawValue ?? "Test")
+                            .font(.headline)
+                            .fontWeight(.light)
+                            .fontDesign(.default)
                             .foregroundColor(.primary)
                             .lineLimit(1)
                         
@@ -46,11 +48,12 @@ struct WeatherView: View, Equatable{
                     
                     Spacer()
                     
-                    Text(weather?.messageWeather ?? "Test Test Test Test Test Test Test ")
-                        .font(.subheadline)
-                        .lineLimit(2)
-                        .minimumScaleFactor(0.8)
+                    Text("\(Int(weather?.temperature ?? 0))°")
+                        .font(.system(size: 55))
+                        .fontWeight(.bold)
+                        .fontDesign(.default)
                         .foregroundColor(.primary)
+                        .padding(.bottom, -12)
                         .if(weather == nil, transform: { `view` in
                             `view`
                                 .redacted(reason: .placeholder)
@@ -58,35 +61,32 @@ struct WeatherView: View, Equatable{
                         })
                     
                 }
-                
+                                
                 Spacer()
                 
                 VStack(alignment: .trailing) {
-                    Text(weather?.locationName ?? "Placeholder")
-                        .font(.headline)
+                    Image(systemName: weather?.condition.icon ?? "sun.max.fill")
+                        .font(.system(size: 40))
                         .fontWeight(.bold)
-                        .fontDesign(.default)
-                        .foregroundColor(.primary)
-                        .lineLimit(1)
-                    
-                    Text(weather?.condition.rawValue ?? "Test")
-                        .font(.subheadline)
-                        .fontWeight(.light)
-                        .fontDesign(.default)
-                        .foregroundColor(.primary)
-                        .lineLimit(1)
+                        .symbolRenderingMode(.multicolor)
                     
                     Spacer()
+                    
+                    Text(weather?.messageWeather ?? "Test Test Test Test Test Test Test ")
+                        .font(.subheadline)
+                        .lineLimit(2)
+                        .foregroundColor(.primary)
                 }
                 .if(weather == nil, transform: { `view` in
                     `view`
                         .redacted(reason: .placeholder)
                         .shimmer()
                 })
+                
             }
-            .padding(24)
+            .padding(20)
         }
-        .frame(height: 140)
+        .frame(height: 170)
         .frame(maxWidth: .infinity)
         .clipShape(RoundedRectangle(cornerRadius: 26))
         .padding(.horizontal)

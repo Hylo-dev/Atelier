@@ -9,11 +9,12 @@ import Foundation
 
 @Observable
 class TabFilterState {
-    var items    : [String] = ["All"]
-    var selection: String?  = "All"
-    var progress : CGFloat  = .zero
+    var items     : [String] = ["All"]
+    var selection : String?  = "All"
+    var progress  : CGFloat  = .zero
+    var subSection: Bool     = false
     
     var isVisible: Bool {
-        return items.count > 2
+        return items.count > 2 && !subSection
     }
 }

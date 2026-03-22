@@ -28,6 +28,9 @@ struct OutfitView: View {
     private var selectedItem: Outfit?
     
     @State
+    private var navigatedOutfit: Outfit?
+    
+    @State
     private var isDeleted: Bool = false
     
     
@@ -161,8 +164,13 @@ struct OutfitView: View {
                 Button("Add", systemImage: "plus") { self.isAddOutfitSheetVisible = true }
             }
         }
-        .navigationDestination(for: Outfit.self) { selectedOutfit in
-            InfoOutfitView(selectedOutfit)
+        .navigationDestination(item: $navigatedOutfit) { item in
+            InfoOutfitView(item)
+                .onAppear {
+                    withAnimation {
+                        seasonsState.subSection = true
+                    }
+                }
         }
         .sheet(isPresented: self.$isAddOutfitSheetVisible) {
             NavigationStack {
@@ -176,6 +184,13 @@ struct OutfitView: View {
         }
         .sheet(isPresented: self.$isFilterSheetVisible) {
             FilterOutfitView(filter: self.$filter)
+        }
+        .onChange(of: navigatedOutfit) { old, newValue in
+            if newValue == nil {
+                withAnimation {
+                    seasonsState.subSection = false
+                }
+            }
         }
     }
     
@@ -198,7 +213,8 @@ struct OutfitView: View {
                         applianceManager: applianceManager,
                         manager         : self.outfitManager,
                         subTitleAlert   : subTitle,
-                        selectedItem    : self.$selectedItem
+                        selectedItem    : self.$selectedItem,
+                        navigatedOutfit : $navigatedOutfit
                     )
                     .equatable()
                     .id(item.id)
@@ -235,6 +251,9 @@ struct OutfitContextCard: View, Equatable {
     @Binding
     var selectedItem: Outfit?
     
+    @Binding
+    var navigatedOutfit: Outfit?
+    
     // MARK: - Deleted target
     @State
     private var taskDeletedCompleted: Bool = false
@@ -248,8 +267,11 @@ struct OutfitContextCard: View, Equatable {
     }
     
     var body: some View {
-        NavigationLink(value: self.outfit) {
+        
+        Button {
+            navigatedOutfit = outfit
             
+        } label: {
             ModelCardView(
                 title      : self.outfit.name,
                 subheadline: self.subTitleAlert,
@@ -262,6 +284,7 @@ struct OutfitContextCard: View, Equatable {
         }
         .buttonStyle(.plain)
         .sensoryFeedback(.success, trigger: self.taskDeletedCompleted)
+        
     }
     
     @ViewBuilder

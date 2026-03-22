@@ -52,19 +52,10 @@ struct OutfitEditorView: View {
     // MARK: - Manage image selection
     
     @State
-    private var selectedItem: PhotosPickerItem?
-    
-    @State
     private var uiImageToSave: UIImage?
     
     @State
     private var showCamera: Bool
-    
-    @State
-    private var showGalleryPicker: Bool
-    
-    @State
-    private var showImageSourceDialog: Bool
     
     
     
@@ -98,8 +89,6 @@ struct OutfitEditorView: View {
         _selectedSeason        = State(initialValue: outfit?.season ?? .summer)
         _selectedStyle         = State(initialValue: outfit?.style ?? .casual)
         _showCamera            = State(initialValue: false)
-        _showGalleryPicker     = State(initialValue: false)
-        _showImageSourceDialog = State(initialValue: false)
         _lastWornDate          = State(initialValue: outfit?.lastWornDate ?? .now)
         _wearCount             = State(initialValue: outfit?.wearCount ?? 0)
                 
@@ -110,7 +99,7 @@ struct OutfitEditorView: View {
         HeroListView(
             fullLookImagePath,
             previewImage  : uiImageToSave,
-            isImageClicked: $showImageSourceDialog
+            isImageClicked: $showCamera
         ) {
             
         } content: { // MARK: - Section
@@ -138,20 +127,9 @@ struct OutfitEditorView: View {
                 .disabled(!isFormValid)
             }
         }
-        .confirmationDialog(
-            "Choose Image",
-            isPresented: self.$showImageSourceDialog,
-            actions: confirmationDialogHandler,
-            message: { Text("Select how you want to add the photo") }
-        )
-        .sheet(
+        .fullScreenCover(
             isPresented: self.$showCamera,
             content    : sheetPhotoHandler
-        )
-        .photosPicker(
-            isPresented: $showGalleryPicker,
-            selection  : $selectedItem,
-            matching   : .images
         )
         .alert("Ops! Something went wrong", isPresented: $isAlertErrorVisible) {
             Button("Ok", role: .cancel) { }
@@ -159,10 +137,7 @@ struct OutfitEditorView: View {
         } message: {
             Text(alertErrorMessage)
         }
-        .onChange(
-            of: self.selectedItem,
-            selectedItemChanged
-        )
+        
     }
     
     
@@ -254,50 +229,14 @@ struct OutfitEditorView: View {
     
 
     // MARK: - Views
-        
-    @ViewBuilder
-    private func confirmationDialogHandler() -> some View {
-        Button("Camera") {
-            self.showCamera = true
-        }
-        
-        Button("Gallery") {
-            self.showGalleryPicker = true
-        }
-        
-        if self.uiImageToSave != nil || self.fullLookImagePath != nil {
-            Button("Remove Photo", role: .destructive) {
-                self.uiImageToSave     = nil
-                self.fullLookImagePath = nil
-            }
-        }
-    }
-    
-    
     
     @ViewBuilder
     private func sheetPhotoHandler() -> some View {
         
-        CameraContainerView() { filename, image in
-            self.uiImageToSave = image
-            self.fullLookImagePath = (filename as NSString).lastPathComponent
-        }
-        .ignoresSafeArea()
-    }
-    
-    
-    
-    private func selectedItemChanged(
-        _ oldValue: PhotosPickerItem?,
-        _ newValue: PhotosPickerItem?
-    ) {
-        Task {
-            if let data = try? await selectedItem?.loadTransferable(type: Data.self),
-               let uiImage = UIImage(data: data) {
-                
-                await MainActor.run {
-                    self.uiImageToSave = uiImage
-                }
+        NavigationStack {
+            CameraContainerView() { filename, image in
+                self.uiImageToSave = image
+                self.fullLookImagePath = (filename as NSString).lastPathComponent
             }
         }
     }
