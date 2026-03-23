@@ -53,6 +53,7 @@ struct CameraView: UIViewControllerRepresentable {
                     ) {
                         let result = self.captureManager.savePhotoToDisk(data)
                         
+                        
                         if let filename = result.filename,
                             let image = result.image {
                             

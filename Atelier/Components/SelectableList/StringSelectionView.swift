@@ -22,30 +22,26 @@ struct StringSelectionView: View {
     
     var body: some View {
         ScrollView {
-            VStack(spacing: 0) {
+            LazyVGrid(columns: columns, spacing: 20) {
                 
-                LazyVGrid(columns: columns, spacing: 20) {
+                ForEach(self.items, id: \.self) { item in
+                    let isSelected = self.selection.contains(item)
                     
-                    ForEach(self.items, id: \.self) { item in
-                        let isSelected = self.selection.contains(item)
-                        
-                        SelectableCell(
-                            item      : item,
-                            isSelected: isSelected,
-                            action: {
-                                self.toggleSelection(item)
-                            }
-                        )
-                        .equatable()
-                    }
+                    SelectableCell(
+                        item      : item,
+                        isSelected: isSelected,
+                        action: {
+                            self.toggleSelection(item)
+                        }
+                    )
+                    .equatable()
                 }
-                .padding()
-                .background(Color(uiColor: .secondarySystemGroupedBackground))
-                .clipShape(RoundedRectangle(cornerRadius: 10))
-                
             }
-            .padding()
+            .padding(16)
+            .background(Color(uiColor: .secondarySystemGroupedBackground))
+            .clipShape(RoundedRectangle(cornerRadius: 26))
         }
+        .padding()
         .background(Color(uiColor: .systemGroupedBackground))
         .navigationTitle(self.title)
     }
@@ -77,11 +73,11 @@ struct SelectableCell: View, Equatable {
         Button(action: action) {
             VStack {
                 ZStack {
-                    RoundedRectangle(cornerRadius: 10)
+                    RoundedRectangle(cornerRadius: 16)
                         .fill(isSelected ? Color.accentColor.opacity(0.15) : Color(uiColor: .secondarySystemFill))
                         .frame(height: 60)
                         .overlay(
-                            RoundedRectangle(cornerRadius: 10)
+                            RoundedRectangle(cornerRadius: 16)
                                 .stroke(isSelected ? Color.accentColor : Color.clear, lineWidth: 2)
                         )
                     

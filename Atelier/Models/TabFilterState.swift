@@ -14,7 +14,11 @@ class TabFilterState {
     var progress  : CGFloat  = .zero
     var subSection: Bool     = false
     
-    var isVisible: Bool {
-        return items.count > 2 && !subSection
+    var isPagesEnabled: Bool {
+        items.count > 2
+    }
+    
+    var isToolbarEnabled: Bool {
+        isPagesEnabled && !subSection
     }
 }

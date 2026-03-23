@@ -191,13 +191,13 @@ struct HomeView: View {
         
         switch tab {
             case .wardrobe:
-                categoryState.isVisible
+                categoryState.isToolbarEnabled
                 
             case .outfitBuilder:
-                seasonState.isVisible
+                seasonState.isToolbarEnabled
                 
             case .care:
-                laundryState.isVisible
+                laundryState.isToolbarEnabled
 			
             default: false
         }

@@ -58,11 +58,11 @@ final class CaptureManager {
             return (nil, nil)
         }
         
-        guard let compressedData = sourceImage.jpegData(
-            compressionQuality: 0.7
-        ) else { return (nil, nil) }
+        guard let compressedData = sourceImage.heicData() else {
+            return (nil, nil)
+        }
         
-        let filename = "\(UUID().uuidString).jpg"
+        let filename = "\(UUID().uuidString).heic"
         let paths = FileManager.default.urls(
             for: .documentDirectory,
             in: .userDomainMask

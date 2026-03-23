@@ -126,7 +126,7 @@ struct OutfitView: View {
                         }
                     },
                     items      : self.seasonsState.items,
-                    isEnabled  : self.seasonsState.isVisible
+                    isEnabled  : self.seasonsState.isPagesEnabled
                 ) { season in
                     self.scrollableGrid(for: season)
                 }

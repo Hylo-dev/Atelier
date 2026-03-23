@@ -32,7 +32,7 @@ struct GenericSelectionView<Item: SelectableItem>: View {
     var body: some View {
         List {
             ForEach(Array(Item.CategoryType.allCases), id: \.id) { category in
-                Section(header: Text(category.rawValue)) {
+                Section(header: Text(category.rawValue.capitalized)) {
                     LazyVGrid(columns: columns, spacing: 16) {
 
                         ForEach(Item.allCases.filter { $0.category == category }, id: \.id) { item in
@@ -43,7 +43,7 @@ struct GenericSelectionView<Item: SelectableItem>: View {
                                 }
                         }
                     }
-                    .padding(.vertical, 8)
+                    .padding(.vertical, 4)
                 }
             }
         }

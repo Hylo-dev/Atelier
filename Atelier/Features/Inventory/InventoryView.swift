@@ -105,8 +105,8 @@ struct InventoryView: View {
                             self.categoryState.progress = newVal
                         }
                     },
-                    items      : self.categoryState.items,
-                    isEnabled  : self.categoryState.isVisible
+                    items    : self.categoryState.items,
+                    isEnabled: self.categoryState.isPagesEnabled
                 ) { category in
                     self.scrollableGrid(for: category)
                 }

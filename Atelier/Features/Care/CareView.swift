@@ -93,7 +93,7 @@ struct CareView: View {
                             }
                         },
                         items      : laundryState.items,
-                        isEnabled  : laundryState.isVisible
+                        isEnabled  : laundryState.isPagesEnabled
                     ) { binType in
                         gridView(binType)
                     }
