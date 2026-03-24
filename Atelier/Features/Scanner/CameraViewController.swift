@@ -35,6 +35,11 @@ class CameraViewController: UIViewController, AVCapturePhotoCaptureDelegate, AVC
         }
     }
     
+    private lazy var detectionRequest: VNCoreMLRequest? = {
+        guard let visionModel = self.visionModel else { return nil }
+        return VNCoreMLRequest(model: visionModel)
+    }()
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -190,7 +195,7 @@ class CameraViewController: UIViewController, AVCapturePhotoCaptureDelegate, AVC
         settings.flashMode = self.currentFlashMode
         settings.photoQualityPrioritization = .quality
         
-        self.photoOutput.capturePhoto(
+        photoOutput.capturePhoto(
             with    : settings,
             delegate: self
         )
@@ -256,50 +261,29 @@ class CameraViewController: UIViewController, AVCapturePhotoCaptureDelegate, AVC
         didFinishProcessingPhoto photo: AVCapturePhoto,
         error: Error?
     ) {
-        if let error = error {
-            print("Error on shot: \(error)")
-            return
-        }
+        if let _ = error { return }
         
-        guard let data = photo.fileDataRepresentation(),
-              let originalImage = UIImage(data: data) else { return }
+        guard let data = photo.fileDataRepresentation() else { return }
         
-        
-        Task { @MainActor in self.progressShoting = 15.0 }
-        
-        let croppedImage = cropImageTo2By3(image: originalImage)
-        
-        Task { @MainActor in self.progressShoting = 30.0 }
-        
-        if case .photo(let removeBackground) = currentMode, removeBackground {
-            Task { @MainActor in self.progressShoting = 45.0 }
+        Task.detached(priority: .userInitiated) {
+            let options: [CFString: Any] = [
+                kCGImageSourceCreateThumbnailFromImageAlways: true,
+                kCGImageSourceThumbnailMaxPixelSize         : 2048,
+                kCGImageSourceCreateThumbnailWithTransform  : true
+            ]
             
-            BackgroundManager.processImage(croppedImage) { [weak self] finalImage in
-                guard let finalImage = finalImage else { return }
-                
-                Task { @MainActor in
-                    self?.progressShoting = 75.0
-                    
-                    if let processedData = finalImage.heicData() {
-                        self?.progressShoting = 100.0
-                        self?.delegate?.didTakePhoto(processedData)
-                    }
-                }
-            }
+            guard let source = CGImageSourceCreateWithData(data as CFData, nil),
+                  let cgImage = CGImageSourceCreateThumbnailAtIndex(source, 0, options as CFDictionary) else { return }
             
-        } else {
-            Task { @MainActor in self.progressShoting = 75.0 }
+            let downsampledImage = UIImage(cgImage: cgImage)
             
-            if let croppedData = croppedImage.heicData() {
-                Task { @MainActor in
-                    self.progressShoting = 100.0
-                    self.delegate?.didTakePhoto(croppedData)
-                }
+            Task { @MainActor in
+                self.delegate?.didTakePhoto(downsampledImage)
             }
         }
     }
     
-    private func cropImageTo2By3(image: UIImage) -> UIImage {
+    func cropImageTo2By3(image: UIImage) -> UIImage {
         let contextSize = image.size
         let targetRatio: CGFloat = 2.0 / 3.0
         
@@ -331,26 +315,24 @@ class CameraViewController: UIViewController, AVCapturePhotoCaptureDelegate, AVC
         _ pixelBuffer: CVPixelBuffer,
         completion: @escaping ([VNRecognizedObjectObservation]?) -> Void
     ) {
-        
-        guard let visionModel = self.visionModel else {
+        guard let request = self.detectionRequest else {
             completion(nil)
             return
         }
         
-        let request = VNCoreMLRequest(model: visionModel) { request, error in
-            let result = request.results as? [VNRecognizedObjectObservation]
-            
-            Task { @MainActor in completion(result) }
-        }
-        
-        let handler = VNImageRequestHandler(
-            cvPixelBuffer: pixelBuffer,
-            options      : [:]
-        )
+        let handler = VNImageRequestHandler(cvPixelBuffer: pixelBuffer, options: [:])
         
         Task.detached(priority: .userInitiated) {
-            do { try handler.perform([request]) }
-            catch { Task { @MainActor in completion(nil) } }
+            autoreleasepool {
+                do {
+                    try handler.perform([request])
+                    let result = request.results as? [VNRecognizedObjectObservation]
+                    Task { @MainActor in completion(result) }
+                    
+                } catch {
+                    Task { @MainActor in completion(nil) }
+                }
+            }
         }
     }
     

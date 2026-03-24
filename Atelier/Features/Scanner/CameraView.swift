@@ -1,12 +1,35 @@
-#if os(iOS)
 import SwiftUI
 import CoreML
 import PhotosUI
+import UniformTypeIdentifiers
+
+struct TempImageFile: Transferable {
+    let url: URL
+    
+    static var transferRepresentation: some TransferRepresentation {
+        FileRepresentation(contentType: .image) { _ in
+            fatalError("Export not supported")
+            
+        } importing: { received in
+            let ext = received.file.pathExtension.isEmpty ? "heic" : received.file.pathExtension
+            
+            let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent("\(UUID().uuidString).\(ext)")
+            
+            try? FileManager.default.removeItem(at: tempURL)
+            try FileManager.default.copyItem(at: received.file, to: tempURL)
+            
+            return TempImageFile(url: tempURL)
+        }
+    }
+}
 
 struct CameraView: UIViewControllerRepresentable {
     
     @Environment(\.dismiss)
     var dismiss
+    
+    @Environment(CaptureManager.self)
+    var captureManager: CaptureManager
     
     @Binding
     var isFlashEnabled: Bool
@@ -26,14 +49,21 @@ struct CameraView: UIViewControllerRepresentable {
     var onImageCaptured  : ((String, UIImage) -> Void)
     var onSymbolsCaptured: (([String]) -> Void)?
     
-    var captureManager: CaptureManager = CaptureManager()
     var mode: CameraMode
+    
+    func makeCoordinator() -> Coordinator {
+        Coordinator(
+            self,
+            manager: captureManager
+        )
+    }
     
     func makeUIViewController(context: Context) -> CameraViewController {
         let controller = CameraViewController()
-        controller.delegate = context.coordinator
-        controller.currentMode = self.mode
+        controller.delegate    = context.coordinator
+        controller.currentMode = mode
         
+        context.coordinator.viewController = controller
         return controller
     }
     
@@ -41,60 +71,125 @@ struct CameraView: UIViewControllerRepresentable {
         _ uiViewController: CameraViewController,
         context: Context
     ) {
-
+        context.coordinator.parent = self
+        
         uiViewController.updateFlashMode(isFlashEnabled)
         uiViewController.updateCameraPosition(isFront: isUsingFrontCamera)
         
-        if let photoItem = selectedPhotoPicker {
-            Task { @MainActor in
-                do {
-                    if let data = try await photoItem.loadTransferable(
-                        type: Data.self
-                    ) {
-                        let result = self.captureManager.savePhotoToDisk(data)
-                        
-                        
-                        if let filename = result.filename,
-                            let image = result.image {
-                            
-                            self.onImageCaptured(filename, image)
-                            self.dismiss()
-                        }
+        if capturePhotoTrigger {
+            Task { @MainActor in self.capturePhotoTrigger = false }
+            uiViewController.takePhoto()
+        }
+        
+        if let item = selectedPhotoPicker {
+            Task { @MainActor in self.selectedPhotoPicker = nil }
+            context.coordinator.handlePhotoSelection(item)
+        }
+    }
+    
+    internal
+    final class Coordinator: NSObject, CameraViewControllerDelegate {
+        var parent : CameraView
+        var manager: CaptureManager
+        
+        weak var viewController: CameraViewController?
+        private var isProcessing = false
+        
+        init(
+            _ parent: CameraView,
+            manager : CaptureManager
+        ) {
+            self.parent  = parent
+            self.manager = manager
+        }
+        
+        
+        
+        @MainActor
+        private func processWorkflow(originalImage: UIImage) {
+            guard !isProcessing, let vc = viewController else { return }
+            isProcessing = true
+            parent.progress = 10.0
+            
+            let croppedImage = vc.cropImageTo2By3(image: originalImage)
+            parent.progress = 30.0
+            
+            let needsBackgroundRemoval: Bool
+            if case .photo(let remove) = parent.mode {
+                needsBackgroundRemoval = remove
+                
+            } else {
+                needsBackgroundRemoval = false
+            }
+            
+            if needsBackgroundRemoval {
+                parent.progress = 50.0
+                BackgroundManager.processImage(croppedImage) { [weak self] finalImage in
+                    guard let self = self, let finalImage = finalImage else {
+                        self?.isProcessing = false
+                        return
                     }
                     
-                } catch {
-                    print("Error on load photo: \(error)")
+                    self.finalizeImage(finalImage)
                 }
                 
-                self.selectedPhotoPicker = nil
+            } else {
+                finalizeImage(croppedImage)
             }
         }
         
-        if capturePhotoTrigger {
-            Task {
-                uiViewController.takePhoto()
-                self.capturePhotoTrigger = false
-            }
-        }
-    }
-    
-    func makeCoordinator() -> Coordinator {
-        Coordinator(self)
-    }
-    
-    class Coordinator: NSObject, CameraViewControllerDelegate {
-        var parent: CameraView
-        
-        init(_ parent: CameraView) {
-            self.parent = parent
-        }
-        
-        func didTakePhoto(_ photoData: Data) {
-            let result = self.parent.captureManager.savePhotoToDisk(photoData)
+        @MainActor
+        private func finalizeImage(_ image: UIImage) {
+            parent.progress = 80.0
             
-            if let filename = result.filename, let image = result.image {
-                self.parent.onImageCaptured(filename, image)
-                self.parent.dismiss()
+            if let data = image.heicData() {
+                let savedImage = manager.savePhotoToDisk(data)
+                
+                if let filename = savedImage.filename,
+                   let uiImage = savedImage.image {
+                    parent.progress = 100.0
+                    
+                    parent.onImageCaptured(filename, uiImage)
+                    parent.dismiss()
+                }
+            }
+            isProcessing = false
+        }
+        
+        
+        
+        func didTakePhoto(_ image: UIImage) {
+            Task { @MainActor in
+                withAnimation {
+                    processWorkflow(originalImage: image)
+                }
+            }
+        }
+        
+        func handlePhotoSelection(_ item: PhotosPickerItem) {
+            guard !isProcessing else { return }
+            
+            Task { @MainActor in
+                defer { isProcessing = false }
+                do {
+                    if let file = try await item.loadTransferable(type: TempImageFile.self) {
+                        defer { try? FileManager.default.removeItem(at: file.url) }
+                        
+                        let options: [CFString: Any] = [
+                            kCGImageSourceCreateThumbnailFromImageAlways: true,
+                            kCGImageSourceThumbnailMaxPixelSize: 2048,
+                            kCGImageSourceCreateThumbnailWithTransform: true
+                        ]
+                        
+                        guard let source = CGImageSourceCreateWithURL(file.url as CFURL, nil),
+                              let cgImage = CGImageSourceCreateThumbnailAtIndex(source, 0, options as CFDictionary) else { return }
+                        
+                        let rawImage = UIImage(cgImage: cgImage)
+                        processWorkflow(originalImage: rawImage)
+                    }
+                } catch {
+                    print("Error loading: \(error)")
+                }
             }
         }
         
@@ -112,8 +207,7 @@ struct CameraView: UIViewControllerRepresentable {
 }
 
 protocol CameraViewControllerDelegate: AnyObject {
-    func didTakePhoto(_ photoData: Data)
+    func didTakePhoto(_ image: UIImage)
     func didFindSymbols(_ symbols: [String])
     func didUpdateProgress(_ progress: Double)
 }
-#endif

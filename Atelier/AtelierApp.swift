@@ -17,6 +17,7 @@ struct AtelierApp: App {
     let applianceManager    : ApplianceManager
     let garmentManager      : GarmentManager
     let outfitManager       : OutfitManager
+    let captureManager      : CaptureManager
     let sharedModelContainer: ModelContainer
     
     init() {
@@ -38,7 +39,10 @@ struct AtelierApp: App {
             garmentManager   = GarmentManager(sharedModelContainer.mainContext)
             outfitManager    = OutfitManager(sharedModelContainer.mainContext)
             
+            captureManager = CaptureManager()
+            
             appDelegate.applianceManager = applianceManager
+            
             
         } catch {
             print("Could not create ModelContainer Database: \(error.localizedDescription)")
@@ -56,6 +60,7 @@ struct AtelierApp: App {
                 .environment(applianceManager)
                 .environment(garmentManager)
                 .environment(outfitManager)
+                .environment(captureManager)
         }
         .modelContainer(sharedModelContainer)
     }
