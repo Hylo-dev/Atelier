@@ -144,7 +144,7 @@ struct InfoOutfitView: View {
         SectionList(titleKey: "Care & Usage") {
             
             RowInfoView(
-                title: "Wear availability",
+                title: "Availability",
                 value: self.outfit.stateWear
             )
             
@@ -152,7 +152,7 @@ struct InfoOutfitView: View {
             if self.outfit.missingItemsCount > 0 {
                 RowInfoView(
                     title: "Missing garments",
-                    value: "\(self.outfit.missingItemsCount) pieces"
+                    value: outfit.missingItemsCount <= 1 ? "\(outfit.missingItemsCount) piece" : "\(outfit.missingItemsCount) pieces"
                 )
             }
             
@@ -163,11 +163,8 @@ struct InfoOutfitView: View {
                     value: "\(self.outfit.wearCount) times"
                 )
             }
-            
-            
         }
     }
-    
     
     
     @ViewBuilder
@@ -183,7 +180,7 @@ struct InfoOutfitView: View {
     
     @ViewBuilder
     private var garmentsLazyRow: some View {
-        SectionList(titleKey: "Garments") {
+        SectionList(titleKey: "Items") {
             
             ScrollView(.horizontal) {
                 LazyHStack(spacing: 15) {

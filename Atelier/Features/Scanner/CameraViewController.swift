@@ -247,11 +247,13 @@ class CameraViewController: UIViewController, AVCapturePhotoCaptureDelegate, AVC
     ) {
         guard let pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) else { return }
         
-        self.analizeImage(pixelBuffer) { results in
+        analizeImage(pixelBuffer) { results in
             
             if let symbols = results,
                   !symbols.isEmpty {
-                Task { @MainActor in self.drawRectangle(symbols) }
+                Task { @MainActor in
+                    self.drawRectangle(symbols)
+                }
             }
         }
     }

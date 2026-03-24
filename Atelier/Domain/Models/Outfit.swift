@@ -10,10 +10,9 @@ import SwiftData
 
 extension AtelierSchemaV1 {
     
-    
-    
     @Model
     final class Outfit {
+        
         @Attribute(.unique)
         var id: UUID
         
@@ -29,9 +28,9 @@ extension AtelierSchemaV1 {
         var style            : GarmentStyle
         
         var isReadyToWear: Bool {
-            guard !self.garments.isEmpty else { return false }
+            guard !garments.isEmpty else { return false }
             
-            return self.garments.allSatisfy { $0.state == .available }
+            return garments.allSatisfy { $0.state == .available }
         }
         
         var isOnLoan: Bool {
@@ -42,7 +41,9 @@ extension AtelierSchemaV1 {
             isReadyToWear ? "Yes" : "No"
         }
         
-        var missingItemsCount: Int { self.garments.filter { $0.state != .available }.count }
+        var missingItemsCount: Int {
+            garments.filter { $0.state != .available }.count
+        }
         
         init(
             name    : String,
