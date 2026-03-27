@@ -27,20 +27,24 @@ extension AtelierSchemaV1 {
         var season           : Season
         var style            : GarmentStyle
         
+        @MainActor
         var isReadyToWear: Bool {
             guard !garments.isEmpty else { return false }
             
             return garments.allSatisfy { $0.state == .available }
         }
         
+        @MainActor
         var isOnLoan: Bool {
             garments.contains { $0.state == .onLoan }
         }
         
+        @MainActor
         var stateWear: String {
             isReadyToWear ? "Yes" : "No"
         }
         
+        @MainActor
         var missingItemsCount: Int {
             garments.filter { $0.state != .available }.count
         }

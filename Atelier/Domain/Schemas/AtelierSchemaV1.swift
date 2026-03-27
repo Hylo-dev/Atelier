@@ -9,7 +9,7 @@ import SwiftData
 import Foundation
 
 enum AtelierSchemaV1: VersionedSchema {
-    static var versionIdentifier = Schema.Version(1, 0, 0)
+    static let versionIdentifier = Schema.Version(1, 0, 0)
     
     
     

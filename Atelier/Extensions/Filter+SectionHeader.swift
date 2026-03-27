@@ -13,14 +13,14 @@ enum FilterSectionHeader: String, CaseIterable, Identifiable {
 }
 
 // MARK: - Conformance per GarmentCategory
-extension GarmentCategory: SelectableItem {
+extension GarmentCategory: @MainActor SelectableItem {
     var category: FilterSectionHeader  { .main      }
     var title: String { self.label }
     var iconName: String?              { nil        }
 }
 
 // MARK: - Conformance per GarmentSubCategory
-extension GarmentSubCategory: SelectableItem {
+extension GarmentSubCategory: @MainActor SelectableItem {
 
     var category: GarmentCategory {
         return GarmentCategory.allCases.first {
@@ -33,7 +33,7 @@ extension GarmentSubCategory: SelectableItem {
 }
 
 // MARK: - Conformance per Season
-extension Season: SelectableItem {
+extension Season: @MainActor SelectableItem {
     var category: FilterSectionHeader { .main         }
     var title   : String              { self.rawValue }
     var iconName: String? {
@@ -47,14 +47,14 @@ extension Season: SelectableItem {
 }
 
 // MARK: - Conformance per GarmentStyle
-extension GarmentStyle: SelectableItem {
+extension GarmentStyle: @MainActor SelectableItem {
     var category: FilterSectionHeader { .main         }
     var title   : String              { self.rawValue }
     var iconName: String?             { nil           }
 }
 
 // MARK: - Conformance per GarmentState
-extension GarmentState: SelectableItem {
+extension GarmentState: @MainActor SelectableItem {
     var category: FilterSectionHeader { .main         }
     var title   : String              { self.rawValue }
     var iconName: String?             { nil           }

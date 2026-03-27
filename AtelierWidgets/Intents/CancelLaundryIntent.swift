@@ -12,7 +12,7 @@ import Foundation
 import UserNotifications
 
 struct CancelLaundryIntent: LiveActivityIntent {
-    static var title: LocalizedStringResource = "Annulla Lavatrice"
+    static let title: LocalizedStringResource = "Annulla Lavatrice"
     
     @Parameter(title: "Session ID")
     var sessionID: String
@@ -22,33 +22,33 @@ struct CancelLaundryIntent: LiveActivityIntent {
     
     @MainActor
     func perform() async throws -> some IntentResult {
-        if let sharedDefaults = UserDefaults(
-            suiteName: "group.com.hylo.team.Atelier"
-        ) {
-            sharedDefaults.set(sessionID, forKey: "canceledSessionID")
-        }
-        
-        let activity = Activity<LaundryAttributes>.activities.first {
-            $0.attributes.sessionID == self.sessionID
-        }
-        
-        if let activity = activity {
-            
-            let finalState = LaundryAttributes.ContentState(
-                interval: Date.now...Date.now
-            )
-            
-            let finalContent = ActivityContent(
-                state: finalState,
-                staleDate: nil
-            )
-            
-            stopNotification()
-            await activity.end(finalContent, dismissalPolicy: .immediate)
-            
-        } else {
-            print("Not found activity with ID: \(sessionID)")
-        }
+//        if let sharedDefaults = UserDefaults(
+//            suiteName: "group.com.hylo.team.Atelier"
+//        ) {
+//            sharedDefaults.set(sessionID, forKey: "canceledSessionID")
+//        }
+//        
+//        let activity = Activity<LaundryAttributes>.activities.first {
+//            $0.attributes.sessionID == self.sessionID
+//        }
+//        
+//        if let activity = activity {
+//            
+//            let finalState = LaundryAttributes.ContentState(
+//                interval: Date.now...Date.now
+//            )
+//            
+//            let finalContent = ActivityContent(
+//                state: finalState,
+//                staleDate: nil
+//            )
+//            
+//            stopNotification()
+//            await activity.end(finalContent, dismissalPolicy: .immediate)
+//            
+//        } else {
+//            print("Not found activity with ID: \(sessionID)")
+//        }
         
         return .result()
     }

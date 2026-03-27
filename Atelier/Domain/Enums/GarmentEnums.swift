@@ -288,7 +288,7 @@ enum FabricCategory: String, CaseIterable, Identifiable {
 
 
 
-enum GarmentFabric: String, Codable, SelectableItem {
+enum GarmentFabric: String, Codable, @MainActor SelectableItem {
     
     // MARK: - Natural
     case cotton   = "Cotton"

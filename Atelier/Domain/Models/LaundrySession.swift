@@ -36,10 +36,12 @@ extension AtelierSchemaV1 {
         var warnings: [LaundryWarning]
         var isCompleted: Bool
         
+        @MainActor
         var isCancel: Bool {
             !isCompleted && garments.allSatisfy { !$0.isBinAssigned }
         }
         
+        @MainActor
         var subheadline: String? {
             switch self.status {
                 case .planned:
@@ -99,7 +101,7 @@ extension AtelierSchemaV1 {
             self.isCompleted       = false
         }
         
-        func updateWarnings() {
+        @MainActor func updateWarnings() {
             var newWarnings: Set<LaundryWarning> = []
             
             if garments.contains(where: { $0.category == .lingerie }) {

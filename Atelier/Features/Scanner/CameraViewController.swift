@@ -6,8 +6,8 @@
 //
 
 import UIKit
-import AVFoundation
-import Vision
+@preconcurrency import AVFoundation
+@preconcurrency import Vision
 import CoreML
 
 class CameraViewController: UIViewController, AVCapturePhotoCaptureDelegate, AVCaptureVideoDataOutputSampleBufferDelegate {
@@ -247,13 +247,10 @@ class CameraViewController: UIViewController, AVCapturePhotoCaptureDelegate, AVC
     ) {
         guard let pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) else { return }
         
-        analizeImage(pixelBuffer) { results in
+        analizeImage(pixelBuffer) { [weak self] results in
             
-            if let symbols = results,
-                  !symbols.isEmpty {
-                Task { @MainActor in
-                    self.drawRectangle(symbols)
-                }
+            if let symbols = results, !symbols.isEmpty {
+                self?.drawRectangle(symbols)
             }
         }
     }
@@ -315,7 +312,7 @@ class CameraViewController: UIViewController, AVCapturePhotoCaptureDelegate, AVC
     
     private func analizeImage(
         _ pixelBuffer: CVPixelBuffer,
-        completion: @escaping ([VNRecognizedObjectObservation]?) -> Void
+        completion: @escaping @MainActor @Sendable ([VNRecognizedObjectObservation]?) -> Void
     ) {
         guard let request = self.detectionRequest else {
             completion(nil)
@@ -324,19 +321,23 @@ class CameraViewController: UIViewController, AVCapturePhotoCaptureDelegate, AVC
         
         let handler = VNImageRequestHandler(cvPixelBuffer: pixelBuffer, options: [:])
         
-        Task.detached(priority: .userInitiated) {
-            autoreleasepool {
+        Task.detached(priority: .userInitiated) { [handler, request] in
+            let result: [VNRecognizedObjectObservation]? = autoreleasepool {
                 do {
                     try handler.perform([request])
-                    let result = request.results as? [VNRecognizedObjectObservation]
-                    Task { @MainActor in completion(result) }
-                    
+                    return request.results as? [VNRecognizedObjectObservation]
                 } catch {
-                    Task { @MainActor in completion(nil) }
+                    print("Vision error: \(error)")
+                    return nil
                 }
+            }
+            
+            await MainActor.run {
+                completion(result)
             }
         }
     }
+    
     
     private func drawRectangle(_ items: [VNRecognizedObjectObservation]) {
         self.overlayLayer.sublayers?.forEach { $0.removeFromSuperlayer() }

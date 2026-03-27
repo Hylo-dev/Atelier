@@ -112,15 +112,18 @@ extension AtelierSchemaV1 {
             self.laundryHistory = []
         }
 
+        @MainActor
         var requiresWashing: Bool {
             wearCount >= subCategory.wearLimit
         }
         
+        @MainActor
         var daysSinceLastWash: Int {
             guard let lastWashingDate = lastWashingDate else { return 999 }
             return Calendar.current.dateComponents([.day], from: lastWashingDate, to: .now).day ?? 0
         }
         
+        @MainActor
         var hasReachedWashingLimits: Bool {
             let wearLimitReached = wearCount >= subCategory.wearLimit
             let timeLimitReached = (daysSinceLastWash >= 30) && (wearCount > 0)
@@ -128,16 +131,19 @@ extension AtelierSchemaV1 {
             return wearLimitReached || timeLimitReached
         }
         
+        @MainActor
         var isReadyToWash: Bool {
             (state.readyToWash && hasReachedWashingLimits) || forceWash
         }
         
+        @MainActor
         func totalPercentage(of category: FabricCategory) -> Double {
             composition
                 .filter { $0.fabric.category == category }
                 .reduce(0) { total, comp in total + comp.percentual }
         }
         
+        @MainActor
         func totalPercentage(of fabrics: [GarmentFabric]) -> Double {
             composition
                 .filter { fabrics.contains($0.fabric) }

@@ -17,7 +17,7 @@ enum LaundryCategory: String, CaseIterable, Identifiable {
 
 
 
-enum LaundrySymbol: String, Codable, SelectableItem {
+enum LaundrySymbol: String, Codable, @MainActor SelectableItem {
     
     // MARK: - Washing
     case machineWashNormal         = "machine_wash_normal"

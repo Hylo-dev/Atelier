@@ -59,10 +59,8 @@ struct HomeView: View {
             self.sidebarLayout
                 .onAppear {
                     let garmentDescriptor = FetchDescriptor<Garment>()
-                    let laundryDescriptor = FetchDescriptor<LaundrySession>()
                     
-                    if let fetchedGarments = try? context.fetch(garmentDescriptor),
-                       let fetchedSessions = try? context.fetch(laundryDescriptor) {
+                    if let fetchedGarments = try? context.fetch(garmentDescriptor) {
                         applianceManager.processUnassignedGarments(fetchedGarments)
                     }
                 }
@@ -71,10 +69,8 @@ struct HomeView: View {
             self.tabLayout
                 .onAppear {
                     let garmentDescriptor = FetchDescriptor<Garment>()
-                    let laundryDescriptor = FetchDescriptor<LaundrySession>()
                     
-                    if let fetchedGarments = try? context.fetch(garmentDescriptor),
-                       let fetchedSessions = try? context.fetch(laundryDescriptor) {
+                    if let fetchedGarments = try? context.fetch(garmentDescriptor) {
                         applianceManager.processUnassignedGarments(fetchedGarments)
                     }
                 }

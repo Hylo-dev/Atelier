@@ -242,7 +242,6 @@ struct GarmentContextCard: View {
                 subheadline: self.item.brand,
                 imagePath: self.item.imagePath
             )
-            .contentShape(.contextMenuPreview, RoundedRectangle(cornerRadius: 26))
         }
         .buttonStyle(.plain)
         .contextMenu {
@@ -331,5 +330,6 @@ struct GarmentContextCard: View {
             }
         }
         .sensoryFeedback(.success, trigger: didTriggerDelete)
+        .id(item.id)
     }
 }

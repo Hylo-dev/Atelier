@@ -108,6 +108,7 @@ struct CameraView: UIViewControllerRepresentable {
         @MainActor
         private func processWorkflow(originalImage: UIImage) {
             guard !isProcessing, let vc = viewController else { return }
+            
             isProcessing = true
             parent.progress = 10.0
             
@@ -117,24 +118,24 @@ struct CameraView: UIViewControllerRepresentable {
             let needsBackgroundRemoval: Bool
             if case .photo(let remove) = parent.mode {
                 needsBackgroundRemoval = remove
-                
             } else {
                 needsBackgroundRemoval = false
             }
             
-            if needsBackgroundRemoval {
-                parent.progress = 50.0
-                BackgroundManager.processImage(croppedImage) { [weak self] finalImage in
-                    guard let self = self, let finalImage = finalImage else {
-                        self?.isProcessing = false
-                        return
+            Task {
+                if needsBackgroundRemoval {
+                    parent.progress = 50.0
+                    
+                    if let finalImage = await BackgroundManager.processImage(croppedImage) {
+                        finalizeImage(finalImage)
+                        
+                    } else {
+                        isProcessing = false
                     }
                     
-                    self.finalizeImage(finalImage)
+                } else {
+                    finalizeImage(croppedImage)
                 }
-                
-            } else {
-                finalizeImage(croppedImage)
             }
         }
         
@@ -159,10 +160,8 @@ struct CameraView: UIViewControllerRepresentable {
         
         
         func didTakePhoto(_ image: UIImage) {
-            Task { @MainActor in
-                withAnimation {
-                    processWorkflow(originalImage: image)
-                }
+            withAnimation {
+                processWorkflow(originalImage: image)
             }
         }
         
