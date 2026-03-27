@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct ModelCardView: Equatable, View {
+struct ModelCardView: View {
     let title      : String
     let subheadline: String?
     let imagePath  : String?

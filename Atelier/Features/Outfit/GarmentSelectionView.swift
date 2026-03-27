@@ -55,7 +55,6 @@ struct GarmentSelectionView: View {
                     imagePath  : item.imagePath,
                     isSelected : isSelected
                 )
-                .equatable()
                 .onTapGesture {
                     if self.selectedGarments.contains(item) {
                         self.selectedGarments.remove(item)

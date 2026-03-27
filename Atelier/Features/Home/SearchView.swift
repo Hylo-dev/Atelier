@@ -51,14 +51,12 @@ enum ListRowItem: Identifiable, Hashable {
 					title: session.bin.displayName,
 					items: items
                 )
-                .equatable()
                     
 			default:
 				ModelCardView(
 					title: name,
 					imagePath: image
 				)
-                .equatable()
 			}
 		}
 	}

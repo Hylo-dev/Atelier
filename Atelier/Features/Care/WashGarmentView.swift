@@ -46,7 +46,6 @@ struct WashGarmentView: View {
                         imagePath : garment.imagePath,
                         isSelected: contained
                     )
-                    .equatable()
                     .onTapGesture {
                         
                         if isSelectionMode {

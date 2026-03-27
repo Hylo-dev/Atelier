@@ -32,7 +32,7 @@ struct AtelierApp: App {
         do {
             sharedModelContainer = try ModelContainer(
                 for           : schema,
-                configurations: [modelConfiguration]
+                migrationPlan: AtelierMigrationPlan.self
             )
             
             applianceManager = ApplianceManager(sharedModelContainer.mainContext)

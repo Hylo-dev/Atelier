@@ -273,7 +273,6 @@ struct InfoGarmentView: View {
                             title    : outfit.name,
                             imagePath: outfit.fullLookImagePath
                         )
-                        .equatable()
                         .frame(width: 150, height: 250)
                         
                     }

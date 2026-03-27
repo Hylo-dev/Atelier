@@ -76,17 +76,15 @@ final class GarmentManager: Manager {
     
     
     func logWear(
-        for  item    : Garment,
-        in   sessions: [LaundrySession],
-        used manager : ApplianceManager,
-        each count   : Int = 1
+        for  item   : Garment,
+        used manager: ApplianceManager,
+        each count  : Int = 1
     ) {
         item.wearCount += count
         
         if item.hasReachedWashingLimits {
             manager.processUnassignedGarments(
-                [item],
-                sessions
+                [item]
             )
         }
         
@@ -95,16 +93,12 @@ final class GarmentManager: Manager {
     
     
     func setWashState(
-        for  item    : Garment,
-        in   sessions: [LaundrySession],
-        used manager : ApplianceManager
+        for  item   : Garment,
+        used manager: ApplianceManager
     ) {
         item.forceWash = true
         
-        manager.processUnassignedGarments(
-            [item],
-            sessions
-        )
+        manager.processUnassignedGarments([item])
         
         self.update()
     }
@@ -115,27 +109,25 @@ final class GarmentManager: Manager {
         for  item: Garment,
         used manager: ApplianceManager
     ) {
+        if let session = item.activeLaundrySession {
+            manager.detachGarment(item, from: session)
+        }
+        
         item.wearCount       = 0
         item.lastWashingDate = .now
         item.forceWash       = false
         item.isBinAssigned   = false
         item.state           = .available
         
-        
-        if let session = item.activeLaundrySession,
-           session.isCancel {
-            
-            manager.delete(session)
-        }
-        
-        
         self.update()
     }
     
     
     
-    @MainActor
-    func processGarments(_ garments: [Garment], with filter: FilterGarmentConfig) {
+    func processGarments(
+        _ garments: [Garment],
+        with filter: FilterGarmentConfig
+    ) {
         let filtered = FilterGarmentConfig.filterGarments(
             allGarments: garments,
             config     : filter
@@ -152,16 +144,26 @@ final class GarmentManager: Manager {
             newGrouped[category] = items
         }
         
-
         let rawBrands    = Set(garments.compactMap { $0.brand })
         let sortedBrands = rawBrands.sorted()
         
         let uniqueCategories = Set(garments.lazy.map { $0.category.title })
         let newCategories    = ["All"] + uniqueCategories.sorted()
         
+        let newVisibleIDs  = filtered.map(\.id)
+        let currVisibleIDs = visibleGarments.map(\.id)
         
+        if newVisibleIDs != currVisibleIDs {
+            self.visibleGarments = filtered
+        }
         
-        self.visibleGarments = filtered
+//        let newGroupedIDs  = newGrouped.mapValues { $0.map(\.id) }
+//        let currGroupedIDs = groupedGarments.mapValues { $0.map(\.id) }
+        
+//        if newGroupedIDs != currGroupedIDs {
+//            self.groupedGarments = newGrouped
+//        }
+        
         self.groupedGarments = newGrouped
         
         if self.availableBrands != sortedBrands {
@@ -173,3 +175,66 @@ final class GarmentManager: Manager {
         }
     }
 }
+
+
+//struct ProcessedGarmentResult: Sendable {
+//    let visibleIDs: [PersistentIdentifier]
+//    let groupedIDs: [String: [PersistentIdentifier]]
+//    let availableBrands: [String]
+//    let availableCategories: [String]
+//}
+//
+//@ModelActor
+//actor GarmentProcessingActor {
+//    
+//    func process(
+//        garmentIDs: [PersistentIdentifier],
+//        with config: FilterGarmentConfig
+//    ) -> ProcessedGarmentResult {
+//        
+//        // 1. Risolviamo i PersistentIdentifier nel ModelContext di background
+//        var backgroundGarments: [Garment] = []
+//        for id in garmentIDs {
+//            // Usiamo model(for:) per assicurarci di recuperarlo dal DB
+//            if let garment = self.modelContext.model(for: id) as? Garment {
+//                backgroundGarments.append(garment)
+//            }
+//        }
+//        
+//        // 2. Applichiamo il filtro (esattamente la tua logica)
+//        let filtered = FilterGarmentConfig.filterGarments(
+//            allGarments: backgroundGarments,
+//            config: config
+//        )
+//        
+//        // 3. Estraiamo gli ID dei capi visibili
+//        let visibleIDs = filtered.map { $0.persistentModelID }
+//        
+//        // 4. Creiamo il dizionario raggruppato mappato in PersistentIdentifier
+//        var groupedIDs: [String: [PersistentIdentifier]] = ["All": visibleIDs]
+//        
+//        let groupedByCategory = Dictionary(
+//            grouping: filtered,
+//            by      : { $0.category.title }
+//        )
+//        
+//        for (category, items) in groupedByCategory {
+//            groupedIDs[category] = items.map { $0.persistentModelID }
+//        }
+//        
+//        // 5. Calcoliamo i set per brand e categorie
+//        let rawBrands    = Set(backgroundGarments.compactMap { $0.brand })
+//        let sortedBrands = rawBrands.sorted()
+//        
+//        let uniqueCategories = Set(backgroundGarments.lazy.map { $0.category.title })
+//        let newCategories    = ["All"] + uniqueCategories.sorted()
+//        
+//        // 6. Ritorniamo il DTO Sendable
+//        return ProcessedGarmentResult(
+//            visibleIDs: visibleIDs,
+//            groupedIDs: groupedIDs,
+//            availableBrands: sortedBrands,
+//            availableCategories: newCategories
+//        )
+//    }
+//}

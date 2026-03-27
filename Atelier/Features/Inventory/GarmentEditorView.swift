@@ -361,11 +361,10 @@ struct GarmentEditorView: View {
     
     @ViewBuilder
     private func sheetPhotoHandler() -> some View {
-        
         NavigationStack {
             CameraContainerView(mode: .photo(removeBackground: true)) { filename, image in
                 self.uiImageToSave = image
-                editorViewModel.imagePath = (filename as NSString).lastPathComponent
+                editorViewModel.imagePath = (filename as NSString).lastPathComponent                
             }
         }
     }

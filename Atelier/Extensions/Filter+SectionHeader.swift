@@ -15,7 +15,7 @@ enum FilterSectionHeader: String, CaseIterable, Identifiable {
 // MARK: - Conformance per GarmentCategory
 extension GarmentCategory: SelectableItem {
     var category: FilterSectionHeader  { .main      }
-    var title   : String               { self.label }
+    var title: String { self.label }
     var iconName: String?              { nil        }
 }
 

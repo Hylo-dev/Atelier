@@ -43,11 +43,6 @@ struct InventoryView: View {
     )
     private var garments: [Garment]
     
-    @Query(
-        sort : \LaundrySession.dateCreated,
-        order: .forward
-    )
-    private var laundrySessions: [LaundrySession]
         
     
     // MARK: - Add Garment Sheet values
@@ -108,19 +103,16 @@ struct InventoryView: View {
                     items    : self.categoryState.items,
                     isEnabled: self.categoryState.isPagesEnabled
                 ) { category in
-                    self.scrollableGrid(for: category)
+                    scrollableGrid(for: category)
                 }
                 .ignoresSafeArea(.container, edges: .top)
                 
             }
         }
-        .onChange(of: garments) {
+        .onChange(of: garments, initial: true) {
             updateData()
         }
         .onChange(of: filter) {
-            updateData()
-        }
-        .onAppear {
             updateData()
         }
         .toolbar {
@@ -185,17 +177,17 @@ struct InventoryView: View {
         ScrollView(.vertical) {
             
             LazyVGrid(columns: Self.columns, spacing: 20) {
-                ForEach(garmentManager.groupedGarments[category] ?? [], id: \.id) { item in
+                let items = garmentManager.groupedGarments[category] ?? []
+                
+                ForEach(items, id: \.id) { item in
                     
                     GarmentContextCard(
                         item            : item,
-                        sessions        : laundrySessions,
                         manager         : garmentManager,
                         applianceManager: applianceManager,
                         selectedItem    : $selectedItem,
                         navigatedGarment: $navigatedGarment
                     )
-                    .equatable()
                     .id(item.id)
                 }
             }
@@ -212,6 +204,7 @@ struct InventoryView: View {
     
     @inline(__always)
     private func updateData() {
+        print("Updated data Garment View")
         garmentManager.processGarments(garments, with: filter)
         
         if self.categoryState.items != garmentManager.availableCategories {
@@ -220,10 +213,11 @@ struct InventoryView: View {
     }
 }
 
+
 fileprivate
-struct GarmentContextCard: View, Equatable {
-    let item            : Garment
-    let sessions        : [LaundrySession]
+struct GarmentContextCard: View {
+    
+    var item            : Garment
     let manager         : GarmentManager
     let applianceManager: ApplianceManager
     
@@ -237,19 +231,9 @@ struct GarmentContextCard: View, Equatable {
     @State
     private var didTriggerDelete: Bool = false
     
-    static func == (lhs: GarmentContextCard, rhs: GarmentContextCard) -> Bool {
-        guard !lhs.item.isDeleted && !rhs.item.isDeleted else {
-            return lhs.item.id == rhs.item.id
-        }
-        
-        return lhs.item.id == rhs.item.id &&
-        lhs.item.name == rhs.item.name &&
-        lhs.item.brand == rhs.item.brand &&
-        lhs.item.imagePath == rhs.item.imagePath &&
-        lhs.item.state == rhs.item.state
-    }
     
     var body: some View {
+        
         Button {
             navigatedGarment = item
         } label: {
@@ -258,99 +242,94 @@ struct GarmentContextCard: View, Equatable {
                 subheadline: self.item.brand,
                 imagePath: self.item.imagePath
             )
-            .contextMenu {
-                self.contextMenuButtons(for: self.item)
-            }
+            .contentShape(.contextMenuPreview, RoundedRectangle(cornerRadius: 26))
         }
-        .sensoryFeedback(.success, trigger: didTriggerDelete)
         .buttonStyle(.plain)
-    }
-    
-    
-    
-    @ViewBuilder
-    private func contextMenuButtons(for item: Garment) -> some View {
-        let loanState = item.state == .onLoan
-        let isToWash  = item.state == .toWash
-        
-        Button {
-            if isToWash {
-                manager.resetWear(
+        .contextMenu {
+            let isToWash  = item.isToWash
+            let loanState = item.state == .onLoan
+            
+            Text(item.name)
+            
+            Button {
+                if isToWash {
+                    manager.resetWear(
+                        for : item,
+                        used: applianceManager
+                    )
+                    
+                } else {
+                    manager.setWashState(
+                        for : item,
+                        used: applianceManager
+                    )
+                }
+                
+                
+            } label: {
+                Label(
+                    isToWash ? "Mark as Clean" : "Move to Wash",
+                    systemImage: isToWash ? "sparkle" : "washer"
+                )
+            }
+            //        .disabled(!item.state.readyToWash)
+            //
+            Button {
+                item.state = loanState ? .available : .onLoan
+                self.manager.update()
+                
+            } label: {
+                Label(
+                    loanState ? "Mark as Returned" : "Mark as Lent",
+                    systemImage: loanState ? "arrow.uturn.backward" : "person.2"
+                )
+            }
+            .disabled(!item.state.readyToLent)
+            
+            
+            
+            Divider()
+            
+            
+            
+            Button {
+                manager.logWear(
                     for : item,
                     used: applianceManager
                 )
                 
-            } else {
-                manager.setWashState(
-                    for : item,
-                    in  : sessions,
-                    used: applianceManager
-                )
+            } label: {
+                Label("Log wear", systemImage: "checkmark.seal")
             }
             
-        } label: {
-            Label(
-                isToWash ? "Mark as Clean" : "Move to Wash",
-                systemImage: isToWash ? "sparkle" : "washer"
-            )
-        }
-//        .disabled(!item.state.readyToWash)
-        
-        Button {
-            item.state = loanState ? .available : .onLoan
-            self.manager.update()
             
-        } label: {
-            Label(
-                loanState ? "Mark as Returned" : "Mark as Lent",
-                systemImage: loanState ? "arrow.uturn.backward" : "person.2"
-            )
-        }
-        .disabled(!item.state.readyToLent)
-        
-        
-        
-        Divider()
-        
-        
-        
-        Button {
-            manager.logWear(
-                for : item,
-                in  : sessions,
-                used: applianceManager
-            )
+            Button {
+                
+            } label: {
+                Label("Add to Outfit", systemImage: "tshirt")
+            }
             
-        } label: {
-            Label("Log wear", systemImage: "checkmark.seal")
-        }
-        
-        
-        Button {
             
-        } label: {
-            Label("Add to Outfit", systemImage: "tshirt")
-        }
-        
-        
-        
-        Divider()
-        
-        
-        
-        Button {
-            self.selectedItem = item
             
-        } label: {
-            Label("Edit Details", systemImage: "pencil")
-        }
-        
-        Button(role: .destructive) {
-            didTriggerDelete.toggle()
-            manager.delete(item)
+            Divider()
             
-        } label: {
-            Label("Delete", systemImage: "trash")
+            
+            
+            Button {
+                self.selectedItem = item
+                
+            } label: {
+                Label("Edit Details", systemImage: "pencil")
+            }
+            
+            Button(role: .destructive) {
+                didTriggerDelete.toggle()
+                manager.delete(item)
+                
+            } label: {
+                Label("Delete", systemImage: "trash")
+            }
         }
+        .sensoryFeedback(.success, trigger: didTriggerDelete)
     }
 }

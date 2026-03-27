@@ -63,7 +63,7 @@ struct HomeView: View {
                     
                     if let fetchedGarments = try? context.fetch(garmentDescriptor),
                        let fetchedSessions = try? context.fetch(laundryDescriptor) {
-                        applianceManager.processUnassignedGarments(fetchedGarments, fetchedSessions)
+                        applianceManager.processUnassignedGarments(fetchedGarments)
                     }
                 }
             
@@ -75,7 +75,7 @@ struct HomeView: View {
                     
                     if let fetchedGarments = try? context.fetch(garmentDescriptor),
                        let fetchedSessions = try? context.fetch(laundryDescriptor) {
-                        applianceManager.processUnassignedGarments(fetchedGarments, fetchedSessions)
+                        applianceManager.processUnassignedGarments(fetchedGarments)
                     }
                 }
         }

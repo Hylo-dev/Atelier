@@ -58,38 +58,49 @@ final class ApplianceManager: Manager {
     
     // MARK: Garment handlers
     
-    func unassignGarment(_ garment: Garment) {
+    func detachGarment(_ garment: Garment, from session: LaundrySession) {
+        session.garments.removeAll { $0.id == garment.id }
+//        garment.laundryHistory.removeAll { $0.id == session.id }
         
-        if let session = garment.activeLaundrySession, session.status == .planned {
-            
-            garment.laundryHistory.removeAll(where: { $0.id == session.id })
-            
-            garment.isBinAssigned = false
-            garment.state         = .available
-            
-            if session.garments.isEmpty {
-                context.delete(session)
-                
-            } else {
-                session.updateWarnings()
-            }
-            save()
+        if session.garments.isEmpty {
+            context.delete(session)
+        } else {
+            session.updateWarnings()
         }
+        
+        save()
+    }
+    
+    func unassignGarment(_ garment: Garment) {
+        guard let session = garment.activeLaundrySession,
+              session.status == .planned else { return }
+        
+        session.garments.removeAll { $0.id == garment.id }
+        garment.laundryHistory.removeAll { $0.id == session.id }
+        
+        garment.isBinAssigned = false
+        garment.state         = .available
+        
+        if session.garments.isEmpty {
+            context.delete(session)
+        } else {
+            session.updateWarnings()
+        }
+        
+        save()
     }
     
     
     
-    func processUnassignedGarments(
-        _ garments: [Garment],
-        _ laundrySessions: [LaundrySession]
-    ) {
+    func processUnassignedGarments(_ garments: [Garment]) {
+        
+        let descriptor = FetchDescriptor<LaundrySession>()
+        var activeSessions = (try? context.fetch(descriptor)) ?? []
         
         let unassignedGarments = garments.filter {
             !$0.isBinAssigned && $0.isReadyToWash
         }
         guard !unassignedGarments.isEmpty else { return }
-        
-        var activeSessions = laundrySessions
         let engine = LaundryEngine()
         
         for garment in unassignedGarments {
@@ -106,6 +117,7 @@ final class ApplianceManager: Manager {
                 $0.bin == decision.bin &&
                 $0.suggestedProgram == decision.suggestedProgram
             }) {
+                
                 let garmentMaxTemp = garment.washingSymbols.compactMap {
                     $0.maxWashingTemperature
                 }.min() ?? 40
@@ -118,16 +130,19 @@ final class ApplianceManager: Manager {
                 if !garment.laundryHistory.contains(exactSession) {
                     garment.laundryHistory.append(exactSession)
                 }
-                exactSession.laundrySymbols.formUnion(garment.washingSymbols)
+                
+                let existing = Set(exactSession.laundrySymbols)
+                exactSession.laundrySymbols = Array(existing.union(garment.washingSymbols))
                 exactSession.updateWarnings()
                 
             } else {
+                
                 let newSession = LaundrySession(
                     bin              : decision.bin,
                     targetTemperature: decision.targetTemperature,
                     suggestedProgram : decision.suggestedProgram,
                     garments         : [garment],
-                    laundrySymbols   : Set(garment.washingSymbols)
+                    laundrySymbols   : garment.washingSymbols
                 )
                 
                 context.insert(newSession)

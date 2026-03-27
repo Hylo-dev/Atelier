@@ -128,11 +128,7 @@ struct CareView: View {
             InfoCareView(selectedItem)
         }
         .onAppear {
-            updateBins()
-            updateFilteredGarments()
-                        
             Task { @MainActor in
-                
                 self.weather = try await weatherService.fetchWeather(
                     for: CLLocation(
                         latitude: .zero,
@@ -142,14 +138,9 @@ struct CareView: View {
                 
             }
         }
-        .onChange(of: laundrySessions) {
+        .onChange(of: laundrySessions, initial: true) {
             updateBins()
             updateFilteredGarments()
-        }
-        .onChange(of: scenePhase) { _, newPhase in
-            if newPhase == .active {
-                checkPendingCancellations()
-            }
         }
     }
     
@@ -252,22 +243,6 @@ struct CareView: View {
         }
     }
     
-    
-    
-    private func checkPendingCancellations() {
-        guard let sharedDefaults = UserDefaults(suiteName: "group.com.hylo.team.Atelier") else { return }
-        
-        if let canceledIDString = sharedDefaults.string(forKey: "canceledSessionID") {
-            if let sessionToCancel = laundrySessions.first(
-                where: { $0.id.uuidString == canceledIDString }
-            ) {
-                manager.cancelWashing(sessionToCancel)
-                print("Cancel session with success")
-            }
-            
-            sharedDefaults.removeObject(forKey: "canceledSessionID")
-        }
-    }
 }
 
 fileprivate struct ItemCareView: View {

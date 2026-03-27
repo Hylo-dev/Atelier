@@ -72,7 +72,7 @@ final class GarmentEditorViewModel {
         
         self.washingSymbols      = Set(item?.washingSymbols ?? [])
         self.purchaseDate        = item?.purchaseDate ?? .now
-        self.imagePath           = item?.imagePath ?? ""
+        self.imagePath           = item?.imagePath
     }
     
     
@@ -180,7 +180,7 @@ final class GarmentEditorViewModel {
         
         if let finalGarment = garmentToProcess {
             applianceManager.processUnassignedGarments(
-                [finalGarment], sessions
+                [finalGarment]
             )
             
             dismiss()
@@ -192,6 +192,13 @@ final class GarmentEditorViewModel {
         _ uiImage: UIImage?,
         manager: GarmentManager
     ) -> Garment? {
+        
+        print("""
+        Image path: \(imagePath ?? "nil")
+        UIImage: \(uiImage == nil ? "nil" : "Image")
+        """)
+        
+        
         if let imageToSave = uiImage {
             
             let result = ImageStorage.saveImage(imageToSave)

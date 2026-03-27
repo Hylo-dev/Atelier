@@ -482,7 +482,7 @@ enum LaundryWarning: String, CaseIterable, Codable {
 
 
 
-enum Program: String, Codable, CaseIterable {
+enum Program: String, Codable {
     case standard = "Cotton/Standard"
     case mix      = "Mix"
     case delicate = "Delicate"

@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct FilterGarmentConfig: Equatable {
+struct FilterGarmentConfig: Equatable, Sendable {
     var selectedBrand      : Set<String>?             = nil
     var selectedSubCategory: Set<GarmentSubCategory>? = nil
     var selectedSeason     : Set<Season>?             = nil

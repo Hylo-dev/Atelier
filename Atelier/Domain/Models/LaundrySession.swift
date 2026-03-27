@@ -27,9 +27,11 @@ extension AtelierSchemaV1 {
         
         var bin: LaundryBin
         var targetTemperature: Int
-        var suggestedProgram: Program
         
-        var laundrySymbols: Set<LaundrySymbol>
+        
+        private var suggestedProgramRaw: String
+        
+        var laundrySymbols: [LaundrySymbol]
         
         var warnings: [LaundryWarning]
         var isCompleted: Bool
@@ -71,12 +73,18 @@ extension AtelierSchemaV1 {
             }
         }
         
+        @Transient
+        var suggestedProgram: Program {
+            get { Program(rawValue: suggestedProgramRaw) ?? .standard }
+            set { suggestedProgramRaw = newValue.rawValue }
+        }
+        
         init(
             bin              : LaundryBin,
             targetTemperature: Int,
             suggestedProgram : Program,
             garments         : [Garment] = [],
-            laundrySymbols   : Set<LaundrySymbol>
+            laundrySymbols   : [LaundrySymbol]
         ) {
             self.id                = UUID()
             self.dateCreated       = .now
@@ -86,7 +94,7 @@ extension AtelierSchemaV1 {
             self.warnings          = []
             
             self.targetTemperature = targetTemperature
-            self.suggestedProgram  = suggestedProgram
+            self.suggestedProgramRaw = suggestedProgram.rawValue
             self.laundrySymbols    = laundrySymbols
             self.isCompleted       = false
         }

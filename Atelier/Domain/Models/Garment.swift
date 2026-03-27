@@ -64,6 +64,10 @@ extension AtelierSchemaV1 {
             }
         }
         
+        var isToWash: Bool {
+            state == .toWash
+        }
+        
         init(
             id            : UUID = UUID(),
             name          : String,
@@ -107,7 +111,7 @@ extension AtelierSchemaV1 {
             self.outfits        = []
             self.laundryHistory = []
         }
-        
+
         var requiresWashing: Bool {
             wearCount >= subCategory.wearLimit
         }

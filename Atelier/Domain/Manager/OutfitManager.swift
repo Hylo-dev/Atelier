@@ -63,7 +63,6 @@ final class OutfitManager: Manager {
         for garment in outfit.garments {
             garmentManager.logWear(
                 for : garment,
-                in  : sessions,
                 used: applianceManager
             )
         }
@@ -82,7 +81,6 @@ final class OutfitManager: Manager {
         for garment in outfit.garments {
             garmentManager.logWear(
                 for : garment,
-                in  : sessions,
                 used: applianceManager,
                 each: 20
             )
