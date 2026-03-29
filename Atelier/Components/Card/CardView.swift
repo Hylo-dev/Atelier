@@ -35,19 +35,19 @@ struct CardView<Content: View>: View {
                 }
                 .clipShape(Rectangle())
             
-            LinearGradient(
-                colors: [
-                    gradient,
-                    gradient.opacity(0.8),
-                    gradient.opacity(0.6),
-                    gradient.opacity(0.3),
-                    gradient.opacity(0.1),
-                    .clear
-                ],
-                startPoint: .bottom,
-                endPoint  : UnitPoint(x: 0.5, y: 0.3)
-            )
-            .frame(height: 80)
+//            LinearGradient(
+//                colors: [
+//                    gradient,
+//                    gradient.opacity(0.8),
+//                    gradient.opacity(0.6),
+//                    gradient.opacity(0.3),
+//                    gradient.opacity(0.1),
+//                    .clear
+//                ],
+//                startPoint: .bottom,
+//                endPoint  : UnitPoint(x: 0.5, y: 0.3)
+//            )
+//            .frame(height: 80)
             
             VStack(alignment: .leading, spacing: 4) {
                 Text(self.title)

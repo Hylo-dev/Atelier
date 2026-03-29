@@ -29,14 +29,14 @@ struct WeatherView: View, Equatable{
                             .font(.title2)
                             .fontWeight(.bold)
                             .fontDesign(.default)
-                            .foregroundColor(.primary)
+                            .foregroundColor(.white)
                             .lineLimit(1)
                         
                         Text(weather?.condition.rawValue ?? "Test")
                             .font(.headline)
                             .fontWeight(.light)
                             .fontDesign(.default)
-                            .foregroundColor(.primary)
+                            .foregroundColor(.white)
                             .lineLimit(1)
                         
                     }
@@ -52,7 +52,7 @@ struct WeatherView: View, Equatable{
                         .font(.system(size: 55))
                         .fontWeight(.bold)
                         .fontDesign(.default)
-                        .foregroundColor(.primary)
+                        .foregroundColor(.white)
                         .padding(.bottom, -12)
                         .if(weather == nil, transform: { `view` in
                             `view`
@@ -75,7 +75,7 @@ struct WeatherView: View, Equatable{
                     Text(weather?.messageWeather ?? "Test Test Test Test Test Test Test ")
                         .font(.subheadline)
                         .lineLimit(2)
-                        .foregroundColor(.primary)
+                        .foregroundColor(.white)
                 }
                 .if(weather == nil, transform: { `view` in
                     `view`

@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		1FC16FD92F79D81D006A1B74 /* Glur in Frameworks */ = {isa = PBXBuildFile; productRef = 1FC16FD82F79D81D006A1B74 /* Glur */; };
 		1FDB2D752F4669E800D02704 /* Nuke in Frameworks */ = {isa = PBXBuildFile; productRef = 1FDB2D742F4669E800D02704 /* Nuke */; };
 		1FDB2D772F4669E800D02704 /* NukeUI in Frameworks */ = {isa = PBXBuildFile; productRef = 1FDB2D762F4669E800D02704 /* NukeUI */; };
 		1FED73E72F6868AC00F5FBEB /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1FED73E62F6868AC00F5FBEB /* WidgetKit.framework */; };
@@ -130,6 +131,7 @@
 			files = (
 				1FDB2D752F4669E800D02704 /* Nuke in Frameworks */,
 				1FDB2D772F4669E800D02704 /* NukeUI in Frameworks */,
+				1FC16FD92F79D81D006A1B74 /* Glur in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -199,6 +201,7 @@
 			packageProductDependencies = (
 				1FDB2D742F4669E800D02704 /* Nuke */,
 				1FDB2D762F4669E800D02704 /* NukeUI */,
+				1FC16FD82F79D81D006A1B74 /* Glur */,
 			);
 			productName = Atelier;
 			productReference = 1F8318342F422D3B00713CCA /* Atelier.app */;
@@ -255,6 +258,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				1FDB2D732F4669E800D02704 /* XCRemoteSwiftPackageReference "Nuke" */,
+				1FC16FD72F79D81D006A1B74 /* XCRemoteSwiftPackageReference "Glur" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 1F8318352F422D3B00713CCA /* Products */;
@@ -650,6 +654,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		1FC16FD72F79D81D006A1B74 /* XCRemoteSwiftPackageReference "Glur" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/joogps/Glur.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.1.0;
+			};
+		};
 		1FDB2D732F4669E800D02704 /* XCRemoteSwiftPackageReference "Nuke" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/kean/Nuke";
@@ -661,6 +673,11 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		1FC16FD82F79D81D006A1B74 /* Glur */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 1FC16FD72F79D81D006A1B74 /* XCRemoteSwiftPackageReference "Glur" */;
+			productName = Glur;
+		};
 		1FDB2D742F4669E800D02704 /* Nuke */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 1FDB2D732F4669E800D02704 /* XCRemoteSwiftPackageReference "Nuke" */;

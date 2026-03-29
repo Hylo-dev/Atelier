@@ -1,6 +1,15 @@
 {
-  "originHash" : "8db810839d2e05d8fa43fe72481467e8e9f47bda8dad613e17d2b9a570e27109",
+  "originHash" : "586c25d357301f9b4ec508d2721c3e89d4b26aa3801c0e2a2885b909b6a4af53",
   "pins" : [
+    {
+      "identity" : "glur",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/joogps/Glur.git",
+      "state" : {
+        "revision" : "178af6499ed7957c7f91187fdee2b09d322f5b87",
+        "version" : "1.1.0"
+      }
+    },
     {
       "identity" : "nuke",
       "kind" : "remoteSourceControl",

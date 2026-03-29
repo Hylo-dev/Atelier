@@ -22,7 +22,9 @@ struct LiquidCategoryBarView: View {
                         } label: {
                             Text(item)
                                 .font(.callout)
-                                .fontWeight(self.state.selection == item ? .semibold : .regular)
+                                .fontWeight(
+                                    self.state.selection == item ? .semibold : .regular
+                                )
                                 .frame(width: 120)
                                 .padding(.vertical, 10)
                                 .contentShape(Rectangle())
@@ -38,10 +40,13 @@ struct LiquidCategoryBarView: View {
                         let capsuleWidth = count > 0 ? size.width / count : 0
                         
                         Capsule()
-                            .glassEffect(.clear)
+                            .fill(.clear)
+                            .glassEffect(.clear.tint(.secondary.opacity(0.18)).interactive())
                             .padding(4)
                             .frame(width: capsuleWidth)
-                            .offset(x: self.state.progress * (size.width - capsuleWidth))
+                            .offset(
+                                x: self.state.progress * (size.width - capsuleWidth)
+                            )
                     }
                 }
                 .padding(.horizontal, 5)

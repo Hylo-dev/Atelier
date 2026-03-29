@@ -8,6 +8,7 @@
 import SwiftUI
 import Nuke
 import NukeUI
+import Glur
 
 struct CachedImageView: View {
     let imagePath: String?
@@ -37,6 +38,14 @@ struct CachedImageView: View {
                     .resizable()
                     .aspectRatio(contentMode: .fill)
                     .transition(.opacity.animation(.easeIn(duration: 0.2)))
+                    .glur(
+                        radius: 8.0,
+                        offset: 0.7,
+                        interpolation: 0.4,
+                        direction: .down,
+                        noise: 0.1,
+                        drawingGroup: true
+                    )
                 
             } else {
                 self.placeholderView(isError: state.error != nil)
