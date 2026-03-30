@@ -8,7 +8,7 @@
 import SwiftUI
 import SwiftData
 
-struct ColorWeight: Identifiable {
+struct ColorWeight: Identifiable, Codable, Hashable {
     let id    : String
     let weight: Double
     

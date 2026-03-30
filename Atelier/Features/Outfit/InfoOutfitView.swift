@@ -166,7 +166,7 @@ struct InfoOutfitView: View {
                 ForEach(outfit.colors, id: \.self) { color in
                     VStack(alignment: .leading) {
                         Spacer()
-                        Text("#\(color)")
+                        Text("#\(color.id)")
                             .font(.subheadline)
                             .fontWeight(.bold)
                             .fontDesign(.monospaced)
@@ -174,7 +174,7 @@ struct InfoOutfitView: View {
                             .padding(13)
                     }
                     .frame(width: 120, height: 87, alignment: .leading)
-                    .background(Color(hex: color))
+                    .background(Color(hex: color.id))
                     .clipShape(RoundedRectangle(cornerRadius: 16))
                 }
             }
