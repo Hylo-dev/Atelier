@@ -22,7 +22,7 @@ final class OutfitEditorViewModel {
     
     var selectedSeason: Season
     
-    var selectedStyle: GarmentStyle
+    var selectedOccasion: Set<GarmentStyle>
     
     var lastWornDate: Date
     
@@ -48,7 +48,7 @@ final class OutfitEditorViewModel {
         self.garments          = Set(item?.garments     ?? [])
         self.fullLookImagePath = item?.fullLookImagePath
         self.selectedSeason    = item?.season           ?? .summer
-        self.selectedStyle     = item?.style            ?? .casual
+        self.selectedOccasion  = Set(item?.occasion     ?? [.casual])
         self.lastWornDate      = item?.lastWornDate     ?? .now
         self.wearCount         = item?.wearCount        ?? 0
     }
@@ -100,7 +100,7 @@ final class OutfitEditorViewModel {
             garments         : Array(self.garments),
             season           : self.selectedSeason,
             fullLookImagePath: self.fullLookImagePath,
-            style            : self.selectedStyle
+            occasion         : Array(self.selectedOccasion)
         )
         
         manager.insert(newOutfit)
@@ -132,7 +132,7 @@ final class OutfitEditorViewModel {
         
         outfit.name              = self.name
         outfit.season            = self.selectedSeason
-        outfit.style             = self.selectedStyle
+        outfit.occasion          = Array(self.selectedOccasion)
         outfit.lastWornDate      = self.lastWornDate
         outfit.fullLookImagePath = self.fullLookImagePath
         outfit.wearCount         = self.wearCount

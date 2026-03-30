@@ -155,7 +155,7 @@ struct OutfitEditorView: View {
             }
             
             
-            PickerList("Style", selection: $editorViewModel.selectedStyle) {
+            PickerList("Style", selection: $editorViewModel.selectedOccasion) {
                 ForEach(GarmentStyle.allCases, id: \.id) { type in
                     Text(type.rawValue).tag(type)
                 }

@@ -117,7 +117,7 @@ struct FilterOutfitConfig: Equatable {
             }
             
             if let styleToFind = config.selectedStyle,
-               !styleToFind.contains(outfit.style) {
+               !styleToFind.contains(outfit.occasion) {
                 return false
             }
             

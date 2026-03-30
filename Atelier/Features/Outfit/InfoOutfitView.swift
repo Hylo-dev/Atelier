@@ -7,6 +7,7 @@
 
 
 import SwiftUI
+import Glur
 
 struct InfoOutfitView: View {
     
@@ -52,9 +53,15 @@ struct InfoOutfitView: View {
             titleSection
             
         } content: {
-            self.sectionCare
+            sectionColors
             
-            self.sectionStyleAndCategory
+            sectionCare
+            
+            sectionDetails
+            
+            if outfit.notes != nil {
+                sectionNotes
+            }
             
             if !outfit.garments.isEmpty {
                 garmentsLazyRow
@@ -62,6 +69,21 @@ struct InfoOutfitView: View {
         }
         .sensoryFeedback(.success, trigger: isDeleted)
         .toolbar {
+            
+            ToolbarItem {
+                Button {
+                    outfit.isFavorite.toggle()
+                    
+                } label: {
+                    Label(
+                        "Is Favorite",
+                        systemImage: outfit.isFavorite ? "star.fill" : "star"
+                    )
+                }
+//                .tint(.yellow) // Not sure
+            }
+            
+            ToolbarSpacer()
             
             ToolbarItem {
                 Button(role: .destructive) {
@@ -124,19 +146,40 @@ struct InfoOutfitView: View {
                 .foregroundStyle(.primary)
                 .multilineTextAlignment(.center)
             
-            if let date = self.outfit.lastWornDate {
-                Text("Last worn - \(date.formatted(date: .abbreviated, time: .omitted))")
-                    .font(.headline)
-                    .fontWeight(.medium)
-                    .foregroundStyle(.secondary)
-                    .fontDesign(.rounded)
-            }
+            let date = outfit.creationDate
+            Text("Created - \(date.formatted(date: .abbreviated, time: .omitted))")
+                .font(.headline)
+                .fontWeight(.medium)
+                .foregroundStyle(.secondary)
+                .fontDesign(.rounded)
             
             
         }
         .frame(maxWidth: .infinity)
     }
     
+    @ViewBuilder
+    private var sectionColors: some View {
+        
+        ScrollView(.horizontal, showsIndicators: false) {
+            LazyHStack(spacing: 16) {
+                ForEach(outfit.colors, id: \.self) { color in
+                    VStack(alignment: .leading) {
+                        Spacer()
+                        Text("#\(color)")
+                            .font(.subheadline)
+                            .fontWeight(.bold)
+                            .fontDesign(.monospaced)
+                            .foregroundColor(.primary)
+                            .padding(13)
+                    }
+                    .frame(width: 120, height: 87, alignment: .leading)
+                    .background(Color(hex: color))
+                    .clipShape(RoundedRectangle(cornerRadius: 16))
+                }
+            }
+        }
+    }
     
     
     @ViewBuilder
@@ -168,14 +211,66 @@ struct InfoOutfitView: View {
     
     
     @ViewBuilder
-    private var sectionStyleAndCategory: some View {
+    private var sectionDetails: some View {
         SectionList(titleKey: "Details") {
             
+            RowInfoView(
+                title: "Total Value",
+                value: outfit.totalValue.formatted(
+                    .currency(
+                        code: Locale.current.currency?.identifier ?? "EUR"
+                    )
+                )
+            )
+            
+            if let date = outfit.lastWornDate {
+                RowInfoView(
+                    title: "Last Worn",
+                    value: date.formatted(date: .abbreviated, time: .omitted)
+                )
+            }
+            
             RowInfoView(title: "Season", value: self.outfit.season.rawValue)
-            RowInfoView(title: "Style", value: self.outfit.style.rawValue)
+                        
+            VStack(alignment: .leading, spacing: 5) {
+                Text("Occasions")
+                    .foregroundStyle(.secondary)
+                
+                ScrollView(.horizontal) {
+                    LazyHStack(spacing: 5) {
+                        ForEach(outfit.occasion) { val in
+                            
+                            Text(val.rawValue)
+                                .font(.subheadline)
+                                .fontDesign(.rounded)
+                                .padding(.horizontal, 10)
+                                .padding(.vertical, 7)
+                                .glassEffect()
+                            
+                        }
+                    }
+                }
+            }
+            .padding(.vertical, 13)
+            
         }
     }
     
+    
+    @ViewBuilder
+    private var sectionNotes: some View {
+        SectionList(titleKey: "Notes") {
+            VStack(alignment: .leading) {
+                Text(outfit.notes!)
+                .font(.body)
+                .fontWeight(.regular)
+                .multilineTextAlignment(.leading)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .padding(.horizontal, 8)
+            .padding(.vertical, 10)
+        }
+    }
     
     
     @ViewBuilder
