@@ -28,6 +28,8 @@ final class OutfitEditorViewModel {
     
     var wearCount: Int
     
+    var notes: String
+    
     var alertErrorMessage: String = ""
     var isAlertErrorVisible: Bool = false
     
@@ -48,9 +50,10 @@ final class OutfitEditorViewModel {
         self.garments          = Set(item?.garments     ?? [])
         self.fullLookImagePath = item?.fullLookImagePath
         self.selectedSeason    = item?.season           ?? .summer
-        self.selectedOccasion  = Set(item?.occasion     ?? [.casual])
+        self.selectedOccasion  = Set(item?.occasion     ?? [])
         self.lastWornDate      = item?.lastWornDate     ?? .now
         self.wearCount         = item?.wearCount        ?? 0
+        self.notes             = item?.notes            ?? ""
     }
     
     

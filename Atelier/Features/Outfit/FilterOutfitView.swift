@@ -16,22 +16,22 @@ struct FilterOutfitView: View {
     var filter: FilterOutfitConfig
     
     
-    
     var body: some View {
         NavigationStack {
             Form {
                 
                 // MARK: Sections
-                self.syleAndCategorySection
+                sectionAttributes
                 
-                self.careSection
+                sectionStatus
                 
+                sectionValue
             }
             .navigationTitle("Filters")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Close", systemImage: "xmark") {
+                    Button("Cancel", systemImage: "xmark") {
                         self.dismiss()
                     }
                 }
@@ -53,9 +53,9 @@ struct FilterOutfitView: View {
                     .fontWeight(.bold)
                 }
             }
-            .onChange(of: self.filter.selectedStyle) { _, newStyles in
-                if let styles = newStyles, !styles.isEmpty && self.filter.onlyClean {
-                    self.filter.onlyClean = false
+            .onChange(of: self.filter.selectedOccasions) { _, newStyles in
+                if let styles = newStyles, !styles.isEmpty && filter.onlyClean {
+                    filter.onlyClean = false
                 }
             }
         }
@@ -68,14 +68,27 @@ struct FilterOutfitView: View {
     
     
     @ViewBuilder
-    private var syleAndCategorySection: some View {
-        Section("Style") {
+    private var sectionAttributes: some View {
+        Section("Attributes") {
             
-            self.filterNavigationLink(
-                title      : "Style",
-                selection  : self.setBinding(for: \.selectedStyle),
+            filterNavigationLink(
+                title      : "Occasions",
+                selection  : self.setBinding(
+                    for: \.selectedOccasions
+                ),
                 destination: GenericSelectionView<GarmentStyle>(
-                    selection: self.setBinding(for: \.selectedStyle)
+                    selection: self.setBinding(for: \.selectedOccasions)
+                )
+            )
+            
+            filterNavigationLink(
+                title      : "Seasons",
+                selection  : self.setBinding(
+                    for: \.selectedSeasons
+                ),
+                destination: GenericSelectionView<Season>(
+                    selection: self.setBinding(for: \.selectedSeasons),
+                    useSystemIcon: true
                 )
             )
         }
@@ -83,13 +96,29 @@ struct FilterOutfitView: View {
     }
     
     @ViewBuilder
-    private var careSection: some View {
-        Section("Care") {
-            Toggle("Only garment clean", isOn: self.$filter.onlyClean)
-            
-            Toggle("Recent Worn outfits", isOn: self.$filter.recentWorn)
+    private var sectionStatus: some View {
+        Section("Status") {
+            Toggle("Favorites Only", isOn: $filter.onlyFavorite)
+            Toggle("Clean Only", isOn: self.$filter.onlyClean)
+            Toggle("Recently Worn", isOn: self.$filter.recentWorn)
         }
     }
+    
+    
+    @ViewBuilder
+    private var sectionValue: some View {
+        Section("Estimated Value") {
+            HStack {
+                Text("Max Price")
+                Spacer()
+                Text(filter.maxPrice.formatted(.currency(code: "EUR")))
+                    .foregroundStyle(.secondary)
+            }
+            Slider(value: $filter.maxPrice, in: 0...5000, step: 50)
+        }
+    }
+    
+    
     
     // MARK: - Helpers
     

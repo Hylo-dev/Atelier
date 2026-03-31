@@ -85,20 +85,29 @@ struct FilterGarmentConfig: Equatable, Sendable {
 }
 
 struct FilterOutfitConfig: Equatable {
-    var recentWorn     : Bool               = false
-    var selectedStyle      : Set<GarmentStyle>? = nil
-    var onlyClean          : Bool               = false
+    var recentWorn       : Bool               = false
+    var selectedOccasions: Set<GarmentStyle>? = nil
+    var selectedSeasons  : Set<Season>?       = nil
+    var maxPrice         : Double             = 0
+    var onlyClean        : Bool               = false
+    var onlyFavorite     : Bool               = false
     
     var isFiltering: Bool {
-        self.recentWorn        ||
-        self.selectedStyle  != nil ||
-        self.onlyClean
+        recentWorn               ||
+        selectedOccasions != nil ||
+        selectedSeasons   != nil ||
+        maxPrice          != 0   ||
+        onlyClean                ||
+        onlyFavorite
     }
     
     mutating func reset() {
-        self.recentWorn = false
-        self.selectedStyle  = nil
-        self.onlyClean      = false
+        recentWorn        = false
+        selectedOccasions = nil
+        selectedSeasons   = nil
+        maxPrice          = 0
+        onlyClean         = false
+        onlyFavorite      = false
     }
     
     static func filterOutfits(
@@ -116,8 +125,30 @@ struct FilterOutfitConfig: Equatable {
                 return false
             }
             
-            if let styleToFind = config.selectedStyle,
-               !styleToFind.contains(outfit.occasion) {
+            if config.onlyFavorite && !outfit.isFavorite {
+                return false
+            }
+            
+            if let selectedOccasions = config.selectedOccasions, !selectedOccasions.isEmpty {
+                
+                let outfitOccasionsSet = Set(outfit.occasion)
+                if outfitOccasionsSet.isDisjoint(
+                    with: selectedOccasions
+                ) {
+                    return false
+                }
+            }
+            
+            if let seasonsToFind = config.selectedSeasons,
+                !seasonsToFind.isEmpty {
+                
+                if !seasonsToFind.contains(outfit.season) {
+                    return false
+                }
+            }
+                        
+            if config.maxPrice > 0 &&
+                outfit.totalValue > config.maxPrice {
                 return false
             }
             

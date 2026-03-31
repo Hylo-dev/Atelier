@@ -57,12 +57,14 @@ struct OutfitEditorView: View {
         ) {
             
         } content: { // MARK: - Section
-            sectionInfo
+            sectionGeneral
             
-            if outfit != nil { sectionCare }
+            if outfit != nil { sectionStatistics }
             
             // Section 1: Style & Category
-            self.sectionStyleAndCategory
+            sectionStyle
+            
+            sectionNotes
         }
         .sensoryFeedback(.success, trigger: self.isSaved)
         .navigationTitle(outfit == nil ? "New Outfit" : "Edit Outfit")
@@ -74,7 +76,7 @@ struct OutfitEditorView: View {
             }
             
             ToolbarItem(placement: .confirmationAction) {
-                Button("Finish", systemImage: "checkmark") {
+                Button("Done", systemImage: "checkmark") {
                     editorViewModel.handleFinishAction(
                         image  : uiImageToSave,
                         manager: outfitManager
@@ -95,7 +97,7 @@ struct OutfitEditorView: View {
             isPresented: self.$showCamera,
             content    : sheetPhotoHandler
         )
-        .alert("Ops! Something went wrong", isPresented: $editorViewModel.isAlertErrorVisible) {
+        .alert("Unable to Save", isPresented: $editorViewModel.isAlertErrorVisible) {
             Button("Ok", role: .cancel) { }
             
         } message: {
@@ -109,57 +111,9 @@ struct OutfitEditorView: View {
     // MARK: - Views
     
     @ViewBuilder
-    private var sectionInfo: some View {
-        SectionList(titleKey: "Info") {
+    private var sectionGeneral: some View {
+        SectionList(titleKey: "General") {
             TextField("Name", text: $editorViewModel.name)
-            
-            if outfit != nil {
-                DatePicker(
-                    "Last worn date",
-                    selection: $editorViewModel.lastWornDate,
-                    displayedComponents: [.date]
-                )
-            }            
-        }
-    }
-    
-    @ViewBuilder
-    var sectionCare: some View {
-        SectionList(titleKey: "Care") {
-            
-            Stepper(
-                value: $editorViewModel.wearCount,
-                in   : 0...Int.max,
-                step : 1
-            ) {
-                HStack(spacing: 4) {
-                    Text("Times worn:")
-                        
-                    
-                    Text("\(editorViewModel.wearCount)")
-                        .fontWeight(.semibold)
-                        .monospacedDigit()
-                }
-            }
-        }
-    }
-    
-    @ViewBuilder
-    private var sectionStyleAndCategory: some View {
-        SectionList(titleKey: "Style & Category") {
-            
-            PickerList("Season", selection: $editorViewModel.selectedSeason) {
-                ForEach(Season.allCases, id: \.id) { type in
-                    Text(type.rawValue).tag(type)
-                }
-            }
-            
-            
-            PickerList("Style", selection: $editorViewModel.selectedOccasion) {
-                ForEach(GarmentStyle.allCases, id: \.id) { type in
-                    Text(type.rawValue).tag(type)
-                }
-            }
             
             
             NavigationLink {
@@ -187,6 +141,87 @@ struct OutfitEditorView: View {
                 }
             }
             .tint(.primary)
+        }
+    }
+    
+    @ViewBuilder
+    var sectionStatistics: some View {
+        SectionList(titleKey: "Usage & History") {
+            
+            if outfit != nil {
+                DatePicker(
+                    "Last worn date",
+                    selection: $editorViewModel.lastWornDate,
+                    displayedComponents: [.date]
+                )
+            }
+            
+            Stepper(
+                value: $editorViewModel.wearCount,
+                in   : 0...Int.max,
+                step : 1
+            ) {
+                HStack(spacing: 4) {
+                    Text("Wear Count:")
+                        
+                    
+                    Text("\(editorViewModel.wearCount)")
+                        .fontWeight(.semibold)
+                        .monospacedDigit()
+                }
+            }
+        }
+    }
+    
+    @ViewBuilder
+    private var sectionStyle: some View {
+        SectionList(titleKey: "Style") {
+            
+            PickerList("Season", selection: $editorViewModel.selectedSeason) {
+                ForEach(Season.allCases, id: \.id) { type in
+                    Text(type.rawValue).tag(type)
+                }
+            }
+            
+            
+            NavigationLink {
+                GenericSelectionView(
+                    selection: $editorViewModel.selectedOccasion
+                )
+                .navigationTitle("Occasions")
+                
+            } label: {
+                HStack {
+                    Text("Occasions")
+                        .foregroundStyle(.primary)
+                    
+                    
+                    Spacer()
+                    
+                    
+                    HStack {
+                        Text(editorViewModel.selectedOccasion.isEmpty ? "None" : "\(editorViewModel.selectedOccasion.count) selected")
+                            .foregroundStyle(.tertiary)
+                        
+                        Image(systemName: "chevron.forward")
+                            .font(.subheadline)
+                            .fontWeight(.semibold)
+                            .foregroundStyle(.tertiary)
+                    }
+                }
+            }
+            .tint(.primary)
+        }
+    }
+    
+    
+    @ViewBuilder
+    private var sectionNotes: some View {
+        SectionList(titleKey: "Notes") {
+            TextEditor(text: $editorViewModel.notes)
+                .scrollContentBackground(.hidden)
+                .background(Color.clear)
+                .frame(minHeight: 120)
         }
     }
     

@@ -8,27 +8,6 @@
 import SwiftUI
 import SwiftData
 
-struct ColorWeight: Identifiable, Codable, Hashable {
-    let id    : String
-    let weight: Double
-    
-    static nonisolated func from(_ strings: [String]) -> [ColorWeight] {
-        let total = Double(strings.count)
-        guard total > 0 else { return [] }
-        
-        let counts = strings.reduce(into: [:]) { counts, color in
-            counts[color, default: 0] += 1
-        }
-        
-        return counts.map { color, count in
-            ColorWeight(
-                id: color,
-                weight: (Double(count) * 100.0) / total
-            )
-        }
-    }
-}
-
 extension AtelierSchemaV1 {
     
     @Model
@@ -55,8 +34,16 @@ extension AtelierSchemaV1 {
         // Style variables
         var season           : Season
         var occasion         : [GarmentStyle] // Implemented in InfView
-        var colors: [ColorWeight]
         
+        
+        var colors: [ColorWeight] {
+            guard !garments.isEmpty else { return [] }
+            
+            return ColorWeight.from(
+                garments.map { $0.color }
+            )
+            .sorted { $0.weight >= $1.weight && $0.id >= $1.id }
+        }
         
         @MainActor
         var totalValue: Double {
@@ -77,7 +64,7 @@ extension AtelierSchemaV1 {
                 
         @MainActor
         var stateWear: String {
-            isReadyToWear ? "Yes" : "No"
+            isReadyToWear ? "Ready" : "Incomplete"
         }
         
         @MainActor
@@ -98,11 +85,6 @@ extension AtelierSchemaV1 {
             self.name              = name
             self.garments          = garments
             
-            
-            let colors = garments.map { $0.color }
-            self.colors            = ColorWeight.from(colors)
-            
-            
             self.season            = season
             
             self.creationDate      = .now
@@ -120,7 +102,6 @@ extension AtelierSchemaV1 {
             self.id                = UUID()
             self.name              = ""
             self.garments          = []
-            self.colors            = []
             self.season            = .summer
             self.occasion          = [.casual]
             self.creationDate      = .now

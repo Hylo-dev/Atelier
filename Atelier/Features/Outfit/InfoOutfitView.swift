@@ -36,6 +36,9 @@ struct InfoOutfitView: View {
     @State
     private var isDeleted: Bool
     
+    @State
+    private var containerWidth: CGFloat = 0
+    
     
     init(_ outfit: Outfit) {
         self.outfit = outfit
@@ -53,11 +56,11 @@ struct InfoOutfitView: View {
             titleSection
             
         } content: {
-            sectionColors
-            
-            sectionCare
+            sectionPalette
             
             sectionDetails
+            
+            sectionUsage
             
             if outfit.notes != nil {
                 sectionNotes
@@ -76,7 +79,7 @@ struct InfoOutfitView: View {
                     
                 } label: {
                     Label(
-                        "Is Favorite",
+                        "Favorite",
                         systemImage: outfit.isFavorite ? "star.fill" : "star"
                     )
                 }
@@ -111,22 +114,16 @@ struct InfoOutfitView: View {
                 OutfitEditorView(outfit)
             }
         }
-        .alert(
-            "Delete Garment?",
-            isPresented: self.$deleteItem
-        ) {
-            
+        .alert("Delete Outfit?", isPresented: $deleteItem) {
             Button("Delete", role: .destructive) {
-                withAnimation {
-                    outfitManager.delete(self.outfit)
-                    isDeleted.toggle()
-                }
-                
+                outfitManager.delete(outfit)
                 dismiss()
             }
             
+            Button("Cancel", role: .cancel) { }
+            
         } message: {
-            Text("Are you sure? This action cannot be undone.")
+            Text("Are you sure you want to delete '\(outfit.name)'? This action cannot be undone.")
         }
     }
     
@@ -138,71 +135,96 @@ struct InfoOutfitView: View {
     
     @ViewBuilder
     private var titleSection: some View {
-        VStack(spacing: 3) {
+        VStack(spacing: 4) {
             Text(self.outfit.name)
                 .font(.system(size: 65))
                 .fontWeight(.bold)
-                .fontDesign(.default)
-                .foregroundStyle(.primary)
                 .multilineTextAlignment(.center)
             
-            let date = outfit.creationDate
-            Text("Created - \(date.formatted(date: .abbreviated, time: .omitted))")
-                .font(.headline)
-                .fontWeight(.medium)
+            Text("Added \(outfit.creationDate.formatted(date: .long, time: .omitted))")
+                .font(.subheadline)
                 .foregroundStyle(.secondary)
-                .fontDesign(.rounded)
-            
             
         }
         .frame(maxWidth: .infinity)
     }
     
     @ViewBuilder
-    private var sectionColors: some View {
+    private var sectionPalette: some View {
         
-        ScrollView(.horizontal, showsIndicators: false) {
-            LazyHStack(spacing: 16) {
-                ForEach(outfit.colors, id: \.self) { color in
-                    VStack(alignment: .leading) {
+        let spacing = 10.0
+        HStack(spacing: spacing) {
+            ForEach(outfit.colors, id: \.id) { color in
+                let totalSpacing = spacing * CGFloat(
+                    max(0, outfit.colors.count - 1)
+                )
+                let relativeWidth = max(0, (containerWidth - totalSpacing) * CGFloat(color.weight) / 100.0)
+                
+                VStack(alignment: .leading) {
+                    
+                    HStack {
                         Spacer()
-                        Text("#\(color.id)")
+                        
+                        Text("\(Int(color.weight))%")
                             .font(.subheadline)
                             .fontWeight(.bold)
                             .fontDesign(.monospaced)
                             .foregroundColor(.primary)
-                            .padding(13)
                     }
-                    .frame(width: 120, height: 87, alignment: .leading)
-                    .background(Color(hex: color.id))
-                    .clipShape(RoundedRectangle(cornerRadius: 16))
+                    
+                    Spacer()
+                    
+                    HStack {
+                        Text("#\(color.id)")
+                            .font(.subheadline)
+                            .fontWeight(.semibold)
+                            .fontDesign(.monospaced)
+                            .foregroundColor(.primary)
+                        
+                        Spacer()
+                        
+                        Image(systemName: "chevron.right")
+                            .font(.subheadline)
+                            .fontWeight(.regular)
+                            .foregroundColor(.primary)
+                    }
                 }
+                .padding(13)
+                .frame(width: relativeWidth, height: 90)
+                .background(Color(hex: color.id))
+                .clipShape(RoundedRectangle(cornerRadius: 16))
             }
+        }
+        .frame(maxWidth: .infinity)
+        .onGeometryChange(for: CGFloat.self) { proxy in
+            proxy.size.width
+        } action: { newValue in
+            containerWidth = newValue
         }
     }
     
     
     @ViewBuilder
-    private var sectionCare: some View {
-        SectionList(titleKey: "Care & Usage") {
+    private var sectionUsage: some View {
+        SectionList(titleKey: "Usage") {
             
             RowInfoView(
-                title: "Availability",
+                title: "Status",
                 value: self.outfit.stateWear
             )
             
             
-            if self.outfit.missingItemsCount > 0 {
+            if let date = outfit.lastWornDate {
                 RowInfoView(
-                    title: "Missing garments",
-                    value: outfit.missingItemsCount <= 1 ? "\(outfit.missingItemsCount) piece" : "\(outfit.missingItemsCount) pieces"
+                    title: "Last Worn",
+                    value: date.formatted(.dateTime.day().month().year())
                 )
             }
             
             
             if self.outfit.wearCount > 0 {
                 RowInfoView(
-                    title: "Wear Count",
+                    title: "Times Worn",
                     value: "\(self.outfit.wearCount) times"
                 )
             }
@@ -223,28 +245,21 @@ struct InfoOutfitView: View {
                 )
             )
             
-            if let date = outfit.lastWornDate {
-                RowInfoView(
-                    title: "Last Worn",
-                    value: date.formatted(date: .abbreviated, time: .omitted)
-                )
-            }
-            
             RowInfoView(title: "Season", value: self.outfit.season.rawValue)
                         
-            VStack(alignment: .leading, spacing: 5) {
+            VStack(alignment: .leading, spacing: 13) {
                 Text("Occasions")
                     .foregroundStyle(.secondary)
                 
                 ScrollView(.horizontal) {
-                    LazyHStack(spacing: 5) {
+                    LazyHStack(spacing: 8) {
                         ForEach(outfit.occasion) { val in
                             
                             Text(val.rawValue)
                                 .font(.subheadline)
                                 .fontDesign(.rounded)
-                                .padding(.horizontal, 10)
-                                .padding(.vertical, 7)
+                                .padding(.horizontal, 13)
+                                .padding(.vertical, 8)
                                 .glassEffect()
                             
                         }
@@ -252,7 +267,6 @@ struct InfoOutfitView: View {
                 }
             }
             .padding(.vertical, 13)
-            
         }
     }
     

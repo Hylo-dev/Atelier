@@ -135,10 +135,7 @@ struct OutfitView: View {
             }
         }
         .sensoryFeedback(.success, trigger: isDeleted)
-        .onAppear {
-            self.updateData()
-        }
-        .onChange(of: outfitsUpdateTrigger) {
+        .onChange(of: outfitsUpdateTrigger, initial: true) {
             self.updateData()
         }
         .onChange(of: self.filter) {
