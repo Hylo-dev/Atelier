@@ -72,6 +72,24 @@ extension AtelierSchemaV1 {
             garments.filter { $0.state != .available }.count
         }
         
+        @MainActor
+        var tone: Tone {
+            guard !garments.isEmpty else { return .none }
+            
+            var temperatureValue = 0.0
+            var garmentsWeight = 0.0
+            
+            garments.forEach { garment in
+                let color  = Color(hex: garment.color)
+                let weight = garment.subCategory.weight
+                
+                garmentsWeight   += weight
+                temperatureValue += weight * color.temperatureValue
+            }
+            
+            return Tone(score: temperatureValue / garmentsWeight)
+        }
+        
         init(
             name             : String,
             garments         : [Garment],
@@ -111,5 +129,6 @@ extension AtelierSchemaV1 {
             self.notes             = nil
             self.fullLookImagePath = nil
         }
+        
     }
 }

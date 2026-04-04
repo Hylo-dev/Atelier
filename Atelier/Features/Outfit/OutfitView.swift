@@ -109,11 +109,19 @@ struct OutfitView: View {
     
     var body: some View {
         Group {
-            if self.outfits.isEmpty {
+            if outfits.isEmpty {
                 ContentUnavailableView(
                     "Outfits Empty",
                     systemImage: "tshirt",
                     description: Text("Time to create your drip")
+                )
+                .containerRelativeFrame(.vertical)
+                
+            } else if outfitManager.visibleOutfits.isEmpty {
+                ContentUnavailableView(
+                    "No Outfits Found",
+                    systemImage: "magnifyingglass",
+                    description: Text("Try adjusting your filters to see more results from your wardrobe.")
                 )
                 .containerRelativeFrame(.vertical)
                 
@@ -141,6 +149,9 @@ struct OutfitView: View {
         .onChange(of: self.filter) {
             self.updateData()
         }
+        .onChange(of: filter.isFiltering) { _, newValue in
+            seasonsState.hiddenSectionBar = newValue
+        }
         .toolbar {
             ToolbarItem(placement: .title) {
                 Text(String(repeating: " ", count: 50))
@@ -165,7 +176,7 @@ struct OutfitView: View {
             InfoOutfitView(item)
                 .onAppear {
                     withAnimation {
-                        seasonsState.subSection = true
+                        seasonsState.hiddenSectionBar = true
                     }
                 }
         }
@@ -185,7 +196,7 @@ struct OutfitView: View {
         .onChange(of: navigatedOutfit) { old, newValue in
             if newValue == nil {
                 withAnimation {
-                    seasonsState.subSection = false
+                    seasonsState.hiddenSectionBar = false
                 }
             }
         }
@@ -199,7 +210,7 @@ struct OutfitView: View {
         ScrollView(.vertical) {
             LazyVGrid(columns: Self.columns, spacing: 20) {
                 
-                ForEach(self.outfitManager.groupedOutfits[season] ?? [], id: \.id) { item in
+                ForEach(outfitManager.groupedOutfits[season] ?? [], id: \.id) { item in
                     
                     let subTitle = item.garments.count <= 1 ?
                     "Incomplete outfit" : nil

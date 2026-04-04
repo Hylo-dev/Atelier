@@ -115,6 +115,9 @@ struct InventoryView: View {
         .onChange(of: filter) {
             updateData()
         }
+        .onChange(of: filter.isFiltering) { _, newValue in
+            categoryState.hiddenSectionBar = newValue
+        }
         .toolbar {
             ToolbarItem(placement: .title) {
                 Text(String(repeating: " ", count: 50))
@@ -124,10 +127,12 @@ struct InventoryView: View {
                             .fontWeight(.bold)
                     }
             }
-                        
-            ToolbarItem(placement: .topBarTrailing) {
-                Button("Filter", systemImage: "line.3.horizontal.decrease") {
-                    self.isFilterSheetVisible = true
+            
+            if !garments.isEmpty {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Filter", systemImage: "line.3.horizontal.decrease") {
+                        self.isFilterSheetVisible = true
+                    }
                 }
             }
             
@@ -141,14 +146,14 @@ struct InventoryView: View {
             InfoGarmentView(item)
                 .onAppear {
                     withAnimation {
-                        categoryState.subSection = true
+                        categoryState.hiddenSectionBar = true
                     }
                 }
         }
         .onChange(of: navigatedGarment) { old, newValue in
             if newValue == nil {
                 withAnimation {
-                    categoryState.subSection = false
+                    categoryState.hiddenSectionBar = false
                 }
             }
         }
@@ -164,7 +169,7 @@ struct InventoryView: View {
         }
         .sheet(isPresented: self.$isFilterSheetVisible) {
             FilterGarmentView(
-                filters: self.$filter,
+                filters: $filter,
                 brands : garmentManager.availableBrands
             )
         }

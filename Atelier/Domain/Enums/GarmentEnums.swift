@@ -201,6 +201,50 @@ enum GarmentSubCategory: String, Codable, CaseIterable, Identifiable {
     
     var id: String { rawValue }
     
+    nonisolated var weight: Double {
+        switch self {
+            case .coats, .pufferJackets, .rainwear, .dresses, .jumpsuits, .pajamas, .robes:
+                return 5.0
+                
+            case .jackets, .blazers:
+                return 4.0
+                
+            case .jeans, .trousers, .sweatpants, .leggings:
+                return 3.5
+                
+            case .sweaters, .hoodies, .sweatshirt:
+                return 3.0
+                
+            case .shirts, .blouses, .tshirts, .skirts:
+                return 2.5
+                
+            case .top, .tankTops, .bodysuits, .shorts, .boots:
+                return 1.5
+                
+                // Footwear & Accessories
+            case .sneakers, .loafers, .heels, .flats, .bags, .scarves:
+                return 1.0
+                
+            case .hats:
+                return 0.8
+                
+            case .sandals, .slippers:
+                return 0.5
+                
+            case .belts, .eyewear:
+                return 0.3
+                
+            case .socks:
+                return 0.2
+                
+            case .jewelry, .watches, .bras, .panties, .boxerShorts, .briefs, .none:
+                return 0.1
+                
+            default:
+                return 1.0
+        }
+    }
+    
     var wearLimit: Int {
         switch self {
                 

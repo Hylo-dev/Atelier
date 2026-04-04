@@ -9,16 +9,16 @@ import Foundation
 
 @Observable
 class TabFilterState {
-    var items     : [String] = ["All"]
-    var selection : String?  = "All"
-    var progress  : CGFloat  = .zero
-    var subSection: Bool     = false
+    var items           : [String] = ["All"]
+    var selection       : String?  = "All"
+    var progress        : CGFloat  = .zero
+    var hiddenSectionBar: Bool     = false
     
     var isPagesEnabled: Bool {
         items.count > 2
     }
     
     var isToolbarEnabled: Bool {
-        isPagesEnabled && !subSection
+        isPagesEnabled && !hiddenSectionBar
     }
 }

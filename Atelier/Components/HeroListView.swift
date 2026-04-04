@@ -15,29 +15,32 @@ struct HeroListView<TitleContent: View, BodyContent: View>: View {
     @Binding
     private var isImageClicked  : Bool
     
-    private let colorPlaceholder: Color
+    private let colorPlaceholder: [Color]
+    private let placeholderGradient: Bool
     private let iconPlaceholder : String
     
     private let titleHeroList: TitleContent
     private let content      : BodyContent
     
     init(
-        _ imagePath       : String?,
-        previewImage      : UIImage? = nil,
-        isImageClicked    : Binding<Bool> = .constant(false),
-        colorPlaceholder  : Color  = .accentColor,
-        iconPlaceholder   : String = "hanger",
+        _ imagePath        : String?,
+        previewImage       : UIImage?      = nil,
+        isImageClicked     : Binding<Bool> = .constant(false),
+        colorPlaceholder   : [Color]       = [.accentColor],
+        placeholderGradient: Bool          = false,
+        iconPlaceholder    : String        = "hanger",
         
         @ViewBuilder titleHeroList: () -> TitleContent,
         @ViewBuilder content      : () -> BodyContent
     ) {
-        self.imagePath        = imagePath
-        self.previewImage     = previewImage
-        self._isImageClicked  = isImageClicked
-        self.colorPlaceholder = colorPlaceholder
-        self.iconPlaceholder  = iconPlaceholder
-        self.titleHeroList    = titleHeroList()
-        self.content          = content()
+        self.imagePath           = imagePath
+        self.previewImage        = previewImage
+        self._isImageClicked     = isImageClicked
+        self.colorPlaceholder    = colorPlaceholder
+        self.placeholderGradient = placeholderGradient
+        self.iconPlaceholder     = iconPlaceholder
+        self.titleHeroList       = titleHeroList()
+        self.content             = content()
     }
     
     var body: some View {
@@ -61,9 +64,10 @@ struct HeroListView<TitleContent: View, BodyContent: View>: View {
     private var heroImageSection: some View {
         AvatarView(
             imagePath,
-            color  : colorPlaceholder,
-            icon   : iconPlaceholder,
-            uiImage: previewImage
+            color   : colorPlaceholder,
+            gradient: placeholderGradient,
+            icon    : iconPlaceholder,
+            uiImage : previewImage
         )
         .frame(height: 700)
         .visualEffect { content, proxy in

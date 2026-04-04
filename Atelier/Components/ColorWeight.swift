@@ -5,6 +5,8 @@
 //  Created by Eliomar Alejandro Rodriguez Ferrer on 31/03/2026.
 //
 
+import SwiftUI
+
 
 struct ColorWeight: Identifiable, Codable, Hashable {
     let id    : String
@@ -24,5 +26,10 @@ struct ColorWeight: Identifiable, Codable, Hashable {
                 weight: (Double(count) * 100.0) / total
             )
         }
+    }
+    
+    @inline(__always)
+    func toColor() -> Color {
+        return Color(hex: id)
     }
 }

@@ -52,7 +52,11 @@ struct InfoOutfitView: View {
     
     var body: some View {
         
-        HeroListView(outfit.fullLookImagePath) {
+        HeroListView(
+            outfit.fullLookImagePath,
+            colorPlaceholder: outfit.colors.map { $0.toColor() },
+            placeholderGradient: true
+        ) {
             titleSection
             
         } content: {
@@ -246,6 +250,11 @@ struct InfoOutfitView: View {
             )
             
             RowInfoView(title: "Season", value: self.outfit.season.rawValue)
+            
+            RowInfoView(
+                title: "Tone",
+                value: outfit.tone.rawValue
+            )
                         
             VStack(alignment: .leading, spacing: 13) {
                 Text("Occasions")
@@ -296,8 +305,9 @@ struct InfoOutfitView: View {
                     ForEach(self.outfit.garments, id: \.id) { garment in
                         
                         ModelCardView(
-                            title    : garment.name,
-                            imagePath: garment.imagePath
+                            title      : garment.name,
+                            subheadline: garment.subCategory.rawValue,
+                            imagePath  : garment.imagePath
                         )
                         .frame(width: 150, height: 250)
                         

@@ -66,7 +66,7 @@ struct GarmentEditorView: View {
             editorViewModel.imagePath,
             previewImage    : uiImageToSave,
             isImageClicked  : $showCamera,
-            colorPlaceholder: editorViewModel.color
+            colorPlaceholder: [editorViewModel.color]
         ) {
             
         } content: {

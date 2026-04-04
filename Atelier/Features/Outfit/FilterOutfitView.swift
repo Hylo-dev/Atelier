@@ -21,6 +21,8 @@ struct FilterOutfitView: View {
             Form {
                 
                 // MARK: Sections
+                sectionColorAnalysis
+                
                 sectionAttributes
                 
                 sectionStatus
@@ -110,9 +112,23 @@ struct FilterOutfitView: View {
         Section("Estimated Value") {
             HStack {
                 Text("Max Price")
+                
                 Spacer()
-                Text(filter.maxPrice.formatted(.currency(code: "EUR")))
-                    .foregroundStyle(.secondary)
+                
+                Group {
+                    if filter.maxPrice == 0 {
+                        Text("All")
+                        
+                    } else {
+                        Text(
+                            filter.maxPrice.formatted(
+                                .currency(code: "EUR")
+                            )
+                        )
+                    }
+                }
+                .foregroundStyle(.secondary)
+                
             }
             Slider(value: $filter.maxPrice, in: 0...5000, step: 50)
         }
@@ -160,6 +176,45 @@ struct FilterOutfitView: View {
                         .fontWeight(.medium)
                 }
             }
+        }
+    }
+    
+    @ViewBuilder
+    private var sectionColorAnalysis: some View {
+        Section("Color & Tone") {
+
+            Picker("Tone", selection: $filter.selectedTone) {
+                ForEach(Tone.allCases, id: \.rawValue) { tone in
+                    Text(tone.rawValue)
+                        .tag(tone)
+                }
+            }
+            .padding(.vertical, 5)
+            .tint(.secondary)
+            
+//            NavigationLink {
+//                ColorSelectionView(selection: $filter.selectedColors)
+//                    .navigationTitle("Dominant Colors")
+//            } label: {
+//                LabeledContent("Colors") {
+//                    if filter.selectedColors.isEmpty {
+//                        Text("All")
+//                            .foregroundStyle(.secondary)
+//                    } else {
+//                        HStack(spacing: 4) {
+//                            ForEach(Array(filter.selectedColors).prefix(3), id: \.self) { color in
+//                                Circle()
+//                                    .fill(color)
+//                                    .frame(width: 12, height: 12)
+//                            }
+//                            if filter.selectedColors.count > 3 {
+//                                Text("+\(filter.selectedColors.count - 3)")
+//                                    .font(.caption2)
+//                            }
+//                        }
+//                    }
+//                }
+//            }
         }
     }
 }

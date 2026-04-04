@@ -218,10 +218,21 @@ struct OutfitEditorView: View {
     @ViewBuilder
     private var sectionNotes: some View {
         SectionList(titleKey: "Notes") {
-            TextEditor(text: $editorViewModel.notes)
-                .scrollContentBackground(.hidden)
-                .background(Color.clear)
-                .frame(minHeight: 120)
+            
+            ZStack(alignment: .topLeading) {
+                if editorViewModel.notes.isEmpty {
+                    Text("Add notes...")
+                        .foregroundColor(.gray)
+                        .padding(.horizontal, 5)
+                        .padding(.top, 8)
+                        .allowsHitTesting(false)
+                }
+                
+                TextEditor(text: $editorViewModel.notes)
+                    .scrollContentBackground(.hidden)
+                    .background(Color.clear)
+                    .frame(minHeight: 120)
+            }
         }
     }
     

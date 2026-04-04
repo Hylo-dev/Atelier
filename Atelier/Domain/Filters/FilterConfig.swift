@@ -88,16 +88,18 @@ struct FilterOutfitConfig: Equatable {
     var recentWorn       : Bool               = false
     var selectedOccasions: Set<GarmentStyle>? = nil
     var selectedSeasons  : Set<Season>?       = nil
+    var selectedTone     : Tone               = .none
     var maxPrice         : Double             = 0
     var onlyClean        : Bool               = false
     var onlyFavorite     : Bool               = false
     
     var isFiltering: Bool {
-        recentWorn               ||
-        selectedOccasions != nil ||
-        selectedSeasons   != nil ||
-        maxPrice          != 0   ||
-        onlyClean                ||
+        recentWorn                 ||
+        selectedOccasions != nil   ||
+        selectedSeasons   != nil   ||
+        selectedTone      != .none ||
+        maxPrice          != 0     ||
+        onlyClean                  ||
         onlyFavorite
     }
     
@@ -105,6 +107,7 @@ struct FilterOutfitConfig: Equatable {
         recentWorn        = false
         selectedOccasions = nil
         selectedSeasons   = nil
+        selectedTone      = .none
         maxPrice          = 0
         onlyClean         = false
         onlyFavorite      = false
@@ -126,6 +129,10 @@ struct FilterOutfitConfig: Equatable {
             }
             
             if config.onlyFavorite && !outfit.isFavorite {
+                return false
+            }
+            
+            if config.selectedTone != outfit.tone {
                 return false
             }
             
