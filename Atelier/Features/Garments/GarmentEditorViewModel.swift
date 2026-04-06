@@ -10,6 +10,7 @@ import SwiftUI
 
 @Observable
 final class GarmentEditorViewModel {
+    private let repository = GarmentRepository()
     
     var name: String
     var brand: String
@@ -159,126 +160,74 @@ final class GarmentEditorViewModel {
         sessions        : [LaundrySession],
         dismiss         : @escaping () -> Void
     ) {
-        let garmentToProcess: Garment?
-        
-        if item == nil {
-            garmentToProcess = saveGarment(
-                image,
-                manager: manager
-            )
+        do {
+            var finalGarment: Garment
             
-        } else {
-            garmentToProcess = updateGarment(
-                item,
-                image,
-                manager: manager
-            )
-            if let g = garmentToProcess {
-                applianceManager.unassignGarment(g)
+            if let existingItem = item {
+                updateProperties(of: existingItem)
+                try repository.update(
+                    garment : existingItem,
+                    newImage: image,
+                    manager : manager
+                )
+                
+                applianceManager.unassignGarment(existingItem)
+                finalGarment = existingItem
+                
+            } else {
+                let newGarment = createGarmentObject()
+                try repository.create(
+                    garment: newGarment,
+                    image  : image,
+                    manager: manager
+                )
+                
+                finalGarment = newGarment
             }
-        }
-        
-        if let finalGarment = garmentToProcess {
-            applianceManager.processUnassignedGarments(
-                [finalGarment]
-            )
             
+            applianceManager.processUnassignedGarments([finalGarment])
             dismiss()
+            
+        } catch {
+            alertErrorMessage   = error.localizedDescription
+            isAlertErrorVisible = true
         }
     }
     
     
-    private func saveGarment(
-        _ uiImage: UIImage?,
-        manager: GarmentManager
-    ) -> Garment? {
-        
-        print("""
-        Image path: \(imagePath ?? "nil")
-        UIImage: \(uiImage == nil ? "nil" : "Image")
-        """)
-        
-        
-        if let imageToSave = uiImage {
-            
-            let result = ImageStorage.saveImage(imageToSave)
-            switch result {
-                case .success(let filename):
-                    imagePath = (filename as NSString).lastPathComponent
-                    
-                case .failure(let error):
-                    alertErrorMessage   = error.localizedDescription
-                    isAlertErrorVisible = true
-                    return nil
-            }
-        }
-        
-        let newGarment = Garment(
+    
+    private func updateProperties(of item: Garment) {
+        item.name           = self.name
+        item.brand          = self.brand.isEmpty ? nil : brand
+        item.price          = self.price
+        item.color          = self.color.toHex() ?? "#FFFFFF"
+        item.composition    = Array(self.selectedComposition)
+        item.category       = self.selectedCategory
+        item.subCategory    = self.selectedSubCategory
+        item.season         = self.selectedSeason
+        item.style          = self.selectedStyle
+        item.wearCount      = self.wearCount
+        item.purchaseDate   = self.purchaseDate
+        item.washingSymbols = Array(self.washingSymbols)
+        item.imagePath      = self.imagePath
+    }
+    
+    
+    private func createGarmentObject() -> Garment {
+        return Garment(
             name          : self.name,
             brand         : self.brand.isEmpty ? nil : self.brand,
             price         : self.price,
-            color         : self.color.toHex() ?? "nil",
+            color         : self.color.toHex() ?? "#FFFFFF",
             composition   : Array(self.selectedComposition),
             category      : self.selectedCategory,
             subCategory   : self.selectedSubCategory,
             season        : self.selectedSeason,
             style         : self.selectedStyle,
             purchaseDate  : self.purchaseDate,
-            
             washingSymbols: Array(self.washingSymbols),
-            
             imagePath     : self.imagePath
         )
-        
-        manager.insert(newGarment)
-        return newGarment
-    }
-    
-    
-    private func updateGarment(
-        _ item: Garment?,
-        _ uiImage: UIImage?,
-        manager: GarmentManager
-    ) -> Garment? {
-        guard let garment = item else { return nil }
-        
-        if let imageToSave = uiImage {
-            
-            if let oldPath = garment.imagePath {
-                ImageStorage.deleteImage(filename: oldPath)
-            }
-            
-            let result = ImageStorage.saveImage(imageToSave)
-            switch result {
-                case .success(let filename):
-                    self.imagePath = (filename as NSString).lastPathComponent
-                    
-                case .failure(let error):
-                    alertErrorMessage   = error.localizedDescription
-                    isAlertErrorVisible = true
-                    return nil
-            }
-        }
-        
-        garment.name           = self.name
-        garment.brand          = self.brand.isEmpty ? nil : self.brand
-        garment.price          = self.price
-        garment.color          = self.color.toHex() ?? "nil"
-        
-        // Updated properties
-        garment.composition    = Array(self.selectedComposition)
-        garment.category       = self.selectedCategory
-        garment.subCategory    = self.selectedSubCategory
-        garment.season         = self.selectedSeason
-        garment.style          = self.selectedStyle
-        garment.wearCount      = self.wearCount
-        
-        garment.washingSymbols = Array(self.washingSymbols)
-        garment.purchaseDate   = self.purchaseDate
-        garment.imagePath      = self.imagePath
-        
-        manager.update()
-        return garment
     }
 }
 

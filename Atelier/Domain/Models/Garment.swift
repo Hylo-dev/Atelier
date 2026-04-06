@@ -112,6 +112,7 @@ extension AtelierSchemaV1 {
             self.laundryHistory = []
         }
 
+
         @MainActor
         var requiresWashing: Bool {
             wearCount >= subCategory.wearLimit

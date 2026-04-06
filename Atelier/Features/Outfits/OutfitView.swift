@@ -154,7 +154,7 @@ struct OutfitView: View {
         }
         .toolbar {
             ToolbarItem(placement: .title) {
-                Text(String(repeating: " ", count: 50))
+                Text(String(repeating: " ", count: 150))
                     .overlay(alignment: .leading) {
                         Text(self.title)
                             .font(.title)
@@ -162,9 +162,11 @@ struct OutfitView: View {
                     }
             }
             
-            ToolbarItem(placement: .topBarTrailing) {
-                Button("Filter", systemImage: "line.3.horizontal.decrease") {
-                    self.isFilterSheetVisible = true
+            if !outfits.isEmpty {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Filter", systemImage: "line.3.horizontal.decrease") {
+                        self.isFilterSheetVisible = true
+                    }
                 }
             }
             

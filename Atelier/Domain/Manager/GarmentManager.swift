@@ -43,7 +43,7 @@ final class GarmentManager: Manager {
     
     @inline(__always)
     func delete(_ item: Garment) {
-        ImageStorage.deleteImage(filename: item.imagePath)
+        ImageService().deleteImage(filename: item.imagePath)
         
         if let session = item.activeLaundrySession {
             let remainingGarments = session.garments.filter {

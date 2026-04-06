@@ -33,8 +33,9 @@ enum ImageSaveError: Error {
     }
 }
 
-struct ImageStorage {
-    static func saveImage(
+struct ImageService {
+    
+    func saveImage(
         _ image       : UIImage,
           maxDimension: CGFloat = 1024
     ) -> Result<String, ImageSaveError> {
@@ -94,7 +95,7 @@ struct ImageStorage {
         }
     }
     
-    static func loadImage(from filename: String) -> UIImage? {
+    func loadImage(from filename: String) -> UIImage? {
         guard !filename.isEmpty else { return nil }
         
         let paths = FileManager.default.urls(
@@ -116,7 +117,7 @@ struct ImageStorage {
         }
     }
     
-    static func deleteImage(filename: String?) {
+    func deleteImage(filename: String?) {
         guard let filename = filename, !filename.isEmpty else { return }
         
         guard let documentsURL = FileManager.default.urls(
