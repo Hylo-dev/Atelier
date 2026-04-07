@@ -33,11 +33,13 @@ struct WardrobeView: View {
     
     // MARK: - Parameters Val
     
+    let title: String
+    
     @Bindable
     var wardrobeState: TabFilterService
     
     @State
-    private var wardrobeViewModel: WardrobeViewModel
+    private var wardrobeViewModel = WardrobeViewModel()
 
     
     // MARK: - Static property
@@ -51,8 +53,8 @@ struct WardrobeView: View {
         title        : String,
         wardrobeState: TabFilterService
     ) {
-        self._wardrobeViewModel = State(initialValue: WardrobeViewModel(title: title))
-        self.wardrobeState     = wardrobeState
+        self.title         = title
+        self.wardrobeState = wardrobeState
     }
     
     var body: some View {
@@ -105,7 +107,7 @@ struct WardrobeView: View {
             ToolbarItem(placement: .title) {
                 Text(String(repeating: " ", count: 150))
                     .overlay(alignment: .leading) {
-                        Text(wardrobeViewModel.title)
+                        Text(title)
                             .font(.title)
                             .fontWeight(.bold)
                     }

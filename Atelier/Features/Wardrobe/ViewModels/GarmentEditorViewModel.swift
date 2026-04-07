@@ -31,6 +31,13 @@ final class GarmentEditorViewModel {
     
     var alertManager: AlertManager
     
+    var uiImageToSave: UIImage?
+    
+    var showCamera = false
+    
+    var showScan = false
+    
+    
     private let repository: any RepositoryProtocol<Garment, any GarmentManaging>
     
     var currentTotalComposition: Int {
@@ -79,8 +86,11 @@ final class GarmentEditorViewModel {
         self.imagePath           = item?.imagePath
         self.repository          = repository
         self.alertManager        = alertManager
+        
+        self.uiImageToSave       = nil
+        self.showCamera          = false
+        self.showScan            = false
     }
-    
     
     
     func selectedFabricsChanged(
@@ -156,14 +166,33 @@ final class GarmentEditorViewModel {
     }
     
     
+    func bindingForFabric(id: UUID) -> Binding<Double> {
+        Binding(
+            get: {
+                self.selectedComposition.first(where: { $0.id == id })?.percentual ?? 0
+            },
+            set: { newValue in
+                guard let index = self.selectedComposition.firstIndex(where: { $0.id == id }) else { return }
+                
+                let otherFabricsSum = self.selectedComposition
+                    .enumerated()
+                    .filter { $0.offset != index }
+                    .reduce(0) { $0 + $1.element.percentual }
+                
+                let availableSpace = 100.0 - otherFabricsSum
+                
+                self.selectedComposition[index].percentual = min(newValue, availableSpace)
+            }
+        )
+    }
+    
     
     func handleFinishAction(
-        _ item          : Garment?,
-        image           : UIImage?,
-        manager         : any GarmentWearLoggable,
-        applianceManager: ApplianceProcessing,
-        sessions        : [LaundrySession],
-        dismiss         : @escaping () -> Void
+        _ item             : Garment?,
+        image              : UIImage?,
+        garmentLoggable    : any GarmentWearLoggable,
+        applianceProcessing: ApplianceProcessing,
+        dismiss            : @escaping () -> Void
     ) {
         do {
             var finalGarment: Garment
@@ -173,10 +202,10 @@ final class GarmentEditorViewModel {
                 try repository.update(
                     item   : existingItem,
                     image  : image,
-                    manager: manager
+                    manager: garmentLoggable
                 )
                 
-                try applianceManager.unassignGarment(existingItem)
+                try applianceProcessing.unassignGarment(existingItem)
                 finalGarment = existingItem
                 
             } else {
@@ -184,13 +213,13 @@ final class GarmentEditorViewModel {
                 try repository.create(
                     item   : newGarment,
                     image  : image,
-                    manager: manager
+                    manager: garmentLoggable
                 )
                 
                 finalGarment = newGarment
             }
             
-            try applianceManager.processUnassignedGarments([finalGarment])
+            try applianceProcessing.processUnassignedGarments([finalGarment])
             dismiss()
             
         } catch {

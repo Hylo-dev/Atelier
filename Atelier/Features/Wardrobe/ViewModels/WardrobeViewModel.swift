@@ -11,9 +11,7 @@ import Observation
 final class WardrobeViewModel {
     
     var alertManager: AlertManager
-    
-    var title: String
-    
+        
     var isAddGarmentSheetVisible: Bool = false
     
     var selectedItem: Garment?
@@ -24,12 +22,8 @@ final class WardrobeViewModel {
     
     var isFilterSheetVisible: Bool = false
     
-    init(
-        title: String,
-        filter: FilterGarmentConfig = FilterGarmentConfig()
-    ) {
+    init(filter: FilterGarmentConfig = FilterGarmentConfig()) {
         self.alertManager             = AlertManager()
-        self.title                    = title
         self.isAddGarmentSheetVisible = false
         self.selectedItem             = nil
         self.navigatedGarment         = nil

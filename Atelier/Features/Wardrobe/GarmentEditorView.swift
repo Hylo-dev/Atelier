@@ -21,36 +21,13 @@ struct GarmentEditorView: View {
     @Environment(GarmentManager.self)
     var garmentManager: GarmentManager
     
-    
-    
-    @Query(
-        sort : \LaundrySession.dateCreated,
-        order: .forward
-    )
-    private var laundrySessions: [LaundrySession]
-        
-    private var item: Garment?
-    
-    
-    
+
     // MARK: - Garment Attributes
+    
+    private var item: Garment?
     
     @State
     private var editorViewModel: GarmentEditorViewModel
-    
-    
-    
-    // MARK: - Image Handling States
-    
-    @State
-    private var uiImageToSave: UIImage?
-    
-    @State
-    private var showCamera = false
-    
-    @State
-    private var showScan = false
-    
     
     
     init(garment: Garment? = nil) {
@@ -60,12 +37,13 @@ struct GarmentEditorView: View {
         )
     }
     
+    
     var body: some View {
                 
         HeroListView(
             editorViewModel.imagePath,
-            previewImage    : uiImageToSave,
-            isImageClicked  : $showCamera,
+            previewImage    : editorViewModel.uiImageToSave,
+            isImageClicked  : $editorViewModel.showCamera,
             colorPlaceholder: [editorViewModel.color]
         ) {
             
@@ -97,10 +75,9 @@ struct GarmentEditorView: View {
                 Button("Finish", systemImage: "checkmark") {
                     editorViewModel.handleFinishAction(
                         item,
-                        image           : uiImageToSave,
-                        manager         : garmentManager,
-                        applianceManager: applianceManager,
-                        sessions        : laundrySessions
+                        image           : editorViewModel.uiImageToSave,
+                        garmentLoggable         : garmentManager,
+                        applianceProcessing: applianceManager
                     ) { dismiss() }
                 }
                 .fontWeight(.bold)
@@ -108,12 +85,12 @@ struct GarmentEditorView: View {
             }
         }
         .fullScreenCover(
-            isPresented: self.$showCamera,
+            isPresented: $editorViewModel.showCamera,
             content    : sheetPhotoHandler
         )
         .sheet(
-            isPresented: self.$showScan,
-            content    : self.sheetScanHandler
+            isPresented: $editorViewModel.showScan,
+            content    : sheetScanHandler
         )
         .alert(editorViewModel.alertManager.title, isPresented: $editorViewModel.alertManager.isPresent) {
             Button("Ok", role: .cancel) { }
@@ -205,7 +182,7 @@ struct GarmentEditorView: View {
                 .toolbar {
                     ToolbarItem(placement: .topBarTrailing) {
                         Button("Scan", systemImage: "camera.on.rectangle.fill") {
-                            self.showScan = true
+                            editorViewModel.showScan = true
                         }
                         .fontWeight(.bold)
                     }
@@ -329,20 +306,7 @@ struct GarmentEditorView: View {
                         }
                         
                         Slider(
-                            value: Binding<Double>(
-                                get: { comp.percentual },
-                                set: { newValue in
-                                    
-                                    let otherFabricsSum = editorViewModel.selectedComposition
-                                        .filter { $0.id != comp.id }
-                                        .reduce(0) { $0 + $1.percentual }
-                                    
-                                    let availableSpace = 100.0 - otherFabricsSum
-                                    
-                                    
-                                    $comp.wrappedValue.percentual = min(newValue, availableSpace)
-                                }
-                            ),
+                            value: editorViewModel.bindingForFabric(id: comp.id),
                             in: 0...100,
                             step: 1
                         )
@@ -363,8 +327,8 @@ struct GarmentEditorView: View {
     private func sheetPhotoHandler() -> some View {
         NavigationStack {
             CameraContainerView(mode: .photo(removeBackground: true)) { filename, image in
-                self.uiImageToSave = image
-                editorViewModel.imagePath = (filename as NSString).lastPathComponent                
+                editorViewModel.uiImageToSave = image
+                editorViewModel.imagePath = (filename as NSString).lastPathComponent
             }
         }
     }
