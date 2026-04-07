@@ -128,12 +128,15 @@ struct WardrobeView: View {
             }
         }
         .navigationDestination(item: $wardrobeViewModel.navigatedGarment) { item in
-            InfoGarmentView(item)
-                .onAppear {
-                    withAnimation {
-                        wardrobeState.hiddenSectionBar = true
-                    }
+            InfoGarmentView(
+                item,
+                garmentManager: self.garmentManager
+            )
+            .onAppear {
+                withAnimation {
+                    wardrobeState.hiddenSectionBar = true
                 }
+            }
         }
         .onChange(of: wardrobeViewModel.navigatedGarment) { old, newValue in
             if newValue == nil {

@@ -6,9 +6,6 @@
 //
 
 import SwiftUI
-import PhotosUI
-import UIKit
-import SwiftData
 
 struct GarmentEditorView: View {
     

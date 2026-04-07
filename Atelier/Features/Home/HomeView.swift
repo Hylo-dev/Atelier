@@ -59,12 +59,12 @@ struct HomeView: View {
                     role       : tab.role
                 ) {
 					NavigationStack {
-						self.destinationView(
+						destinationView(
 							for: tab,
 							tab.title
 						)
 						.onAppear {
-							self.selectedTab = tab
+                            selectedTab = tab
 						}
 					}
                 }

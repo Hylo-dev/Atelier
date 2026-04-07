@@ -105,16 +105,5 @@ struct HeroListView<TitleContent: View, BodyContent: View>: View {
         .onTapGesture {
             self.isImageClicked = true
         }
-        //        .overlay(alignment: .bottomTrailing) {
-        //            Button(action: {}) {
-        //                Image(systemName: "view.3d")
-        //                    .font(.system(size: 18, weight: .semibold))
-        //                    .foregroundStyle(.white)
-        //                    .padding(12)
-        //                    .background(.ultraThinMaterial)
-        //                    .clipShape(Circle())
-        //            }
-        //            .padding(20)
-        //        }
     }
 }

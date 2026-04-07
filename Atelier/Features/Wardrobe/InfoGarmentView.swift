@@ -10,62 +10,56 @@ import SwiftData
 
 struct InfoGarmentView: View {
     
+    @Environment(\.dismiss)
+    private var dismiss
     
     
     // MARK: - Parameters Variables
     
-    let item: Garment
+    private let item: Garment
     
+    private let color: [Color]
     
+    private var garmentManager: any GarmentManaging
     
-    // MARK: - Private State Variables
-    
-    @Environment(\.dismiss)
-    private var dismiss
-    
-    @Environment(GarmentManager.self)
-    var garmentManager: GarmentManager
-    
-    @Environment(ApplianceManager.self)
-    var applianceManager: ApplianceManager
-    
-    
-    @Query
-    private var outfits: [Outfit]
+    private let formattedDate: String
+    private let formattedPrice: String?
     
     
     @State
     private var isModifySheetVisible: Bool = false
     
     @State
-    private var deleteItem: Bool = false
+    private var alertManager = AlertManager()
     
     @State
     private var isDeleted: Bool = false
     
-    
-    init(_ item: Garment) {
-        self.item = item
+
+    init(
+        _ item: Garment,
+        garmentManager: any GarmentManaging
+    ) {
+        self.item           = item
+        self.color          = [Color(hex: item.color)]
+        self.garmentManager = garmentManager
         
-        let itemId = item.id
-        self._outfits = Query(
-            filter: #Predicate<Outfit> { outfit in
-                outfit.garments.contains {
-                    $0.id == itemId
-                }
-            },
-            sort: \Outfit.name,
-            order: .forward
-        )
+        self.formattedDate = item.purchaseDate.formatted(date: .abbreviated, time: .omitted)
+        
+        if let price = item.price {
+            self.formattedPrice = price.formatted(.currency(code: Locale.current.currency?.identifier ?? "EUR"))
+        } else {
+            self.formattedPrice = nil
+        }
     }
     
     
-    
     var body: some View {
+        let _ = Self._printChanges()
         
         HeroListView(
             item.imagePath,
-            colorPlaceholder: [Color(hex: item.color)]
+            colorPlaceholder: color
         ) {
             titleSection
             
@@ -78,7 +72,7 @@ struct InfoGarmentView: View {
             
             sectionCare
             
-            if !outfits.isEmpty {
+            if !item.outfits.isEmpty {
                 outfitsLazyRow
             }
             
@@ -87,7 +81,9 @@ struct InfoGarmentView: View {
         .toolbar {
             ToolbarItem {
                 Button(role: .destructive) {
-                    deleteItem = true
+                    alertManager.isPresent = true
+                    alertManager.title = "Delete Garment"
+                    alertManager.message = "Are you sure? This action cannot be undone."
                     
                 } label: {
                     Label("Delete", systemImage: "trash")
@@ -96,30 +92,32 @@ struct InfoGarmentView: View {
                         
             ToolbarItem {
                 Button {
-                    self.isModifySheetVisible = true
+                    isModifySheetVisible = true
                     
                 } label: {
                     Label("Edit", systemImage: "pencil")
                 }
             }
         }
-        .sheet(isPresented: self.$isModifySheetVisible) {
+        .sheet(isPresented: $isModifySheetVisible) {
             NavigationStack {
-                GarmentEditorView(garment: self.item)
+                GarmentEditorView(garment: item)
             }
         }
         .alert(
-            "Delete Garment?",
-            isPresented: self.$deleteItem
+            alertManager.title,
+            isPresented: $alertManager.isPresent
         ) {
             
             Button("Delete", role: .destructive) {
                 withAnimation {
                     do {
                         try garmentManager.delete(item)
+                        
                     } catch {
                         print(error.localizedDescription) // TODO: Manage error
                     }
+                    
                     isDeleted.toggle()
                 }
                 
@@ -127,15 +125,13 @@ struct InfoGarmentView: View {
             }
             
         } message: {
-            Text("Are you sure? This action cannot be undone.")
+            Text(alertManager.message)
         }
     }
     
     
     
     // MARK: - Views
-
-    
     
     @ViewBuilder
     private var titleSection: some View {
@@ -156,7 +152,7 @@ struct InfoGarmentView: View {
                         .fontDesign(.default)
                 }
                 
-                Text("\(self.item.purchaseDate.formatted(date: .abbreviated, time: .omitted))")
+                Text(formattedDate)
                     .font(.headline)
                     .fontWeight(.medium)
                     .foregroundStyle(.secondary)
@@ -179,14 +175,10 @@ struct InfoGarmentView: View {
             
             RowInfoView(title: "Season", value: self.item.season.rawValue)
             
-            if let price = item.price {
+            if let price = formattedPrice {
                 RowInfoView(
                     title: "Price",
-                    value: price.formatted(
-                        .currency(
-                            code: Locale.current.currency?.identifier ?? "EUR"
-                        )
-                    )
+                    value: price
                 )
             }
         }
@@ -271,7 +263,7 @@ struct InfoGarmentView: View {
         
             ScrollView(.horizontal) {
                 LazyHStack(spacing: 15) {
-                    ForEach(self.outfits, id: \.id) { outfit in
+                    ForEach(item.outfits, id: \.id) { outfit in
                         
                         ModelCardView(
                             title    : outfit.name,
@@ -290,6 +282,9 @@ struct InfoGarmentView: View {
 }
 
 #Preview {
+    @Previewable
+    @Environment(GarmentManager.self)
+    var garmentManager
     
     let garment = Garment(
         name: "Maglia",
@@ -302,5 +297,8 @@ struct InfoGarmentView: View {
         style: .casual
     )
     
-    InfoGarmentView(garment)
+    InfoGarmentView(
+        garment,
+        garmentManager: garmentManager
+    )
 }
