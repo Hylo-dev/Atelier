@@ -22,8 +22,9 @@ protocol ApplianceProcessGarmentProtocol {
 }
 
 protocol LaundrySessionManaging {
+    
     var timerPulse: Publishers.Autoconnect<Timer.TimerPublisher> { get }
-
+    
     func finishWashing(_ session: LaundrySession) throws
     func startWashing(_ session: LaundrySession) throws
     func pauseWashing(_ item: LaundrySession) throws
@@ -38,13 +39,16 @@ protocol LaundrySessionManaging {
 @MainActor
 @Observable
 final class ApplianceManager: Manager, ApplianceProcessGarmentProtocol, LaundrySessionManaging {
+    
     private let context: ModelContext
     
     private let repository: LaundryRepositoryProtocol
     private let assignmentService: LaundryAssignmentManaging
     private let controlService: LaundryControlManaging
     
-    var timerPulse: Publishers.Autoconnect<Timer.TimerPublisher> { controlService.timerPulse }
+    var timerPulse: Publishers.Autoconnect<Timer.TimerPublisher> {
+        controlService.timerPulse
+    }
     
     init(
         _ context        : ModelContext,
@@ -96,11 +100,6 @@ final class ApplianceManager: Manager, ApplianceProcessGarmentProtocol, LaundryS
             in: context
         )
     }
-    
-    
-    
-    // MARK: - Laundry Session live
-    
     
     
     // MARK: - Wash

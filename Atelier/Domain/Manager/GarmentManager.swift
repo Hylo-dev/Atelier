@@ -21,6 +21,16 @@ protocol GarmentWearLoggableProtocol: GarmentManaging {
         for item  : Garment,
         each count: Int
     ) -> Bool
+    
+    func setWashState(
+        for  item   : Garment,
+        used manager: ApplianceProcessGarmentProtocol
+    ) throws
+    
+    func resetWear(
+        for  item   : Garment,
+        used manager: ApplianceProcessGarmentProtocol
+    ) throws
 }
 
 @Observable

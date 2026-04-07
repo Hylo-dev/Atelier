@@ -7,14 +7,7 @@
 
 import Observation
 
-protocol AlertManaging {
-    var title    : String { get set }
-    var message  : String { get set }
-    var isPresent: Bool   { get set }
-}
-
-@Observable
-final class AlertManager: AlertManaging {
+struct AlertManager {
     var title    : String
     var message  : String
     var isPresent: Bool

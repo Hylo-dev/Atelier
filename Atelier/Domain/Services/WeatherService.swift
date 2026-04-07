@@ -11,8 +11,7 @@ protocol WeatherProvider {
     func fetchWeather(for location: CLLocation) async throws -> WeatherState
 }
 
-
-class WeatherService: WeatherProvider {
+struct WeatherService: WeatherProvider {
     
     func fetchWeather(for location: CLLocation) async throws -> WeatherState {
         

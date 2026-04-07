@@ -29,7 +29,7 @@ final class OutfitEditorViewModel {
     
     var notes: String
     
-    var alertManager: AlertManaging
+    var alertManager: AlertManager
     
     private let repository: any RepositoryProtocol<Outfit, any OutfitManaging>
     
@@ -46,7 +46,7 @@ final class OutfitEditorViewModel {
     init(
         _ item: Outfit?,
         repository: any RepositoryProtocol<Outfit, any OutfitManaging> = OutfitRepository(),
-        alertManager: AlertManaging = AlertManager()
+        alertManager: AlertManager = AlertManager()
     ) {
         self.item = item
         
@@ -67,7 +67,7 @@ final class OutfitEditorViewModel {
     
     func handleFinishAction(
         image  : UIImage?,
-        manager: OutfitManager,
+        manager: any OutfitManaging,
         dismiss: @escaping () -> Void
     ) {
         do {

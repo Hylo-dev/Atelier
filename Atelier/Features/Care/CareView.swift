@@ -29,7 +29,7 @@ struct CareView: View {
     
     
     @State
-    private var alertManager: AlertManaging
+    private var alertManager: AlertManager
     
     
     // MARK: - Struct attributes
@@ -68,7 +68,7 @@ struct CareView: View {
         title         : String,
         laundryState  : TabFilterState,
         weatherService: WeatherProvider = WeatherService(),
-        alertManager  : AlertManaging   = AlertManager()
+        alertManager  : AlertManager   = AlertManager()
     ) {
         self.title          = title
         self.laundryState   = laundryState

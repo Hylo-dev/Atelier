@@ -23,7 +23,7 @@ struct InventoryView: View {
     
     
     @State
-    private var alertManager: AlertManaging = AlertManager()
+    private var alertManager: AlertManager = AlertManager()
     
     
     // MARK: - Parameters Val
@@ -239,7 +239,7 @@ fileprivate
 struct GarmentContextCard: View {
     
     var item            : Garment
-    let manager         : GarmentManager
+    let manager         : any GarmentWearLoggableProtocol
     let applianceManager: ApplianceProcessGarmentProtocol
     let onError         : (String, String) -> Void
     
@@ -254,7 +254,7 @@ struct GarmentContextCard: View {
     
     init(
         item: Garment,
-        manager: GarmentManager,
+        manager: any GarmentWearLoggableProtocol,
         processGarment: ApplianceProcessGarmentProtocol,
         selectedItem: Binding<Garment?>,
         navigatedGarment: Binding<Garment?>,
@@ -348,7 +348,7 @@ struct GarmentContextCard: View {
             
             Button {
                 do {
-                    let needWashing = manager.logWear(for: item)
+                    let needWashing = manager.logWear(for: item, each: 1)
                     
                     if needWashing {
                         try applianceManager.processUnassignedGarments([item])

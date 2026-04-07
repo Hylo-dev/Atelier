@@ -29,7 +29,7 @@ final class GarmentEditorViewModel {
     
     var imagePath: String?
     
-    var alertManager: AlertManaging
+    var alertManager: AlertManager
     
     private let repository: any RepositoryProtocol<Garment, any GarmentManaging>
     
@@ -49,7 +49,7 @@ final class GarmentEditorViewModel {
     init (
         _ item: Garment?,
         repository: any RepositoryProtocol<Garment, any GarmentManaging> = GarmentRepository(),
-        alertManager: AlertManaging = AlertManager()
+        alertManager: AlertManager = AlertManager()
     ) {
         self.name  = item?.name  ?? ""
         self.brand = item?.brand ?? ""

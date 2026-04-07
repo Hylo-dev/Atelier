@@ -8,7 +8,6 @@
 import SwiftData
 import Foundation
 
-
 protocol LaundryAssignmentManaging {
     func processUnassignedGarments(
         _  garments: [Garment],
@@ -26,6 +25,7 @@ protocol LaundryAssignmentManaging {
         in context  : ModelContext
     ) throws
 }
+
 
 struct LaundryAssignmentService: LaundryAssignmentManaging {
     private let engine: LaundryEngineService
