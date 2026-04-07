@@ -9,54 +9,32 @@ import SwiftUI
 import SwiftData
 
 struct HomeView: View {
-    
-    
-    
-    // MARK: - Screen values
-    
     @Environment(\.horizontalSizeClass)
     private var sizeClass
-    
-    @Environment(\.modelContext)
-    private var context
-    
-    @Environment(ApplianceManager.self)
-    private var applianceManager
-    
-    @Environment(CaptureManager.self)
-    private var manager
-    
     
     
     @State
     private var selectedTab: AppTab? = .wardrobe
     
+    @State
+    private var wardrobeState = TabFilterService()
     
     @State
-    private var alertManager = AlertManager()
-    
-    
-    
-    // MARK: - Categories app bar state
+    private var outfitState = TabFilterService()
     
     @State
-    private var categoryState: TabFilterState = TabFilterState()
-    
-    
-    
-    // MARK: - Season app bar state
-    
-    @State
-    private var seasonState: TabFilterState = TabFilterState()
-    
-    
-    
-    // MARK: - Laundry bar state
-    @State
-    private var laundryState: TabFilterState = TabFilterState()
+    private var careState = TabFilterService()
 	
-	
-
+    
+    private var currentState: TabFilterService {
+        switch selectedTab {
+            case .wardrobe:      return wardrobeState
+            case .outfitBuilder: return outfitState
+            case .care:          return careState
+                
+            default:             return wardrobeState
+        }
+    }
 	
     var body: some View {
         Group {
@@ -65,31 +43,6 @@ struct HomeView: View {
                 
             } else {
                 self.tabLayout
-                    
-            }
-        }
-        .alert(
-            alertManager.title,
-            isPresented: $alertManager.isPresent
-        ) {
-            
-        } message: {
-            Text(alertManager.message)
-        }
-        .onAppear {
-            let garmentDescriptor = FetchDescriptor<Garment>()
-            
-            do {
-                let fetchedGarments = try context.fetch(garmentDescriptor)
-                
-                try applianceManager
-                    .processUnassignedGarments(fetchedGarments)
-                
-                
-            } catch {
-                alertManager.title = "Error on processing"
-                alertManager.message = error.localizedDescription
-                alertManager.isPresent = true
             }
         }
     }
@@ -120,23 +73,61 @@ struct HomeView: View {
         .tabViewBottomAccessory(
             isEnabled: self.isTopAppBarVisible(self.selectedTab)
         ) {
-            switch self.selectedTab {
-                case .wardrobe:
-                    LiquidCategoryBarView(state: categoryState)
-                    
-                case .outfitBuilder:
-                    LiquidCategoryBarView(state: seasonState)
-                    
-                case .care:
-                    LiquidCategoryBarView(state: laundryState)
-                    
-                default: EmptyView()
-            }
-            
+            LiquidCategoryBarView(state: currentState)
         }
     }
     
     // MARK: - SubViews
+    
+    @ViewBuilder
+    private func destinationView(
+        for tab  : AppTab,
+        _   title: String
+    ) -> some View {
+        switch tab {
+            case .wardrobe:
+                WardrobeView(
+                    title        : title,
+                    wardrobeState: wardrobeState
+                )
+                
+            case .outfitBuilder:
+                OutfitView(
+                    seasonsState: outfitState,
+                    title       : title
+                )
+                
+            case .care:
+                CareView(
+                    title       : title,
+                    laundryState: careState
+                )
+                
+            case .search:
+                SearchView(
+                    title: title
+                )
+        }
+    }
+    
+    
+    private func isTopAppBarVisible(_ tab: AppTab?) -> Bool {
+        
+        switch tab {
+            case .wardrobe:
+                wardrobeState.isToolbarEnabled
+                
+            case .outfitBuilder:
+                outfitState.isToolbarEnabled
+                
+            case .care:
+                careState.isToolbarEnabled
+                
+            default: false
+        }
+        
+    }
+    
     
     private var sidebarLayout: some View {
         NavigationSplitView {
@@ -162,58 +153,5 @@ struct HomeView: View {
                 ContentUnavailableView("Select view", systemImage: "arrow.left")
             }
 		}
-    }
-    
-    @ViewBuilder
-    private func destinationView(
-        for tab  : AppTab,
-        _   title: String
-    ) -> some View {
-        switch tab {
-		case .wardrobe:
-			InventoryView(
-				manager      : self.manager,
-				categoryState: self.categoryState,
-				title        : title
-			)
-		
-		case .outfitBuilder:
-			OutfitView(
-				manager     : self.manager,
-				seasonsState: self.seasonState,
-				title       : title
-			)
-		
-		case .care:
-			CareView(
-				title       : title,
-				laundryState: laundryState
-			)
-			
-		case .search:
-			SearchView(
-				title: title
-			)
-        }
-    }
-	
-    
-    // MARK: - Handlers
-    
-    private func isTopAppBarVisible(_ tab: AppTab?) -> Bool {
-        
-        switch tab {
-            case .wardrobe:
-                categoryState.isToolbarEnabled
-                
-            case .outfitBuilder:
-                seasonState.isToolbarEnabled
-                
-            case .care:
-                laundryState.isToolbarEnabled
-			
-            default: false
-        }
-        
     }
 }

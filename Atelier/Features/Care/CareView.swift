@@ -37,12 +37,12 @@ struct CareView: View {
     let title: String
         
     @Bindable
-    var laundryState: TabFilterState
+    var laundryState: TabFilterService
     
     
     // MARK: - private managers
     
-    let weatherService: WeatherProvider
+    var weatherService: WeatherProvider
         
     @State
     private var weather: WeatherState?
@@ -66,7 +66,7 @@ struct CareView: View {
     
     init(
         title         : String,
-        laundryState  : TabFilterState,
+        laundryState  : TabFilterService,
         weatherService: WeatherProvider = WeatherService(),
         alertManager  : AlertManager   = AlertManager()
     ) {

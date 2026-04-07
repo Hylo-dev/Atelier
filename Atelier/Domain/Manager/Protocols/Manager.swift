@@ -10,7 +10,6 @@ import SwiftData
 protocol Manager {
     associatedtype T: PersistentModel
     
-    
     func insert(_ element: T) throws
     
     func update() throws

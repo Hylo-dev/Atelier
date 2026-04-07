@@ -160,8 +160,8 @@ final class GarmentEditorViewModel {
     func handleFinishAction(
         _ item          : Garment?,
         image           : UIImage?,
-        manager         : any GarmentWearLoggableProtocol,
-        applianceManager: ApplianceProcessGarmentProtocol,
+        manager         : any GarmentWearLoggable,
+        applianceManager: ApplianceProcessing,
         sessions        : [LaundrySession],
         dismiss         : @escaping () -> Void
     ) {

@@ -8,24 +8,6 @@
 import SwiftData
 import Foundation
 
-protocol LaundryAssignmentManaging {
-    func processUnassignedGarments(
-        _  garments: [Garment],
-        in context : ModelContext
-    ) throws
-    
-    func unassignGarment(
-        _  garment: Garment,
-        in context: ModelContext
-    ) throws
-    
-    func detachGarment(
-        _ garment   : Garment,
-        from session: LaundrySession,
-        in context  : ModelContext
-    ) throws
-}
-
 
 struct LaundryAssignmentService: LaundryAssignmentManaging {
     private let engine: LaundryEngineService

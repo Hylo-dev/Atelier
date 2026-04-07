@@ -3,42 +3,17 @@
 //  Atelier
 //
 //  Created by C4V4H.exe on 18/02/26.
+//  Modified by eliorodr2104 on 07/04/26.
 //
 
-import Observation
 import SwiftData
-import Foundation
 import UserNotifications
 internal import Combine
 
-protocol ApplianceProcessGarmentProtocol {
-    func processUnassignedGarments(_ garments: [Garment]) throws
-    func unassignGarment(_ garment: Garment) throws
-    
-    func detachGarment(
-        _    garment: Garment,
-        from session: LaundrySession
-    ) throws
-}
-
-protocol LaundrySessionManaging {
-    
-    var timerPulse: Publishers.Autoconnect<Timer.TimerPublisher> { get }
-    
-    func finishWashing(_ session: LaundrySession) throws
-    func startWashing(_ session: LaundrySession) throws
-    func pauseWashing(_ item: LaundrySession) throws
-    func resumeWashing(_ item: LaundrySession) throws
-    func cancelWashing(_ session: LaundrySession) throws
-    
-    func startDrying(_ session: LaundrySession) throws
-    func cancelDrying(_ session: LaundrySession) throws
-    func markAsComplete(_ session: LaundrySession) throws
-}
 
 @MainActor
 @Observable
-final class ApplianceManager: Manager, ApplianceProcessGarmentProtocol, LaundrySessionManaging {
+final class ApplianceManager: Manager, ApplianceProcessing, LaundrySessionManaging, WashingSessionManaging {
     
     private let context: ModelContext
     
@@ -46,9 +21,7 @@ final class ApplianceManager: Manager, ApplianceProcessGarmentProtocol, LaundryS
     private let assignmentService: LaundryAssignmentManaging
     private let controlService: LaundryControlManaging
     
-    var timerPulse: Publishers.Autoconnect<Timer.TimerPublisher> {
-        controlService.timerPulse
-    }
+    var timerPulse: Publishers.Autoconnect<Timer.TimerPublisher>
     
     init(
         _ context        : ModelContext,
@@ -60,6 +33,7 @@ final class ApplianceManager: Manager, ApplianceProcessGarmentProtocol, LaundryS
         self.repository = repository ?? LaundryRepository(context: context)
         self.assignmentService = assignmentService
         self.controlService = controlService
+        self.timerPulse = controlService.timerPulse
     }
     
     
@@ -165,11 +139,5 @@ final class ApplianceManager: Manager, ApplianceProcessGarmentProtocol, LaundryS
         if let session = try context.fetch(descriptor).first {
             try finishWashing(session)
         }
-    }
-    
-    // MARK: Handlers
-    
-    func stopLiveActivity(_ session: LaundrySession) {
-        controlService.stopLiveActivity(session)
     }
 }

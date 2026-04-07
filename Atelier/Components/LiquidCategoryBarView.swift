@@ -4,7 +4,7 @@ import SwiftUI
 struct LiquidCategoryBarView: View {
     
     @Bindable
-    var state: TabFilterState
+    var state: TabFilterService
     
     @Namespace
     private var categoryNamespace

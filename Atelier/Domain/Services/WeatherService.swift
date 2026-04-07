@@ -4,12 +4,10 @@
 //
 //  Created by Eliomar Alejandro Rodriguez Ferrer on 28/02/26.
 //
+
 import WeatherKit
 import CoreLocation
 
-protocol WeatherProvider {
-    func fetchWeather(for location: CLLocation) async throws -> WeatherState
-}
 
 struct WeatherService: WeatherProvider {
     

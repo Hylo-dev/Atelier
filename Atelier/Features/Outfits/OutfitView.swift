@@ -12,11 +12,11 @@ struct OutfitView: View {
     
     // MARK: - Param values
     
-    @Bindable
-    var manager: CaptureManager
+    @Environment(CaptureManager.self)
+    var manager
     
     @Bindable
-    var seasonsState: TabFilterState
+    var seasonsState: TabFilterService
     
     var title: String
     

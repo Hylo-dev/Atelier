@@ -5,14 +5,13 @@
 //  Created by Eliomar Alejandro Rodriguez Ferrer on 16/03/26.
 //
 
-
 import Foundation
 import ActivityKit
 import UserNotifications
 
+
 @MainActor
 final class LaundryActivityManager: LaundryActivityProviding {
-    static let shared = LaundryActivityManager()
 //    private var activity: Activity<LaundryAttributes>?
     
     

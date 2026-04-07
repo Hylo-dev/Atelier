@@ -9,24 +9,6 @@ import Observation
 import Foundation
 import UserNotifications
 internal import Combine
-import SwiftData
-
-
-protocol LaundryControlManaging {
-    
-    var timerPulse: Publishers.Autoconnect<Timer.TimerPublisher> { get }
-    
-    func finishWashing(_ session: LaundrySession) throws
-    func startWashing(_ session: LaundrySession) throws
-    func pauseWashing(_ item: LaundrySession) throws
-    func resumeWashing(_ item: LaundrySession) throws
-    func cancelWashing(_ session: LaundrySession) throws
-    
-    func startDrying(_ session: LaundrySession) throws
-    func cancelDrying(_ session: LaundrySession) throws
-    func markAsComplete(_ session: LaundrySession) throws
-    func stopLiveActivity(_ session: LaundrySession)
-}
 
 @Observable
 final class LaundryControlService: LaundryControlManaging {
@@ -34,7 +16,7 @@ final class LaundryControlService: LaundryControlManaging {
     
     let timerPulse = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
 
-    init(activityProvider: LaundryActivityProviding = LaundryActivityManager.shared) {
+    init(activityProvider: LaundryActivityProviding = LaundryActivityManager()) {
         self.activityProvider = activityProvider
     }
 

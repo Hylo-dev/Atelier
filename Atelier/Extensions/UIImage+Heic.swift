@@ -1,8 +1,8 @@
 //
-//  UIImage+Heic.swift
+//  Heic+.swift
 //  Atelier
 //
-//  Created by Eliomar Alejandro Rodriguez Ferrer on 13/03/26.
+//  Created by Eliomar Alejandro Rodriguez Ferrer on 07/04/2026.
 //
 
 

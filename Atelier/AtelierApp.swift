@@ -14,108 +14,20 @@ struct AtelierApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self)
     var appDelegate
     
-    let applianceManager    : ApplianceManager
-    let garmentManager      : GarmentManager
-    let outfitManager       : OutfitManager
-    let captureManager      : CaptureManager
-    let sharedModelContainer: ModelContainer
-    
-    init() {
-        
-        let schema = Schema(versionedSchema: AtelierSchemaV1.self)
-        
-        let modelConfiguration = ModelConfiguration(
-            schema              : schema,
-            isStoredInMemoryOnly: false
-        )
-        
-        do {
-            sharedModelContainer = try ModelContainer(
-                for           : schema,
-                migrationPlan: AtelierMigrationPlan.self,
-                configurations: [modelConfiguration]
-            )
-            
-            applianceManager = ApplianceManager(sharedModelContainer.mainContext)
-            garmentManager   = GarmentManager(sharedModelContainer.mainContext)
-            outfitManager    = OutfitManager(sharedModelContainer.mainContext)
-            
-            captureManager = CaptureManager()
-            
-            appDelegate.applianceManager = applianceManager
-            
-            
-        } catch {
-            print("Could not create ModelContainer Database: \(error.localizedDescription)")
-            fatalError("Exit")
-        }
-        
-        
-        appDelegate.requestNotificationPermissions()
-        LaundryActivityManager.shared.setupNotifications()
-    }
+    @State
+    private var container = AppContainer()
 
     var body: some Scene {
         WindowGroup {
             ContentView()
-                .environment(applianceManager)
-                .environment(garmentManager)
-                .environment(outfitManager)
-                .environment(captureManager)
-        }
-        .modelContainer(sharedModelContainer)
-    }
-}
-
-class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDelegate {
-    var applianceManager: ApplianceManager?
-    
-    func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil) -> Bool {
-        UNUserNotificationCenter.current().delegate = self
-        return true
-    }
-    
-    func userNotificationCenter(
-        _          center  : UNUserNotificationCenter,
-        didReceive response: UNNotificationResponse
-    ) async {
-        let userInfo = response.notification.request.content.userInfo
-        
-        let isFinishAction = response.actionIdentifier == "FINISH_ACTION"
-        let isDefaultTap   = response.actionIdentifier == UNNotificationDefaultActionIdentifier
-        
-        if (isFinishAction || isDefaultTap),
-           let sessionIdString = userInfo["SESSION_ID"] as? String {
-                        
-            await MainActor.run {
-                
-                if let sessionId = UUID(uuidString: sessionIdString) {
-                    
-                    do {
-                        try applianceManager?
-                            .finishWashingSession(id: sessionId)
-                        
-                    } catch {
-                        print(error.localizedDescription) // TODO: Manage error
-                    }
+                .environment(container.applianceManager)
+                .environment(container.garmentManager)
+                .environment(container.outfitManager)
+                .environment(container.captureManager)
+                .task {
+                    container.setupServices(appDelegate: appDelegate)
                 }
-            }
-            
-            LaundryActivityManager.shared.stop()
         }
-    }
-    
-    func requestNotificationPermissions() {
-        UNUserNotificationCenter.current().requestAuthorization(
-            options: [.alert, .badge, .sound]
-        ) { granted, error in
-            
-            if granted {
-                print("Check notification")
-                
-            } else if let error = error {
-                print("Error notification: \(error.localizedDescription)")
-            }
-        }
+        .modelContainer(container.modelContainer)
     }
 }

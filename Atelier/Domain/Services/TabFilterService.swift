@@ -8,7 +8,7 @@
 import Foundation
 
 @Observable
-class TabFilterState {
+final class TabFilterService {
     var items           : [String] = ["All"]
     var selection       : String?  = "All"
     var progress        : CGFloat  = .zero
