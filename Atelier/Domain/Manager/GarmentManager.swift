@@ -13,7 +13,7 @@ import UIKit
 @Observable
 @MainActor
 final class GarmentManager: Manager {
-    var context: ModelContext
+    private let context: ModelContext
     
     var visibleGarments: [Garment]           = []
     var groupedGarments: [String: [Garment]] = [:]
@@ -29,20 +29,20 @@ final class GarmentManager: Manager {
     
     
     @inline(__always)
-    func insert(_ element: Garment) {
+    func insert(_ element: Garment) throws {
         context.insert(element)
-        save()
+        try context.save()
     }
     
     
     
     @inline(__always)
-    func update() {
-        save()
+    func update() throws {
+        try context.save()
     }
     
     @inline(__always)
-    func delete(_ item: Garment) {
+    func delete(_ item: Garment) throws {
         ImageService().deleteImage(filename: item.imagePath)
         
         if let session = item.activeLaundrySession {
@@ -58,49 +58,33 @@ final class GarmentManager: Manager {
         }
         
         context.delete(item)
-        save()
+        try context.save()
     }
-    
-    
-    
-    @inline(__always)
-    internal func save() {
-        do {
-            try context.save()
-            
-        } catch {
-            print("Error DB: \(error)")
-        }
-    }
-    
     
     
     func logWear(
         for  item   : Garment,
         used manager: ApplianceManager,
         each count  : Int = 1
-    ) {
+    ) throws {
         item.wearCount += count
         
         if item.hasReachedWashingLimits {
-            manager.processUnassignedGarments(
-                [item]
-            )
+            try manager.processUnassignedGarments([item])
         }
         
-        self.update()
+        try update()
     }
     
     
     func setWashState(
         for  item   : Garment,
         used manager: ApplianceManager
-    ) {
+    ) throws {
         item.forceWash = true
         
-        manager.processUnassignedGarments([item])
-        
-        self.update()
+        try manager.processUnassignedGarments([item])
+        try update()
     }
     
     
@@ -108,9 +92,9 @@ final class GarmentManager: Manager {
     func resetWear(
         for  item: Garment,
         used manager: ApplianceManager
-    ) {
+    ) throws {
         if let session = item.activeLaundrySession {
-            manager.detachGarment(item, from: session)
+            try manager.detachGarment(item, from: session)
         }
         
         item.wearCount       = 0
@@ -119,7 +103,7 @@ final class GarmentManager: Manager {
         item.isBinAssigned   = false
         item.state           = .available
         
-        self.update()
+        try update()
     }
     
     

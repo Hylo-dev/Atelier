@@ -26,6 +26,10 @@ struct CareView: View {
     
     
     
+    @State
+    private var alertManager = AlertManager()
+    
+    
     // MARK: - Struct attributes
         
     let title: String
@@ -129,12 +133,16 @@ struct CareView: View {
         }
         .onAppear {
             Task { @MainActor in
-                self.weather = try await weatherService.fetchWeather(
-                    for: CLLocation(
-                        latitude: .zero,
-                        longitude: .zero
+                do {
+                    self.weather = try await weatherService.fetchWeather(
+                        for: CLLocation(latitude: .zero, longitude: .zero)
                     )
-                )
+                    
+                } catch {
+                    alertManager.title   = "Weather Error"
+                    alertManager.message = "Impossible update weather"
+                    alertManager.isPresent = true
+                }
                 
             }
         }
@@ -142,6 +150,15 @@ struct CareView: View {
             updateBins()
             updateFilteredGarments()
         }
+        .alert(
+            alertManager.title,
+            isPresented: $alertManager.isPresent
+        ) {
+    
+        } message: {
+            Text(alertManager.message)
+        }
+
     }
     
     
@@ -162,7 +179,12 @@ struct CareView: View {
                         item    : item,
                         manager : manager,
                         garments: garmentsWithImage[item.id] ?? []
-                    )
+                    
+                    ) { title, message in
+                        alertManager.title     = title
+                        alertManager.message   = message
+                        alertManager.isPresent = true
+                    }
                 }
             }
             .padding(.horizontal, 16)
@@ -250,6 +272,7 @@ fileprivate struct ItemCareView: View {
     let item    : LaundrySession
     let manager : ApplianceManager
     let garments: [Garment]
+    let onError : (String, String) -> Void
     
     @State
     private var timeRemaining: TimeInterval = 0
@@ -262,12 +285,13 @@ fileprivate struct ItemCareView: View {
     init(
         item    : LaundrySession,
         manager : ApplianceManager,
-        garments: [Garment]
+        garments: [Garment],
+        onError : @escaping (String, String) -> Void
     ) {
         self.item     = item
         self.manager  = manager
         self.garments = garments
-        
+        self.onError  = onError
     }
     
     var body: some View {
@@ -288,9 +312,17 @@ fileprivate struct ItemCareView: View {
             guard item.status == .washing else { return }
             
             updateTimeRemaining()
-            if timeRemaining <= 0 {
-                timer.upstream.connect().cancel()
-                manager.finishWashing(item)
+            
+            do {
+                if timeRemaining <= 0 {
+                    timer.upstream.connect().cancel()
+                    try manager.finishWashing(item)
+                }
+            } catch {
+                onError(
+                    "Finish Washing",
+                    error.localizedDescription
+                )
             }
         }
     }
@@ -300,7 +332,14 @@ fileprivate struct ItemCareView: View {
             switch item.status {
                 case .planned:
                     Button {
-                        manager.startWashing(item)
+                        do {
+                            try manager.startWashing(item)
+                        } catch {
+                            onError(
+                                "Start Washing",
+                                error.localizedDescription
+                            )
+                        }
                     } label: {
                         Label("Start Wash", systemImage: "play.fill")
                     }
@@ -319,7 +358,14 @@ fileprivate struct ItemCareView: View {
                     }
                     
                     Button {
-                        manager.pauseWashing(item)
+                        do {
+                            try manager.pauseWashing(item)
+                        } catch {
+                            onError(
+                                "Pause Washing",
+                                error.localizedDescription
+                            )
+                        }
                     } label: {
                         Label("Pause Wash", systemImage: "pause.fill")
                     }
@@ -329,14 +375,29 @@ fileprivate struct ItemCareView: View {
                     
                     
                     Button {
-                        manager.finishWashing(item)
+                        do {
+                            try manager.finishWashing(item)
+                        } catch {
+                            onError(
+                                "Finish Washing",
+                                error.localizedDescription
+                            )
+                        }
                         
                     } label: {
                         Label("Finish Wash", systemImage: "checkmark.circle")
                     }
                     
                     Button(role: .destructive) {
-                        manager.cancelWashing(item)
+                        do {
+                            try manager.cancelWashing(item)
+                        } catch {
+                            onError(
+                                "Cancel Washing",
+                                error.localizedDescription
+                            )
+                        }
+                        
                     } label: {
                         Label("Cancel Wash", systemImage: "xmark.circle")
                     }
@@ -344,7 +405,15 @@ fileprivate struct ItemCareView: View {
                     
                 case .clean:
                     Button {
-                        manager.startDrying(item)
+                        do {
+                           try manager.startDrying(item)
+                        } catch {
+                            onError(
+                                "Start Washing",
+                                error.localizedDescription
+                            )
+                        }
+                        
                     } label: {
                         Label("Start Drying", systemImage: "sun.max.fill")
                     }
@@ -357,7 +426,15 @@ fileprivate struct ItemCareView: View {
                     )
                     
                     Button {
-                        manager.resumeWashing(item)
+                        do {
+                            try manager.resumeWashing(item)
+                        } catch {
+                            onError(
+                                "Resume Washing",
+                                error.localizedDescription
+                            )
+                        }
+                        
                     } label: {
                         Label("Resume Wash", systemImage: "play.fill")
                     }
@@ -365,13 +442,29 @@ fileprivate struct ItemCareView: View {
                     Divider()
                     
                     Button {
-                        manager.finishWashing(item)
+                        do {
+                            try manager.finishWashing(item)
+                        } catch {
+                            onError(
+                                "Finish Washing",
+                                error.localizedDescription
+                            )
+                        }
+                        
                     } label: {
                         Label("Finish Wash", systemImage: "checkmark.circle")
                     }
                     
                     Button(role: .destructive) {
-                        manager.cancelWashing(item)
+                        do {
+                           try manager.cancelWashing(item)
+                        } catch {
+                            onError(
+                                "Cancel Washing",
+                                error.localizedDescription
+                            )
+                        }
+                        
                     } label: {
                         Label("Cancel Wash", systemImage: "xmark.circle")
                     }
@@ -379,13 +472,29 @@ fileprivate struct ItemCareView: View {
                     
                 case .drying:
                     Button {
-                        manager.markAsComplete(item)
+                        do {
+                           try manager.markAsComplete(item)
+                        } catch {
+                            onError(
+                                "Mark Complete",
+                                error.localizedDescription
+                            )
+                        }
+                        
                     } label: {
                         Label("Mark as Done", systemImage: "checkmark.seal.fill")
                     }
                     
                     Button {
-                        manager.cancelDrying(item)
+                        do {
+                           try manager.cancelDrying(item)
+                        } catch {
+                            onError(
+                                "Cancel Drying",
+                                error.localizedDescription
+                            )
+                        }
+                        
                     } label: {
                         Label("Cancel Drying", systemImage: "xmark.circle")
                     }

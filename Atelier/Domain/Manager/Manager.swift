@@ -16,17 +16,14 @@ protocol Manager {
     
     
     
-    func insert(_ element: T)
+    func insert(_ element: T) throws
     
     
     
-    func update()
+    func update() throws
     
     
     
-    func delete(_ element: T)
+    func delete(_ element: T) throws
     
-    
-    
-    func save()
 }

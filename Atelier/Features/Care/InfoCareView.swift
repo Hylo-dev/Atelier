@@ -96,8 +96,15 @@ struct InfoCareView: View {
             
         }
         .alert("Delete Session", isPresented: $didTriggerDelete) {
+            
             Button("Delete", role: .destructive) {
-                manager.delete(item)
+                do {
+                    try manager.delete(item)
+                    
+                } catch {
+                    print(error.localizedDescription) // TODO: Manage errore
+                }
+                
                 dismiss()
             }
             

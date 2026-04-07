@@ -31,8 +31,7 @@ final class GarmentEditorViewModel {
     
     var imagePath: String?
     
-    var alertErrorMessage: String = ""
-    var isAlertErrorVisible: Bool = false
+    var alertManager = AlertManager()
     
     var currentTotalComposition: Int {
         Int(
@@ -171,7 +170,7 @@ final class GarmentEditorViewModel {
                     manager : manager
                 )
                 
-                applianceManager.unassignGarment(existingItem)
+                try applianceManager.unassignGarment(existingItem)
                 finalGarment = existingItem
                 
             } else {
@@ -185,12 +184,13 @@ final class GarmentEditorViewModel {
                 finalGarment = newGarment
             }
             
-            applianceManager.processUnassignedGarments([finalGarment])
+            try applianceManager.processUnassignedGarments([finalGarment])
             dismiss()
             
         } catch {
-            alertErrorMessage   = error.localizedDescription
-            isAlertErrorVisible = true
+            alertManager.title     = "Error on Saving"
+            alertManager.message   = error.localizedDescription
+            alertManager.isPresent = true
         }
     }
     

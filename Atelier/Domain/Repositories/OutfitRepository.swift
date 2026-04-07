@@ -28,7 +28,7 @@ class OutfitRepository {
             }
         }
         
-        manager.insert(outfit)
+        try manager.insert(outfit)
     }
     
     func update(
@@ -50,6 +50,6 @@ class OutfitRepository {
             }
         }
         
-        manager.update()
+        try manager.update()
     }
 }

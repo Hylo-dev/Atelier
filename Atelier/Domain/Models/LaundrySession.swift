@@ -20,7 +20,6 @@ extension AtelierSchemaV1 {
         var startDate       : Date?
         var completationDate: Date?
         var remainingTime   : TimeInterval?
-        var status          : LaundrySessionStatus
         
         @Relationship
         var garments: [Garment]
@@ -75,6 +74,14 @@ extension AtelierSchemaV1 {
             }
         }
         
+        var statusRawValue: String = LaundrySessionStatus.planned.rawValue
+        
+        @Transient
+        var status: LaundrySessionStatus {
+            get { LaundrySessionStatus(rawValue: statusRawValue) ?? .planned }
+            set { statusRawValue = newValue.rawValue }
+        }
+        
         @Transient
         var suggestedProgram: Program {
             get { Program(rawValue: suggestedProgramRaw) ?? .standard }
@@ -90,7 +97,7 @@ extension AtelierSchemaV1 {
         ) {
             self.id                = UUID()
             self.dateCreated       = .now
-            self.status            = .planned
+            self.statusRawValue    = LaundrySessionStatus.planned.rawValue
             self.bin               = bin
             self.garments          = garments
             self.warnings          = []

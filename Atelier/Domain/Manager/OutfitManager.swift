@@ -12,7 +12,7 @@ import Foundation
 @Observable
 @MainActor
 final class OutfitManager: Manager {
-    var context: ModelContext
+    private let context: ModelContext
     
     var visibleOutfits  : [Outfit]           = []
     var groupedOutfits  : [String: [Outfit]] = [:]
@@ -23,31 +23,27 @@ final class OutfitManager: Manager {
     }
     
     @inline(__always)
-    func insert(_ element: Outfit) {
+    func insert(_ element: Outfit) throws {
         context.insert(element)
-        save()
+        try context.save()
     }
     
     @inline(__always)
-    func update() {
-        save()
+    func update() throws {
+        try context.save()
     }
     
     @inline(__always)
-    func delete(_ element: Outfit) {
-        self.context.delete(element)
-        save()
-    }
-    
-    @inline(__always)
-    internal func save() {
-        do {
-            try context.save()
-        } catch {
-            print("Error DB: \(error)")
+    func delete(_ element: Outfit) throws {
+        if let image = element.fullLookImagePath,
+              !image.isEmpty {
+            
+            ImageService().deleteImage(filename: image)
         }
+        
+        context.delete(element)
+        try context.save()
     }
-    
     
     
     func logOutfitWear(
@@ -56,18 +52,18 @@ final class OutfitManager: Manager {
         in sessions     : [LaundrySession],
         applianceManager: ApplianceManager,
         each count      : Int = 1
-    ) {
+    ) throws {
         outfit.wearCount    += count
         outfit.lastWornDate  = .now
         
         for garment in outfit.garments {
-            garmentManager.logWear(
+            try garmentManager.logWear(
                 for : garment,
                 used: applianceManager
             )
         }
         
-        self.update()
+        try update()
     }
     
     
@@ -77,16 +73,16 @@ final class OutfitManager: Manager {
         garmentManager: GarmentManager,
         in sessions: [LaundrySession],
         applianceManager: ApplianceManager
-    ) {
+    ) throws {
         for garment in outfit.garments {
-            garmentManager.logWear(
+            try garmentManager.logWear(
                 for : garment,
                 used: applianceManager,
                 each: 20
             )
         }
         
-        garmentManager.update()
+        try garmentManager.update()
     }
     
     
@@ -94,7 +90,7 @@ final class OutfitManager: Manager {
     func toggleOutfitLoan(
         _ outfit      : Outfit,
         garmentManager: GarmentManager
-    ) {
+    ) throws {
         let newState: GarmentState = outfit.isOnLoan ? .available : .onLoan
         
         for garment in outfit.garments {
@@ -105,7 +101,7 @@ final class OutfitManager: Manager {
             }
         }
         
-        garmentManager.update()
+        try garmentManager.update()
     }
     
     

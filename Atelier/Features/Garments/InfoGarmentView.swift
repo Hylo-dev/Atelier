@@ -115,7 +115,11 @@ struct InfoGarmentView: View {
             
             Button("Delete", role: .destructive) {
                 withAnimation {
-                    self.garmentManager.delete(item)
+                    do {
+                        try garmentManager.delete(item)
+                    } catch {
+                        print(error.localizedDescription) // TODO: Manage error
+                    }
                     isDeleted.toggle()
                 }
                 

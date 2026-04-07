@@ -451,7 +451,7 @@ enum LaundryBin: String, Codable, CaseIterable, Identifiable {
 
 
 
-enum LaundrySessionStatus: String, Codable, CaseIterable {
+enum LaundrySessionStatus: String, Codable, CaseIterable, RawRepresentable {
     case planned   = "Planed"
     case washing   = "On Washing"
     case completed = "Complete"

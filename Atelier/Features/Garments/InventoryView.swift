@@ -22,6 +22,9 @@ struct InventoryView: View {
     private var applianceManager: ApplianceManager
     
     
+    @State
+    private var alertManager = AlertManager()
+    
     
     // MARK: - Parameters Val
     
@@ -120,7 +123,7 @@ struct InventoryView: View {
         }
         .toolbar {
             ToolbarItem(placement: .title) {
-                Text(String(repeating: " ", count: 50))
+                Text(String(repeating: " ", count: 150))
                     .overlay(alignment: .leading) {
                         Text(self.title)
                             .font(.title)
@@ -173,6 +176,14 @@ struct InventoryView: View {
                 brands : garmentManager.availableBrands
             )
         }
+        .alert(
+            alertManager.title,
+            isPresented: $alertManager.isPresent
+        ) {
+            
+        } message: {
+            Text(alertManager.message)
+        }
     }
     
     // MARK: - Subviews
@@ -192,7 +203,12 @@ struct InventoryView: View {
                         applianceManager: applianceManager,
                         selectedItem    : $selectedItem,
                         navigatedGarment: $navigatedGarment
-                    )
+                        
+                    ) { title, message in
+                        alertManager.title     = title
+                        alertManager.message   = message
+                        alertManager.isPresent = true
+                    }
                     .id(item.id)
                 }
             }
@@ -225,7 +241,7 @@ struct GarmentContextCard: View {
     var item            : Garment
     let manager         : GarmentManager
     let applianceManager: ApplianceManager
-    
+    let onError         : (String, String) -> Void
     
     @Binding
     var selectedItem: Garment?
@@ -236,6 +252,22 @@ struct GarmentContextCard: View {
     @State
     private var didTriggerDelete: Bool = false
     
+    init(
+        item: Garment,
+        manager: GarmentManager,
+        applianceManager: ApplianceManager,
+        selectedItem: Binding<Garment?>,
+        navigatedGarment: Binding<Garment?>,
+        onError: @escaping (String, String) -> Void
+    ) {
+        self.item              = item
+        self.manager           = manager
+        self.applianceManager  = applianceManager
+        self.onError           = onError
+        self._selectedItem     = selectedItem
+        self._navigatedGarment = navigatedGarment
+        self.didTriggerDelete  = didTriggerDelete
+    }
     
     var body: some View {
         
@@ -256,16 +288,27 @@ struct GarmentContextCard: View {
             Text(item.name)
             
             Button {
-                if isToWash {
-                    manager.resetWear(
-                        for : item,
-                        used: applianceManager
-                    )
-                    
-                } else {
-                    manager.setWashState(
-                        for : item,
-                        used: applianceManager
+                let title: String
+                
+                do {
+                    if isToWash {
+                        title = "Error on reset wear"
+                        try manager.resetWear(
+                            for : item,
+                            used: applianceManager
+                        )
+                        
+                    } else {
+                        title = "Error on set state"
+                        try manager.setWashState(
+                            for : item,
+                            used: applianceManager
+                        )
+                    }
+                } catch {
+                    onError(
+                        title,
+                        error.localizedDescription
                     )
                 }
                 
@@ -280,7 +323,14 @@ struct GarmentContextCard: View {
             //
             Button {
                 item.state = loanState ? .available : .onLoan
-                self.manager.update()
+                do {
+                    try manager.update()
+                } catch {
+                    onError(
+                        "Error on update data",
+                        error.localizedDescription
+                    )
+                }
                 
             } label: {
                 Label(
@@ -297,10 +347,18 @@ struct GarmentContextCard: View {
             
             
             Button {
-                manager.logWear(
-                    for : item,
-                    used: applianceManager
-                )
+                do {
+                    try manager.logWear(
+                        for : item,
+                        used: applianceManager
+                    )
+                    
+                } catch {
+                    onError(
+                        "Error on loggin wear",
+                        error.localizedDescription
+                    )
+                }
                 
             } label: {
                 Label("Log wear", systemImage: "checkmark.seal")
@@ -328,7 +386,16 @@ struct GarmentContextCard: View {
             
             Button(role: .destructive) {
                 didTriggerDelete.toggle()
-                manager.delete(item)
+                
+                do {
+                    try manager.delete(item)
+                    
+                } catch {
+                    onError(
+                        "Error on deleted data",
+                        error.localizedDescription
+                    )
+                }
                 
             } label: {
                 Label("Delete", systemImage: "trash")

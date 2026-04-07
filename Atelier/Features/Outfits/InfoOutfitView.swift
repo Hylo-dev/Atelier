@@ -120,7 +120,11 @@ struct InfoOutfitView: View {
         }
         .alert("Delete Outfit?", isPresented: $deleteItem) {
             Button("Delete", role: .destructive) {
-                outfitManager.delete(outfit)
+                do {
+                    try outfitManager.delete(outfit)
+                } catch {
+                    print(error.localizedDescription) // TODO: Manage error
+                }
                 dismiss()
             }
             

@@ -30,6 +30,9 @@ struct HomeView: View {
     @State
     private var manager = CaptureManager()
     
+    @State
+    private var alertManager = AlertManager()
+    
     
     
     // MARK: - Categories app bar state
@@ -54,26 +57,38 @@ struct HomeView: View {
 
 	
     var body: some View {
-        if sizeClass == .regular {
-			
-            self.sidebarLayout
-                .onAppear {
-                    let garmentDescriptor = FetchDescriptor<Garment>()
+        Group {
+            if sizeClass == .regular {
+                self.sidebarLayout
+                
+            } else {
+                self.tabLayout
                     
-                    if let fetchedGarments = try? context.fetch(garmentDescriptor) {
-                        applianceManager.processUnassignedGarments(fetchedGarments)
-                    }
-                }
+            }
+        }
+        .alert(
+            alertManager.title,
+            isPresented: $alertManager.isPresent
+        ) {
             
-        } else {
-            self.tabLayout
-                .onAppear {
-                    let garmentDescriptor = FetchDescriptor<Garment>()
-                    
-                    if let fetchedGarments = try? context.fetch(garmentDescriptor) {
-                        applianceManager.processUnassignedGarments(fetchedGarments)
-                    }
-                }
+        } message: {
+            Text(alertManager.message)
+        }
+        .onAppear {
+            let garmentDescriptor = FetchDescriptor<Garment>()
+            
+            do {
+                let fetchedGarments = try context.fetch(garmentDescriptor)
+                
+                try applianceManager
+                    .processUnassignedGarments(fetchedGarments)
+                
+                
+            } catch {
+                alertManager.title = "Error on processing"
+                alertManager.message = error.localizedDescription
+                alertManager.isPresent = true
+            }
         }
     }
     

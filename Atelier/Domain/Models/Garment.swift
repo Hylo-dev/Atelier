@@ -115,7 +115,10 @@ extension AtelierSchemaV1 {
 
         @MainActor
         var requiresWashing: Bool {
-            wearCount >= subCategory.wearLimit
+            if let wearLimit = subCategory.wearLimit {
+                wearCount >= wearLimit
+                
+            } else { false }
         }
         
         @MainActor
@@ -126,10 +129,9 @@ extension AtelierSchemaV1 {
         
         @MainActor
         var hasReachedWashingLimits: Bool {
-            let wearLimitReached = wearCount >= subCategory.wearLimit
             let timeLimitReached = (daysSinceLastWash >= 30) && (wearCount > 0)
             
-            return wearLimitReached || timeLimitReached
+            return requiresWashing || timeLimitReached
         }
         
         @MainActor

@@ -115,11 +115,11 @@ struct GarmentEditorView: View {
             isPresented: self.$showScan,
             content    : self.sheetScanHandler
         )
-        .alert("Ops! Something went wrong", isPresented: $editorViewModel.isAlertErrorVisible) {
+        .alert(editorViewModel.alertManager.title, isPresented: $editorViewModel.alertManager.isPresent) {
             Button("Ok", role: .cancel) { }
             
         } message: {
-            Text(editorViewModel.alertErrorMessage)
+            Text(editorViewModel.alertManager.message)
         }
         .onChange(
             of: editorViewModel.selectedFabrics,

@@ -245,7 +245,7 @@ enum GarmentSubCategory: String, Codable, CaseIterable, Identifiable {
         }
     }
     
-    var wearLimit: Int {
+    var wearLimit: Int? {
         switch self {
                 
             case .tshirts, .tankTops, .bodysuits, .sweatpants,
@@ -268,7 +268,8 @@ enum GarmentSubCategory: String, Codable, CaseIterable, Identifiable {
                 
             case .sneakers, .boots, .loafers, .heels, .sandals, .flats, .slippers,
                     .bags, .belts, .hats, .scarves, .jewelry, .eyewear, .watches, .none:
-                return -1
+                
+                return nil
         }
     }
 }

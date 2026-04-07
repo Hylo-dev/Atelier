@@ -95,28 +95,6 @@ struct ImageService {
         }
     }
     
-    func loadImage(from filename: String) -> UIImage? {
-        guard !filename.isEmpty else { return nil }
-        
-        let paths = FileManager.default.urls(
-            for: .documentDirectory,
-            in: .userDomainMask
-        )
-        let fileURL = paths[0].appendingPathComponent(filename)
-        
-        guard FileManager.default.fileExists(atPath: fileURL.path) else {
-            return nil
-        }
-        
-        do {
-            let data = try Data(contentsOf: fileURL)
-            return UIImage(data: data)
-        } catch {
-            print("Error to load image: \(error)")
-            return nil
-        }
-    }
-    
     func deleteImage(filename: String?) {
         guard let filename = filename, !filename.isEmpty else { return }
         

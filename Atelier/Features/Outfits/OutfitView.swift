@@ -22,6 +22,11 @@ struct OutfitView: View {
     
     
     
+    @State
+    private var alertManager = AlertManager()
+    
+    
+    
     // MARK: - Edit Sheet value
     
     @State
@@ -195,6 +200,14 @@ struct OutfitView: View {
         .sheet(isPresented: self.$isFilterSheetVisible) {
             FilterOutfitView(filter: self.$filter)
         }
+        .alert(
+            alertManager.title,
+            isPresented: $alertManager.isPresent
+        ) {
+            
+        } message: {
+            Text(alertManager.message)
+        }
         .onChange(of: navigatedOutfit) { old, newValue in
             if newValue == nil {
                 withAnimation {
@@ -225,7 +238,12 @@ struct OutfitView: View {
                         subTitleAlert   : subTitle,
                         selectedItem    : self.$selectedItem,
                         navigatedOutfit : $navigatedOutfit
-                    )
+                        
+                    ) { title, message in
+                        alertManager.title     = title
+                        alertManager.message   = message
+                        alertManager.isPresent = true
+                    }
                     .equatable()
                     .id(item.id)
                 }
@@ -257,6 +275,7 @@ struct OutfitContextCard: View, Equatable {
     let applianceManager: ApplianceManager
     let manager         : OutfitManager
     let subTitleAlert   : String?
+    let onError         : (String, String) -> Void
     
     @Binding
     var selectedItem: Outfit?
@@ -267,6 +286,30 @@ struct OutfitContextCard: View, Equatable {
     // MARK: - Deleted target
     @State
     private var taskDeletedCompleted: Bool = false
+    
+    
+    init(
+        outfit          : Outfit,
+        sessions        : [LaundrySession],
+        garmentManager  : GarmentManager,
+        applianceManager: ApplianceManager,
+        manager         : OutfitManager,
+        subTitleAlert   : String?,
+        selectedItem    : Binding<Outfit?>,
+        navigatedOutfit : Binding<Outfit?>,
+        onError         : @escaping (String, String) -> Void
+    ) {
+        
+        self.outfit = outfit
+        self.sessions = sessions
+        self.garmentManager = garmentManager
+        self.applianceManager = applianceManager
+        self.manager = manager
+        self.subTitleAlert = subTitleAlert
+        self._selectedItem = selectedItem
+        self._navigatedOutfit = navigatedOutfit
+        self.onError = onError
+    }
     
     static func == (lhs: OutfitContextCard, rhs: OutfitContextCard) -> Bool {
         return lhs.outfit.id == rhs.outfit.id &&
@@ -301,22 +344,37 @@ struct OutfitContextCard: View, Equatable {
     private func contextMenuButtons(for item: Outfit) -> some View {
         
         Button {
-            manager.moveOutfitToWash(
-                for             : outfit,
-                garmentManager  : garmentManager,
-                in              : sessions,
-                applianceManager: applianceManager
-            )
+            do {
+                try manager.moveOutfitToWash(
+                    for             : outfit,
+                    garmentManager  : garmentManager,
+                    in              : sessions,
+                    applianceManager: applianceManager
+                )
+            } catch {
+                onError(
+                    "Error on move state",
+                    error.localizedDescription
+                )
+            }
+            
         } label: {
             Label("Wash Entire Outfit", systemImage: "washer")
         }
         
         
         Button {
-            manager.toggleOutfitLoan(
-                outfit,
-                garmentManager: garmentManager
-            )
+            do {
+                try manager.toggleOutfitLoan(
+                    outfit,
+                    garmentManager: garmentManager
+                )
+            } catch {
+                onError(
+                    "Error on set Loan State",
+                    error.localizedDescription
+                )
+            }
             
         } label: {
             let isOnLoan = outfit.isOnLoan
@@ -333,12 +391,19 @@ struct OutfitContextCard: View, Equatable {
         
         
         Button {
-            manager.logOutfitWear(
-                for: item,
-                garmentManager: garmentManager,
-                in: sessions,
-                applianceManager: applianceManager
-            )
+            do {
+               try manager.logOutfitWear(
+                    for: item,
+                    garmentManager: garmentManager,
+                    in: sessions,
+                    applianceManager: applianceManager
+                )
+            } catch {
+                onError(
+                    "Error on loggin wear",
+                    error.localizedDescription
+                )
+            }
             
         } label: {
             Label("Log wear", systemImage: "checkmark.seal")
@@ -358,8 +423,16 @@ struct OutfitContextCard: View, Equatable {
         
         
         Button(role: .destructive) {
-            self.manager.delete(item)
-            self.taskDeletedCompleted.toggle()
+            do {
+                try self.manager.delete(item)
+                self.taskDeletedCompleted.toggle()
+            } catch {
+                onError(
+                    "Error on delete outfit",
+                    error.localizedDescription
+                )
+            }
+            
         } label: {
             Label("Delete", systemImage: "trash")
         }

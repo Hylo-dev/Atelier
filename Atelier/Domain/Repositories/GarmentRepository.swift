@@ -19,18 +19,19 @@ class GarmentRepository {
     ) throws {
         
         if let imageToSave = image {
+            
             let result = imageService.saveImage(imageToSave)
             
             switch result {
                 case .success(let filename):
-                    garment.imagePath = (filename as NSString).lastPathComponent
+                    garment.imagePath = filename
                     
                 case .failure(let error):
                     throw error
             }
         }
         
-        manager.insert(garment)
+        try manager.insert(garment)
     }
     
     
@@ -48,13 +49,13 @@ class GarmentRepository {
             let result = imageService.saveImage(imageToSave)
             switch result {
                 case .success(let filename):
-                    garment.imagePath = (filename as NSString).lastPathComponent
+                    garment.imagePath = filename
                     
                 case .failure(let error):
                     throw error
             }
         }
         
-        manager.update()
+        try manager.update()
     }
 }

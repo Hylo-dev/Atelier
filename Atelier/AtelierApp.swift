@@ -96,12 +96,15 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
                         predicate: #Predicate { $0.id == sessionId }
                     )
                     
-                    if let session = try? context.fetch(descriptor).first {
-                        applianceManager?.finishWashing(session)
-                        print("Session complete!")
-                        
-                    } else {
-                        print("Session not found on DB")
+                    do {
+                        if let session = try context.fetch(descriptor).first {
+                            
+                            try applianceManager?
+                                .finishWashing(session)
+                        }
+                                                
+                    } catch {
+                        print(error.localizedDescription) // TODO: Manage error
                     }
                 }
             }

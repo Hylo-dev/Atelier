@@ -13,7 +13,7 @@ import UserNotifications
 @MainActor
 @Observable
 final class ApplianceManager: Manager {
-    var context: ModelContext
+    let context: ModelContext
     
     
     init(_ context: ModelContext) {
@@ -24,41 +24,30 @@ final class ApplianceManager: Manager {
     
     // MARK: - Database CRUD handler
     
-    func insert(_ element: LaundrySession) {
+    func insert(_ element: LaundrySession) throws {
         context.insert(element)
-        save()
+        try context.save()
     }
     
     
     
-    func update() {
-        save()
+    func update() throws {
+        try context.save()
     }
     
     
     
-    func delete(_ element: LaundrySession) {
+    func delete(_ element: LaundrySession) throws {
         context.delete(element)
-        save()
+        try context.save()
     }
-    
-    
-    
-    @inline(__always)
-    internal func save() {
-        do {
-            try context.save()
-            
-        } catch {
-            print("Error DB: \(error)")
-        }
-    }
-    
-    
     
     // MARK: Garment handlers
     
-    func detachGarment(_ garment: Garment, from session: LaundrySession) {
+    func detachGarment(
+        _    garment: Garment,
+        from session: LaundrySession
+    ) throws{
         session.garments.removeAll { $0.id == garment.id }
 //        garment.laundryHistory.removeAll { $0.id == session.id }
         
@@ -68,10 +57,10 @@ final class ApplianceManager: Manager {
             session.updateWarnings()
         }
         
-        save()
+        try context.save()
     }
     
-    func unassignGarment(_ garment: Garment) {
+    func unassignGarment(_ garment: Garment) throws {
         guard let session = garment.activeLaundrySession,
               session.status == .planned else { return }
         
@@ -87,22 +76,27 @@ final class ApplianceManager: Manager {
             session.updateWarnings()
         }
         
-        save()
+        try context.save()
     }
     
     
     
-    func processUnassignedGarments(_ garments: [Garment]) {
-        
-        let descriptor = FetchDescriptor<LaundrySession>()
-        var activeSessions = (try? context.fetch(descriptor)) ?? []
-        
+    func processUnassignedGarments(_ garments: [Garment]) throws {
         let unassignedGarments = garments.filter {
             !$0.isBinAssigned && $0.isReadyToWash
         }
-        guard !unassignedGarments.isEmpty else { return }
-        let engine = LaundryEngine()
         
+        guard !unassignedGarments.isEmpty else { return }
+        
+        let targetString = LaundrySessionStatus.planned.rawValue
+        let descriptor = FetchDescriptor<LaundrySession>(
+            predicate: #Predicate<LaundrySession> { session in
+                session.statusRawValue == targetString
+            }
+        )
+        var activeSessions = try context.fetch(descriptor)
+        
+        let engine = LaundryEngine()
         for garment in unassignedGarments {
             
             if garment.washingSymbols.isEmpty && garment.composition.isEmpty {
@@ -113,7 +107,6 @@ final class ApplianceManager: Manager {
             let decision = engine.process(garment)
             
             if let exactSession = activeSessions.first(where: {
-                $0.status == .planned &&
                 $0.bin == decision.bin &&
                 $0.suggestedProgram == decision.suggestedProgram
             }) {
@@ -156,7 +149,7 @@ final class ApplianceManager: Manager {
             garment.state = .toWash
         }
         
-        save()
+        try context.save()
     }
     
     
@@ -167,7 +160,7 @@ final class ApplianceManager: Manager {
     
     // MARK: - Wash
     
-    func startWashing(_ session: LaundrySession) {
+    func startWashing(_ session: LaundrySession) throws {
         session.status           = .washing
         session.startDate        = .now
         
@@ -187,11 +180,11 @@ final class ApplianceManager: Manager {
             temperature: session.targetTemperature
         )
         
-        save()
+        try context.save()
     }
     
     
-    func pauseWashing(_ item: LaundrySession) {
+    func pauseWashing(_ item: LaundrySession) throws {
         guard let endDate = item.completationDate else { return }
         
         let remaining = endDate.timeIntervalSinceNow
@@ -211,11 +204,11 @@ final class ApplianceManager: Manager {
         item.completationDate = nil
         item.status = .paused
         
-        save()
+        try context.save()
     }
     
     
-    func resumeWashing(_ item: LaundrySession) {
+    func resumeWashing(_ item: LaundrySession) throws {
         let timeToWash = item.remainingTime ?? 0
         
         item.completationDate = Date.now.addingTimeInterval(timeToWash)
@@ -230,11 +223,11 @@ final class ApplianceManager: Manager {
         item.remainingTime = nil
         item.status        = .washing
         
-        save()
+        try context.save()
     }
     
     
-    func cancelWashing(_ session: LaundrySession) {
+    func cancelWashing(_ session: LaundrySession) throws {
         session.status           = .planned
         session.startDate        = nil
         session.completationDate = nil
@@ -244,12 +237,12 @@ final class ApplianceManager: Manager {
         }
         
         stopLiveActivity(session)
-        save()
+        try context.save()
     }
     
     
     
-    func finishWashing(_ session: LaundrySession) {
+    func finishWashing(_ session: LaundrySession) throws {
         session.status = .clean
         
         for garment in session.garments {
@@ -257,27 +250,27 @@ final class ApplianceManager: Manager {
         }
         
         stopLiveActivity(session)
-        save()
+        try context.save()
     }
     
     
     
     // MARK: Dry
     
-    func startDrying(_ session: LaundrySession) {
+    func startDrying(_ session: LaundrySession) throws {
         session.status = .drying
-        save()
+        try context.save()
     }
     
     
     
-    func cancelDrying(_ session: LaundrySession) {
+    func cancelDrying(_ session: LaundrySession) throws {
         session.status = .clean
-        save()
+        try context.save()
     }
     
     
-    func markAsComplete(_ session: LaundrySession) {
+    func markAsComplete(_ session: LaundrySession) throws {
         session.status      = .completed
         session.isCompleted = true
         
@@ -289,7 +282,7 @@ final class ApplianceManager: Manager {
             garment.lastWashingDate      = .now
         }
         
-        save()
+        try context.save()
     }
     
     
