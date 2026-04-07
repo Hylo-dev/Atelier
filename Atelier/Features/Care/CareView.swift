@@ -29,7 +29,7 @@ struct CareView: View {
     
     
     @State
-    private var alertManager = AlertManager()
+    private var alertManager: AlertManaging
     
     
     // MARK: - Struct attributes
@@ -68,7 +68,7 @@ struct CareView: View {
         title         : String,
         laundryState  : TabFilterState,
         weatherService: WeatherProvider = WeatherService(),
-        alertManager  : AlertManager    = AlertManager()
+        alertManager  : AlertManaging   = AlertManager()
     ) {
         self.title          = title
         self.laundryState   = laundryState
@@ -279,21 +279,16 @@ struct CareView: View {
 fileprivate struct ItemCareView: View {
     
     let item    : LaundrySession
-    let manager : ApplianceManager
+    let manager : LaundrySessionManaging
     let garments: [Garment]
     let onError : (String, String) -> Void
     
     @State
     private var timeRemaining: TimeInterval = 0
-    
-    let timer = Timer.publish(
-        every: 1, on: .main, in: .common
-    ).autoconnect()
-    
         
     init(
         item    : LaundrySession,
-        manager : ApplianceManager,
+        manager : LaundrySessionManaging,
         garments: [Garment],
         onError : @escaping (String, String) -> Void
     ) {
@@ -317,22 +312,25 @@ fileprivate struct ItemCareView: View {
         }
         .buttonStyle(.plain)
         .contextMenu { actionButton }
-        .onReceive(timer) { _ in
+        .onReceive(manager.timerPulse) { _ in
             guard item.status == .washing else { return }
             
             updateTimeRemaining()
-            
-            do {
-                if timeRemaining <= 0 {
-                    timer.upstream.connect().cancel()
-                    try manager.finishWashing(item)
-                }
-            } catch {
-                onError(
-                    "Finish Washing",
-                    error.localizedDescription
-                )
+            if timeRemaining <= 0 {
+                handleAutoFinish()
             }
+        }
+        .onAppear(perform: updateTimeRemaining)
+        .onChange(of: item.status) { _, _ in
+            updateTimeRemaining()
+        }
+    }
+    
+    private func handleAutoFinish() {
+        do {
+            try manager.finishWashing(item)
+        } catch {
+            onError("Finish Washing", error.localizedDescription)
         }
     }
     

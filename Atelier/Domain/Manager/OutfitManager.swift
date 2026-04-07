@@ -9,9 +9,14 @@ import Observation
 import SwiftData
 import Foundation
 
+protocol OutfitManaging: Manager where T == Outfit {
+    func insert(_ item: Outfit) throws
+    func update() throws
+}
+
 @Observable
 @MainActor
-final class OutfitManager: Manager {
+final class OutfitManager: OutfitManaging {
     private let context: ModelContext
     private let imageService: ImageServiceProtocol
     
@@ -51,8 +56,7 @@ final class OutfitManager: Manager {
     
     func logOutfitWear(
         for outfit    : Outfit,
-        garmentManager: GarmentWearLoggableProtocol,
-        in sessions   : [LaundrySession],
+        garmentManager: any GarmentWearLoggableProtocol,
         processGarment: ApplianceProcessGarmentProtocol,
         each count    : Int = 1
     ) throws {
@@ -73,10 +77,9 @@ final class OutfitManager: Manager {
     
     
     func moveOutfitToWash(
-        for outfit      : Outfit,
-        garmentManager  : GarmentWearLoggableProtocol,
-        in sessions     : [LaundrySession],
-        processGarment  : ApplianceProcessGarmentProtocol
+        for outfit    : Outfit,
+        garmentManager: any GarmentWearLoggableProtocol,
+        processGarment: ApplianceProcessGarmentProtocol
     ) throws {
         let garmentsToWash = outfit.garments.filter { garment in
             garmentManager.logWear(for: garment, each: 20)

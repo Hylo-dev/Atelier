@@ -33,7 +33,7 @@ struct HomeView: View {
     
     
     @State
-    private var alertManager = AlertManager()
+    private var alertManager: AlertManaging = AlertManager()
     
     
     

@@ -29,10 +29,9 @@ final class OutfitEditorViewModel {
     
     var notes: String
     
-    var alertErrorMessage: String = ""
-    var isAlertErrorVisible: Bool = false
+    var alertManager: AlertManaging
     
-    private let repository: any RepositoryProtocol<Outfit, OutfitManager>
+    private let repository: any RepositoryProtocol<Outfit, any OutfitManaging>
     
     var isFormValid: Bool {
         let isNameValid = !name.trimmingCharacters(
@@ -46,7 +45,8 @@ final class OutfitEditorViewModel {
     
     init(
         _ item: Outfit?,
-        repository: any RepositoryProtocol<Outfit, OutfitManager> = OutfitRepository()
+        repository: any RepositoryProtocol<Outfit, any OutfitManaging> = OutfitRepository(),
+        alertManager: AlertManaging = AlertManager()
     ) {
         self.item = item
         
@@ -60,6 +60,7 @@ final class OutfitEditorViewModel {
         self.notes             = item?.notes            ?? ""
         
         self.repository        = repository
+        self.alertManager      = alertManager
     }
     
     
@@ -91,8 +92,9 @@ final class OutfitEditorViewModel {
             
             dismiss()
         } catch {
-            alertErrorMessage   = error.localizedDescription
-            isAlertErrorVisible = true
+            alertManager.title     = "Error on save outfit"
+            alertManager.message   = error.localizedDescription
+            alertManager.isPresent = true
         }
     }
     

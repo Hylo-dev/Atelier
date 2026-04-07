@@ -163,7 +163,8 @@ struct FilterOutfitConfig: FilterProtocol {
                 return false
             }
             
-            if selectedTone != outfit.tone {
+            if selectedTone != .none &&
+                selectedTone != outfit.tone {
                 return false
             }
             

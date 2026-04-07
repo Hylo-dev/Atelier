@@ -97,11 +97,14 @@ struct OutfitEditorView: View {
             isPresented: self.$showCamera,
             content    : sheetPhotoHandler
         )
-        .alert("Unable to Save", isPresented: $editorViewModel.isAlertErrorVisible) {
+        .alert(
+            editorViewModel.alertManager.title,
+            isPresented: $editorViewModel.alertManager.isPresent
+        ) {
             Button("Ok", role: .cancel) { }
             
         } message: {
-            Text(editorViewModel.alertErrorMessage)
+            Text(editorViewModel.alertManager.message)
         }
         
     }

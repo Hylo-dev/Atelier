@@ -7,7 +7,17 @@
 
 import Foundation
 
-struct LaundryEngine {
+protocol LaundryEngineService {
+    var rules: [LaundrySortingRule] { get }
+    
+    func process(_ garment: Garment) -> (
+        bin              : LaundryBin,
+        targetTemperature: Int,
+        suggestedProgram : Program
+    )
+}
+
+struct LaundryEngine: LaundryEngineService {
     
     private static let defaultRules: [LaundrySortingRule] = [
         ProfessionalCareRule(),
@@ -16,7 +26,7 @@ struct LaundryEngine {
         ColorMatrixRule()
     ]
     
-    private let rules: [LaundrySortingRule]
+    internal let rules: [LaundrySortingRule]
     
     init(rules: [LaundrySortingRule] = Self.defaultRules) {
         self.rules = rules

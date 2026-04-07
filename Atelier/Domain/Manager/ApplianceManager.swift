@@ -9,9 +9,11 @@ import Observation
 import SwiftData
 import Foundation
 import UserNotifications
+internal import Combine
 
 protocol ApplianceProcessGarmentProtocol {
     func processUnassignedGarments(_ garments: [Garment]) throws
+    func unassignGarment(_ garment: Garment) throws
     
     func detachGarment(
         _    garment: Garment,
@@ -19,42 +21,56 @@ protocol ApplianceProcessGarmentProtocol {
     ) throws
 }
 
+protocol LaundrySessionManaging {
+    var timerPulse: Publishers.Autoconnect<Timer.TimerPublisher> { get }
+
+    func finishWashing(_ session: LaundrySession) throws
+    func startWashing(_ session: LaundrySession) throws
+    func pauseWashing(_ item: LaundrySession) throws
+    func resumeWashing(_ item: LaundrySession) throws
+    func cancelWashing(_ session: LaundrySession) throws
+    
+    func startDrying(_ session: LaundrySession) throws
+    func cancelDrying(_ session: LaundrySession) throws
+    func markAsComplete(_ session: LaundrySession) throws
+}
+
 @MainActor
 @Observable
-final class ApplianceManager: Manager, ApplianceProcessGarmentProtocol {
+final class ApplianceManager: Manager, ApplianceProcessGarmentProtocol, LaundrySessionManaging {
     private let context: ModelContext
-    private let activityProvider: LaundryActivityProviding
     
+    private let repository: LaundryRepositoryProtocol
+    private let assignmentService: LaundryAssignmentManaging
+    private let controlService: LaundryControlManaging
+    
+    var timerPulse: Publishers.Autoconnect<Timer.TimerPublisher> { controlService.timerPulse }
     
     init(
-        _ context: ModelContext,
-        activityProvider: LaundryActivityProviding = LaundryActivityManager.shared
+        _ context        : ModelContext,
+        repository       : LaundryRepositoryProtocol? = nil,
+        assignmentService: LaundryAssignmentManaging = LaundryAssignmentService(),
+        controlService  : LaundryControlManaging = LaundryControlService()
     ) {
-        self.context          = context
-        self.activityProvider = activityProvider
+        self.context = context
+        self.repository = repository ?? LaundryRepository(context: context)
+        self.assignmentService = assignmentService
+        self.controlService = controlService
     }
     
-    
-    
-    // MARK: - Database CRUD handler
     
     func insert(_ element: LaundrySession) throws {
-        context.insert(element)
-        try context.save()
+        try repository.insert(element)
     }
-    
-    
     
     func update() throws {
         try context.save()
     }
     
-    
-    
     func delete(_ element: LaundrySession) throws {
-        context.delete(element)
-        try context.save()
+        try repository.delete(element)
     }
+    
     
     // MARK: Garment handlers
     
@@ -62,107 +78,23 @@ final class ApplianceManager: Manager, ApplianceProcessGarmentProtocol {
         _    garment: Garment,
         from session: LaundrySession
     ) throws {
-        session.garments.removeAll { $0.id == garment.id }
-        
-        if session.garments.isEmpty {
-            context.delete(session)
-        } else {
-            session.updateWarnings()
-        }
-        
-        try context.save()
+        try assignmentService.detachGarment(
+            garment,
+            from: session,
+            in: context
+        )
     }
     
     func unassignGarment(_ garment: Garment) throws {
-        guard let session = garment.activeLaundrySession,
-              session.status == .planned else { return }
-        
-        session.garments.removeAll { $0.id == garment.id }
-        garment.laundryHistory.removeAll { $0.id == session.id }
-        
-        garment.isBinAssigned = false
-        garment.state         = .available
-        
-        if session.garments.isEmpty {
-            context.delete(session)
-        } else {
-            session.updateWarnings()
-        }
-        
-        try context.save()
+        try assignmentService.unassignGarment(garment, in: context)
     }
     
     
-    
     func processUnassignedGarments(_ garments: [Garment]) throws {
-        let unassignedGarments = garments.filter {
-            !$0.isBinAssigned && $0.isReadyToWash
-        }
-        
-        guard !unassignedGarments.isEmpty else { return }
-        
-        let targetString = LaundrySessionStatus.planned.rawValue
-        let descriptor = FetchDescriptor<LaundrySession>(
-            predicate: #Predicate<LaundrySession> { session in
-                session.statusRawValue == targetString
-            }
+        try assignmentService.processUnassignedGarments(
+            garments,
+            in: context
         )
-        var activeSessions = try context.fetch(descriptor)
-        
-        let engine = LaundryEngine()
-        for garment in unassignedGarments {
-            
-            if garment.washingSymbols.isEmpty && garment.composition.isEmpty {
-                print("⚠️ Capo ignorato (\(garment.name)): mancano dati di lavaggio e composizione.")
-                continue
-            }
-            
-            let decision = engine.process(garment)
-            
-            if let exactSession = activeSessions.first(where: {
-                $0.bin == decision.bin &&
-                $0.suggestedProgram == decision.suggestedProgram
-            }) {
-                
-                let garmentMaxTemp = garment.washingSymbols.compactMap {
-                    $0.maxWashingTemperature
-                }.min() ?? 40
-                
-                exactSession.targetTemperature = min(
-                    exactSession.targetTemperature,
-                    garmentMaxTemp
-                )
-                
-                if !garment.laundryHistory.contains(exactSession) {
-                    garment.laundryHistory.append(exactSession)
-                }
-                
-                let existing = Set(exactSession.laundrySymbols)
-                exactSession.laundrySymbols = Array(existing.union(garment.washingSymbols))
-                exactSession.updateWarnings()
-                
-            } else {
-                
-                let newSession = LaundrySession(
-                    bin              : decision.bin,
-                    targetTemperature: decision.targetTemperature,
-                    suggestedProgram : decision.suggestedProgram,
-                    garments         : [garment],
-                    laundrySymbols   : garment.washingSymbols
-                )
-                
-                context.insert(newSession)
-                
-                garment.laundryHistory.append(newSession)
-                newSession.updateWarnings()
-                activeSessions.append(newSession)
-            }
-            
-            garment.isBinAssigned = true
-            garment.state = .toWash
-        }
-        
-        try context.save()
     }
     
     
@@ -174,95 +106,32 @@ final class ApplianceManager: Manager, ApplianceProcessGarmentProtocol {
     // MARK: - Wash
     
     func startWashing(_ session: LaundrySession) throws {
-        session.status           = .washing
-        session.startDate        = .now
-        
-        let minutes    = session.suggestedProgram.washingTime // - 99 This is used for testing notification
-        let targetDate = Calendar.current.date(byAdding: .minute, value: minutes, to: .now) ?? .now
-        session.completationDate = targetDate
-        
-        for garment in session.garments {
-            garment.state = .washing
-        }
-        
-        activityProvider.start(
-            programName: session.suggestedProgram.displayName,
-            startDate  : session.startDate ?? .now,
-            targetDate : targetDate,
-            sessionId  : session.id.uuidString,
-            temperature: session.targetTemperature
-        )
-        
+        try controlService.startWashing(session)
         try context.save()
     }
     
     
     func pauseWashing(_ item: LaundrySession) throws {
-        guard let endDate = item.completationDate else { return }
-        
-        let remaining = endDate.timeIntervalSinceNow
-        if remaining > 0 {
-            item.remainingTime = remaining
-            
-            activityProvider.updateNotification(
-                for          : item.id.uuidString,
-                isPaused     : true,
-                remainingTime: item.remainingTime,
-                programName  : item.suggestedProgram.displayName
-                
-            )
-            
-        } else { item.remainingTime = 0 }
-        
-        item.completationDate = nil
-        item.status = .paused
-        
+        try controlService.pauseWashing(item)
         try context.save()
     }
     
     
     func resumeWashing(_ item: LaundrySession) throws {
-        let timeToWash = item.remainingTime ?? 0
-        
-        item.completationDate = Date.now.addingTimeInterval(timeToWash)
-        
-        activityProvider.updateNotification(
-            for          : item.id.uuidString,
-            isPaused     : false,
-            remainingTime: timeToWash,
-            programName  : item.suggestedProgram.displayName
-        )
-        
-        item.remainingTime = nil
-        item.status        = .washing
-        
+        try controlService.resumeWashing(item)
         try context.save()
     }
     
     
     func cancelWashing(_ session: LaundrySession) throws {
-        session.status           = .planned
-        session.startDate        = nil
-        session.completationDate = nil
-        
-        for garment in session.garments {
-            garment.state = .toWash
-        }
-        
-        stopLiveActivity(session)
+        try controlService.cancelWashing(session)
         try context.save()
     }
     
     
     
     func finishWashing(_ session: LaundrySession) throws {
-        session.status = .clean
-        
-        for garment in session.garments {
-            garment.state = .drying
-        }
-        
-        stopLiveActivity(session)
+        try controlService.finishWashing(session)
         try context.save()
     }
     
@@ -271,30 +140,20 @@ final class ApplianceManager: Manager, ApplianceProcessGarmentProtocol {
     // MARK: Dry
     
     func startDrying(_ session: LaundrySession) throws {
-        session.status = .drying
+        try controlService.startDrying(session)
         try context.save()
     }
     
     
     
     func cancelDrying(_ session: LaundrySession) throws {
-        session.status = .clean
+        try controlService.cancelDrying(session)
         try context.save()
     }
     
     
     func markAsComplete(_ session: LaundrySession) throws {
-        session.status      = .completed
-        session.isCompleted = true
-        
-        for garment in session.garments {
-            garment.state                = .available
-            garment.forceWash            = false
-            garment.isBinAssigned        = false
-            garment.wearCount            = 0
-            garment.lastWashingDate      = .now
-        }
-        
+        try controlService.markAsComplete(session)
         try context.save()
     }
     
@@ -312,10 +171,6 @@ final class ApplianceManager: Manager, ApplianceProcessGarmentProtocol {
     // MARK: Handlers
     
     func stopLiveActivity(_ session: LaundrySession) {
-        UNUserNotificationCenter.current().removePendingNotificationRequests(
-            withIdentifiers: [session.id.uuidString]
-        )
-        
-        activityProvider.stop()
+        controlService.stopLiveActivity(session)
     }
 }

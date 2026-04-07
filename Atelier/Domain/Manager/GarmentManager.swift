@@ -10,7 +10,13 @@ import SwiftData
 import Foundation
 import UIKit
 
-protocol GarmentWearLoggableProtocol {
+
+protocol GarmentManaging: Manager where T == Garment {
+    func insert(_ item: Garment) throws
+    func update() throws
+}
+
+protocol GarmentWearLoggableProtocol: GarmentManaging {
     func logWear(
         for item  : Garment,
         each count: Int
@@ -19,7 +25,7 @@ protocol GarmentWearLoggableProtocol {
 
 @Observable
 @MainActor
-final class GarmentManager: Manager, GarmentWearLoggableProtocol {
+final class GarmentManager: GarmentManaging, GarmentWearLoggableProtocol {
     private let context: ModelContext
     private let imageService: ImageServiceProtocol
     

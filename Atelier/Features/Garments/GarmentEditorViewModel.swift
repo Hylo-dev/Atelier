@@ -29,9 +29,9 @@ final class GarmentEditorViewModel {
     
     var imagePath: String?
     
-    var alertManager = AlertManager()
+    var alertManager: AlertManaging
     
-    private let repository: any RepositoryProtocol<Garment, GarmentManager>
+    private let repository: any RepositoryProtocol<Garment, any GarmentManaging>
     
     var currentTotalComposition: Int {
         Int(
@@ -48,7 +48,8 @@ final class GarmentEditorViewModel {
     
     init (
         _ item: Garment?,
-        repository: any RepositoryProtocol<Garment, GarmentManager> = GarmentRepository()
+        repository: any RepositoryProtocol<Garment, any GarmentManaging> = GarmentRepository(),
+        alertManager: AlertManaging = AlertManager()
     ) {
         self.name  = item?.name  ?? ""
         self.brand = item?.brand ?? ""
@@ -77,6 +78,7 @@ final class GarmentEditorViewModel {
         self.purchaseDate        = item?.purchaseDate ?? .now
         self.imagePath           = item?.imagePath
         self.repository          = repository
+        self.alertManager        = alertManager
     }
     
     
@@ -158,8 +160,8 @@ final class GarmentEditorViewModel {
     func handleFinishAction(
         _ item          : Garment?,
         image           : UIImage?,
-        manager         : GarmentManager,
-        applianceManager: ApplianceManager,
+        manager         : any GarmentWearLoggableProtocol,
+        applianceManager: ApplianceProcessGarmentProtocol,
         sessions        : [LaundrySession],
         dismiss         : @escaping () -> Void
     ) {

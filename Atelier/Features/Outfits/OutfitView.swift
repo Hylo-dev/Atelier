@@ -23,7 +23,7 @@ struct OutfitView: View {
     
     
     @State
-    private var alertManager = AlertManager()
+    private var alertManager: AlertManaging = AlertManager()
     
     
     
@@ -348,7 +348,6 @@ struct OutfitContextCard: View, Equatable {
                 try manager.moveOutfitToWash(
                     for           : outfit,
                     garmentManager: garmentManager,
-                    in            : sessions,
                     processGarment: applianceManager
                 )
             } catch {
@@ -393,7 +392,6 @@ struct OutfitContextCard: View, Equatable {
                try manager.logOutfitWear(
                     for           : item,
                     garmentManager: garmentManager,
-                    in            : sessions,
                     processGarment: applianceManager
                 )
             } catch {

@@ -11,7 +11,7 @@ import UIKit
 
 protocol RepositoryProtocol<T, M> {
     associatedtype T: PersistentModel
-    associatedtype M: Manager where M.T == T
+    associatedtype M
         
     func create(item: T, image: UIImage?, manager: M) throws
     func update(item: T, image: UIImage?, manager: M) throws

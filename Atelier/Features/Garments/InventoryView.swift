@@ -23,7 +23,7 @@ struct InventoryView: View {
     
     
     @State
-    private var alertManager = AlertManager()
+    private var alertManager: AlertManaging = AlertManager()
     
     
     // MARK: - Parameters Val
