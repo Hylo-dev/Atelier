@@ -14,6 +14,7 @@ import UIKit
 @MainActor
 final class GarmentManager: Manager {
     private let context: ModelContext
+    private let imageService: ImageServiceProtocol
     
     var visibleGarments: [Garment]           = []
     var groupedGarments: [String: [Garment]] = [:]
@@ -22,8 +23,12 @@ final class GarmentManager: Manager {
     
     
     
-    init(_ context: ModelContext) {
-        self.context = context
+    init(
+        _ context: ModelContext,
+        imageService: ImageServiceProtocol = ImageService()
+    ) {
+        self.context      = context
+        self.imageService = imageService
     }
     
     
@@ -43,7 +48,9 @@ final class GarmentManager: Manager {
     
     @inline(__always)
     func delete(_ item: Garment) throws {
-        ImageService().deleteImage(filename: item.imagePath)
+        if let image = item.imagePath, !image.isEmpty {
+            imageService.deleteImage(filename: image)
+        }
         
         if let session = item.activeLaundrySession {
             let remainingGarments = session.garments.filter {

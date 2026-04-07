@@ -13,13 +13,18 @@ import Foundation
 @MainActor
 final class OutfitManager: Manager {
     private let context: ModelContext
+    private let imageService: ImageServiceProtocol
     
     var visibleOutfits  : [Outfit]           = []
     var groupedOutfits  : [String: [Outfit]] = [:]
     var availableSeasons: [String]           = []
     
-    init(_ context: ModelContext) {
-        self.context = context
+    init(
+        _ context: ModelContext,
+        imageService: ImageServiceProtocol = ImageService()
+    ) {
+        self.context      = context
+        self.imageService = imageService
     }
     
     @inline(__always)
@@ -35,10 +40,8 @@ final class OutfitManager: Manager {
     
     @inline(__always)
     func delete(_ element: Outfit) throws {
-        if let image = element.fullLookImagePath,
-              !image.isEmpty {
-            
-            ImageService().deleteImage(filename: image)
+        if let image = element.fullLookImagePath, !image.isEmpty {
+            imageService.deleteImage(filename: image)
         }
         
         context.delete(element)

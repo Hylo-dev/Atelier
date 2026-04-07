@@ -10,8 +10,6 @@ import SwiftUI
 
 @Observable
 final class GarmentEditorViewModel {
-    private let repository = GarmentRepository()
-    
     var name: String
     var brand: String
     var price: Double?
@@ -33,6 +31,8 @@ final class GarmentEditorViewModel {
     
     var alertManager = AlertManager()
     
+    private let repository: any RepositoryProtocol<Garment, GarmentManager>
+    
     var currentTotalComposition: Int {
         Int(
             selectedComposition.reduce(0) { $0 + $1.percentual }
@@ -46,7 +46,10 @@ final class GarmentEditorViewModel {
         return isNameValid && isCompositionValid
     }
     
-    init (_ item: Garment?) {
+    init (
+        _ item: Garment?,
+        repository: any RepositoryProtocol<Garment, GarmentManager> = GarmentRepository()
+    ) {
         self.name  = item?.name  ?? ""
         self.brand = item?.brand ?? ""
         self.price = item?.price
@@ -73,6 +76,7 @@ final class GarmentEditorViewModel {
         self.washingSymbols      = Set(item?.washingSymbols ?? [])
         self.purchaseDate        = item?.purchaseDate ?? .now
         self.imagePath           = item?.imagePath
+        self.repository          = repository
     }
     
     
@@ -165,9 +169,9 @@ final class GarmentEditorViewModel {
             if let existingItem = item {
                 updateProperties(of: existingItem)
                 try repository.update(
-                    garment : existingItem,
-                    newImage: image,
-                    manager : manager
+                    item   : existingItem,
+                    image  : image,
+                    manager: manager
                 )
                 
                 try applianceManager.unassignGarment(existingItem)
@@ -176,7 +180,7 @@ final class GarmentEditorViewModel {
             } else {
                 let newGarment = createGarmentObject()
                 try repository.create(
-                    garment: newGarment,
+                    item   : newGarment,
                     image  : image,
                     manager: manager
                 )

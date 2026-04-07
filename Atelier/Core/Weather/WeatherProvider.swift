@@ -36,9 +36,3 @@ struct WeatherState: Equatable {
         
     }
 }
-
-protocol WeatherProvider {
-    func fetchWeather(for location: CLLocation) async throws -> WeatherState
-    
-    
-}

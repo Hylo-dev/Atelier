@@ -23,12 +23,14 @@ struct HomeView: View {
     @Environment(ApplianceManager.self)
     private var applianceManager
     
+    @Environment(CaptureManager.self)
+    private var manager
+    
+    
     
     @State
     private var selectedTab: AppTab? = .wardrobe
     
-    @State
-    private var manager = CaptureManager()
     
     @State
     private var alertManager = AlertManager()

@@ -9,19 +9,25 @@ import Foundation
 
 struct LaundryEngine {
     
-    private static let rules: [LaundrySortingRule] = [
+    private static let defaultRules: [LaundrySortingRule] = [
         ProfessionalCareRule(),
         WoolAndCashmereRule(),
         DenimRule(),
         ColorMatrixRule()
     ]
     
+    private let rules: [LaundrySortingRule]
+    
+    init(rules: [LaundrySortingRule] = Self.defaultRules) {
+        self.rules = rules
+    }
+    
     func process(_ garment: Garment) -> (
         bin: LaundryBin,
         targetTemperature: Int,
         suggestedProgram: Program
     ) {
-        let targetBin = Self.rules.lazy.compactMap {
+        let targetBin = self.rules.lazy.compactMap {
             $0.evaluate(garment)
         }.first ?? .vibrantNormal
         

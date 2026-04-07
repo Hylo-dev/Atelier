@@ -33,7 +33,16 @@ enum ImageSaveError: Error {
     }
 }
 
-struct ImageService {
+protocol ImageServiceProtocol {
+    func saveImage(
+        _ image     : UIImage,
+        maxDimension: CGFloat
+    ) -> Result<String, ImageSaveError>
+    
+    func deleteImage(filename: String?)
+}
+
+struct ImageService: ImageServiceProtocol {
     
     func saveImage(
         _ image       : UIImage,

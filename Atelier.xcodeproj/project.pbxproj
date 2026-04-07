@@ -86,6 +86,7 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Domain/Manager/LaundryActivityManager.swift,
+				Domain/Manager/LaundryActivityProviding.swift,
 				"Extensions/View+If.swift",
 			);
 			target = 1FED73E42F6868AC00F5FBEB /* AtelierWidgetsExtension */;

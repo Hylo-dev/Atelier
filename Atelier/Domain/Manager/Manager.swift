@@ -11,19 +11,9 @@ protocol Manager {
     associatedtype T: PersistentModel
     
     
-    
-    init(_ context: ModelContext)
-    
-    
-    
     func insert(_ element: T) throws
-    
-    
     
     func update() throws
     
-    
-    
     func delete(_ element: T) throws
-    
 }

@@ -89,20 +89,12 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
                         
             await MainActor.run {
                 
-                if let context = applianceManager?.context,
-                   let sessionId = UUID(uuidString: sessionIdString) {
-                    
-                    let descriptor = FetchDescriptor<LaundrySession>(
-                        predicate: #Predicate { $0.id == sessionId }
-                    )
+                if let sessionId = UUID(uuidString: sessionIdString) {
                     
                     do {
-                        if let session = try context.fetch(descriptor).first {
-                            
-                            try applianceManager?
-                                .finishWashing(session)
-                        }
-                                                
+                        try applianceManager?
+                            .finishWashingSession(id: sessionId)
+                        
                     } catch {
                         print(error.localizedDescription) // TODO: Manage error
                     }

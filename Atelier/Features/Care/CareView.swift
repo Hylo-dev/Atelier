@@ -15,6 +15,8 @@ struct CareView: View {
     @Environment(\.scenePhase)
     private var scenePhase
     
+    @Environment(ApplianceManager.self)
+    private var manager
     
     
     @Query( // TODO: This is for testing, completed laundry appears on history section or filter toggle
@@ -38,17 +40,12 @@ struct CareView: View {
     var laundryState: TabFilterState
     
     
-    
     // MARK: - private managers
     
-    let weatherService = WeatherService()
-    
-    @Environment(ApplianceManager.self)
-    private var manager
+    let weatherService: WeatherProvider
         
     @State
     private var weather: WeatherState?
-    
     
     
     // MARK: - Private state variables
@@ -66,6 +63,18 @@ struct CareView: View {
         GridItem(.adaptive(minimum: 150), spacing: 20)
     ]
     
+    
+    init(
+        title         : String,
+        laundryState  : TabFilterState,
+        weatherService: WeatherProvider = WeatherService(),
+        alertManager  : AlertManager    = AlertManager()
+    ) {
+        self.title          = title
+        self.laundryState   = laundryState
+        self.weatherService = weatherService
+        self._alertManager  = State(initialValue: alertManager)
+    }
     
     
     var body: some View {

@@ -11,8 +11,6 @@ import UIKit
 
 @Observable
 final class OutfitEditorViewModel {
-    private let repository = OutfitRepository()
-    
     let item: Outfit?
     
     var name: String
@@ -34,6 +32,8 @@ final class OutfitEditorViewModel {
     var alertErrorMessage: String = ""
     var isAlertErrorVisible: Bool = false
     
+    private let repository: any RepositoryProtocol<Outfit, OutfitManager>
+    
     var isFormValid: Bool {
         let isNameValid = !name.trimmingCharacters(
             in: .whitespaces
@@ -44,7 +44,10 @@ final class OutfitEditorViewModel {
         return isNameValid && hasEnoughGarments
     }
     
-    init(_ item: Outfit?) {
+    init(
+        _ item: Outfit?,
+        repository: any RepositoryProtocol<Outfit, OutfitManager> = OutfitRepository()
+    ) {
         self.item = item
         
         self.name              = item?.name             ?? ""
@@ -55,6 +58,8 @@ final class OutfitEditorViewModel {
         self.lastWornDate      = item?.lastWornDate     ?? .now
         self.wearCount         = item?.wearCount        ?? 0
         self.notes             = item?.notes            ?? ""
+        
+        self.repository        = repository
     }
     
     
@@ -69,7 +74,7 @@ final class OutfitEditorViewModel {
                 updateProperties(of: existingItem)
                 
                 try repository.update(
-                    outfit : existingItem,
+                    item : existingItem,
                     image  : image,
                     manager: manager
                 )
@@ -78,7 +83,7 @@ final class OutfitEditorViewModel {
                 let newGarment = createOutfitObject()
                 
                 try repository.create(
-                    outfit : newGarment,
+                    item : newGarment,
                     image  : image,
                     manager: manager
                 )

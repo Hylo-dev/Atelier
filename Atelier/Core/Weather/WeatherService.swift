@@ -7,6 +7,11 @@
 import WeatherKit
 import CoreLocation
 
+protocol WeatherProvider {
+    func fetchWeather(for location: CLLocation) async throws -> WeatherState
+}
+
+
 class WeatherService: WeatherProvider {
     
     func fetchWeather(for location: CLLocation) async throws -> WeatherState {

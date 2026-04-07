@@ -7,43 +7,56 @@
 
 import UIKit
 
-class OutfitRepository {
-    private let imageService = ImageService()
+class OutfitRepository: RepositoryProtocol {
+    typealias T = Outfit
+    typealias M = OutfitManager
+    
+    internal let imageService: ImageServiceProtocol
+    
+    init(imageService: ImageServiceProtocol = ImageService()) {
+        self.imageService = imageService
+    }
     
     func create(
-        outfit : Outfit,
+        item   : Outfit,
         image  : UIImage?,
         manager: OutfitManager
     ) throws {
         
         if let imageToSave = image {
-            let result = imageService.saveImage(imageToSave)
+            let result = imageService.saveImage(
+                imageToSave,
+                maxDimension: 1024
+            )
             
             switch result {
                 case .success(let filename):
-                    outfit.fullLookImagePath = (filename as NSString).lastPathComponent
+                    item.fullLookImagePath = (filename as NSString).lastPathComponent
                     
                 case .failure(let error):
                     throw error
             }
         }
         
-        try manager.insert(outfit)
+        try manager.insert(item)
     }
     
     func update(
-        outfit : Outfit,
+        item   : Outfit,
         image  : UIImage?,
         manager: OutfitManager
     ) throws {
         if let imageToSave = image {
-            if let oldPath = outfit.fullLookImagePath {
+            if let oldPath = item.fullLookImagePath {
                 imageService.deleteImage(filename: oldPath)
             }
             
-            switch imageService.saveImage(imageToSave) {
+            switch imageService.saveImage(
+                imageToSave,
+                maxDimension: 1024
+            ) {
                 case .success(let filename):
-                    outfit.fullLookImagePath = (filename as NSString).lastPathComponent
+                    item.fullLookImagePath = (filename as NSString).lastPathComponent
                     
                 case .failure(let error):
                     throw error

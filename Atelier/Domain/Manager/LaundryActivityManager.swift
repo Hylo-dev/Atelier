@@ -11,8 +11,8 @@ import ActivityKit
 import UserNotifications
 
 @MainActor
-final class LaundryActivityManager {
-    static  let shared = LaundryActivityManager()
+final class LaundryActivityManager: LaundryActivityProviding {
+    static let shared = LaundryActivityManager()
 //    private var activity: Activity<LaundryAttributes>?
     
     

@@ -8,48 +8,60 @@
 import Foundation
 import UIKit
 
-class GarmentRepository {
-    private let imageService = ImageService()
+class GarmentRepository: RepositoryProtocol {
+    typealias T = Garment
+    typealias M = GarmentManager
     
+    internal let imageService: ImageServiceProtocol
+    
+    init(imageService: ImageServiceProtocol = ImageService()) {
+        self.imageService = imageService
+    }
     
     func create(
-        garment : Garment,
+        item    : Garment,
         image   : UIImage?,
         manager : GarmentManager
     ) throws {
         
         if let imageToSave = image {
             
-            let result = imageService.saveImage(imageToSave)
+            let result = imageService.saveImage(
+                imageToSave,
+                maxDimension: 1024
+            )
             
             switch result {
                 case .success(let filename):
-                    garment.imagePath = filename
+                    item.imagePath = filename
                     
                 case .failure(let error):
                     throw error
             }
         }
         
-        try manager.insert(garment)
+        try manager.insert(item)
     }
     
     
     func update(
-        garment : Garment,
-        newImage: UIImage?,
+        item    : Garment,
+        image   : UIImage?,
         manager : GarmentManager
     ) throws {
         
-        if let imageToSave = newImage {
-            if let oldPath = garment.imagePath {
+        if let imageToSave = image {
+            if let oldPath = item.imagePath {
                 imageService.deleteImage(filename: oldPath)
             }
             
-            let result = imageService.saveImage(imageToSave)
+            let result = imageService.saveImage(
+                imageToSave,
+                maxDimension: 1024
+            )
             switch result {
                 case .success(let filename):
-                    garment.imagePath = filename
+                    item.imagePath = filename
                     
                 case .failure(let error):
                     throw error

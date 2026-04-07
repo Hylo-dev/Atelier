@@ -13,11 +13,16 @@ import UserNotifications
 @MainActor
 @Observable
 final class ApplianceManager: Manager {
-    let context: ModelContext
+    private let context: ModelContext
+    private let activityProvider: LaundryActivityProviding
     
     
-    init(_ context: ModelContext) {
-        self.context = context
+    init(
+        _ context: ModelContext,
+        activityProvider: LaundryActivityProviding = LaundryActivityManager.shared
+    ) {
+        self.context          = context
+        self.activityProvider = activityProvider
     }
     
     
@@ -172,7 +177,7 @@ final class ApplianceManager: Manager {
             garment.state = .washing
         }
         
-        LaundryActivityManager.shared.start(
+        activityProvider.start(
             programName: session.suggestedProgram.displayName,
             startDate  : session.startDate ?? .now,
             targetDate : targetDate,
@@ -191,7 +196,7 @@ final class ApplianceManager: Manager {
         if remaining > 0 {
             item.remainingTime = remaining
             
-            LaundryActivityManager.shared.updateNotification(
+            activityProvider.updateNotification(
                 for          : item.id.uuidString,
                 isPaused     : true,
                 remainingTime: item.remainingTime,
@@ -213,7 +218,7 @@ final class ApplianceManager: Manager {
         
         item.completationDate = Date.now.addingTimeInterval(timeToWash)
         
-        LaundryActivityManager.shared.updateNotification(
+        activityProvider.updateNotification(
             for          : item.id.uuidString,
             isPaused     : false,
             remainingTime: timeToWash,
@@ -286,6 +291,15 @@ final class ApplianceManager: Manager {
     }
     
     
+    func finishWashingSession(id: UUID) throws {
+        let descriptor = FetchDescriptor<LaundrySession>(
+            predicate: #Predicate { $0.id == id }
+        )
+        
+        if let session = try context.fetch(descriptor).first {
+            try finishWashing(session)
+        }
+    }
     
     // MARK: Handlers
     
@@ -294,6 +308,6 @@ final class ApplianceManager: Manager {
             withIdentifiers: [session.id.uuidString]
         )
         
-        LaundryActivityManager.shared.stop()
+        activityProvider.stop()
     }
 }
