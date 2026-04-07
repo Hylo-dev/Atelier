@@ -346,10 +346,10 @@ struct OutfitContextCard: View, Equatable {
         Button {
             do {
                 try manager.moveOutfitToWash(
-                    for             : outfit,
-                    garmentManager  : garmentManager,
-                    in              : sessions,
-                    applianceManager: applianceManager
+                    for           : outfit,
+                    garmentManager: garmentManager,
+                    in            : sessions,
+                    processGarment: applianceManager
                 )
             } catch {
                 onError(
@@ -365,10 +365,8 @@ struct OutfitContextCard: View, Equatable {
         
         Button {
             do {
-                try manager.toggleOutfitLoan(
-                    outfit,
-                    garmentManager: garmentManager
-                )
+                try manager.toggleOutfitLoan(outfit)
+                
             } catch {
                 onError(
                     "Error on set Loan State",
@@ -393,10 +391,10 @@ struct OutfitContextCard: View, Equatable {
         Button {
             do {
                try manager.logOutfitWear(
-                    for: item,
+                    for           : item,
                     garmentManager: garmentManager,
-                    in: sessions,
-                    applianceManager: applianceManager
+                    in            : sessions,
+                    processGarment: applianceManager
                 )
             } catch {
                 onError(

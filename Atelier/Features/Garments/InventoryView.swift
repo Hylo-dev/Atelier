@@ -200,7 +200,7 @@ struct InventoryView: View {
                     GarmentContextCard(
                         item            : item,
                         manager         : garmentManager,
-                        applianceManager: applianceManager,
+                        processGarment  : applianceManager,
                         selectedItem    : $selectedItem,
                         navigatedGarment: $navigatedGarment
                         
@@ -240,7 +240,7 @@ struct GarmentContextCard: View {
     
     var item            : Garment
     let manager         : GarmentManager
-    let applianceManager: ApplianceManager
+    let applianceManager: ApplianceProcessGarmentProtocol
     let onError         : (String, String) -> Void
     
     @Binding
@@ -255,14 +255,14 @@ struct GarmentContextCard: View {
     init(
         item: Garment,
         manager: GarmentManager,
-        applianceManager: ApplianceManager,
+        processGarment: ApplianceProcessGarmentProtocol,
         selectedItem: Binding<Garment?>,
         navigatedGarment: Binding<Garment?>,
         onError: @escaping (String, String) -> Void
     ) {
         self.item              = item
         self.manager           = manager
-        self.applianceManager  = applianceManager
+        self.applianceManager  = processGarment
         self.onError           = onError
         self._selectedItem     = selectedItem
         self._navigatedGarment = navigatedGarment
@@ -348,10 +348,11 @@ struct GarmentContextCard: View {
             
             Button {
                 do {
-                    try manager.logWear(
-                        for : item,
-                        used: applianceManager
-                    )
+                    let needWashing = manager.logWear(for: item)
+                    
+                    if needWashing {
+                        try applianceManager.processUnassignedGarments([item])
+                    }
                     
                 } catch {
                     onError(

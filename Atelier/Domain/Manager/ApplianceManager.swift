@@ -10,9 +10,18 @@ import SwiftData
 import Foundation
 import UserNotifications
 
+protocol ApplianceProcessGarmentProtocol {
+    func processUnassignedGarments(_ garments: [Garment]) throws
+    
+    func detachGarment(
+        _    garment: Garment,
+        from session: LaundrySession
+    ) throws
+}
+
 @MainActor
 @Observable
-final class ApplianceManager: Manager {
+final class ApplianceManager: Manager, ApplianceProcessGarmentProtocol {
     private let context: ModelContext
     private let activityProvider: LaundryActivityProviding
     
@@ -52,9 +61,8 @@ final class ApplianceManager: Manager {
     func detachGarment(
         _    garment: Garment,
         from session: LaundrySession
-    ) throws{
+    ) throws {
         session.garments.removeAll { $0.id == garment.id }
-//        garment.laundryHistory.removeAll { $0.id == session.id }
         
         if session.garments.isEmpty {
             context.delete(session)

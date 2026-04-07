@@ -10,9 +10,16 @@ import SwiftData
 import Foundation
 import UIKit
 
+protocol GarmentWearLoggableProtocol {
+    func logWear(
+        for item  : Garment,
+        each count: Int
+    ) -> Bool
+}
+
 @Observable
 @MainActor
-final class GarmentManager: Manager {
+final class GarmentManager: Manager, GarmentWearLoggableProtocol {
     private let context: ModelContext
     private let imageService: ImageServiceProtocol
     
@@ -70,23 +77,22 @@ final class GarmentManager: Manager {
     
     
     func logWear(
-        for  item   : Garment,
-        used manager: ApplianceManager,
-        each count  : Int = 1
-    ) throws {
+        for  item : Garment,
+        each count: Int = 1
+    ) -> Bool {
         item.wearCount += count
         
         if item.hasReachedWashingLimits {
-            try manager.processUnassignedGarments([item])
+            return true
         }
         
-        try update()
+        return false
     }
     
     
     func setWashState(
         for  item   : Garment,
-        used manager: ApplianceManager
+        used manager: ApplianceProcessGarmentProtocol
     ) throws {
         item.forceWash = true
         
@@ -97,8 +103,8 @@ final class GarmentManager: Manager {
     
     
     func resetWear(
-        for  item: Garment,
-        used manager: ApplianceManager
+        for  item   : Garment,
+        used manager: ApplianceProcessGarmentProtocol
     ) throws {
         if let session = item.activeLaundrySession {
             try manager.detachGarment(item, from: session)
@@ -117,12 +123,9 @@ final class GarmentManager: Manager {
     
     func processGarments(
         _ garments: [Garment],
-        with filter: FilterGarmentConfig
+        with filterManager: any FilterProtocol<Garment>
     ) {
-        let filtered = FilterGarmentConfig.filterGarments(
-            allGarments: garments,
-            config     : filter
-        )
+        let filtered = filterManager.filter(garments)
         
         var newGrouped: [String: [Garment]] = ["All": filtered]
         

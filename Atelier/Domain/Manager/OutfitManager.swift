@@ -50,20 +50,21 @@ final class OutfitManager: Manager {
     
     
     func logOutfitWear(
-        for outfit      : Outfit,
-        garmentManager  : GarmentManager,
-        in sessions     : [LaundrySession],
-        applianceManager: ApplianceManager,
-        each count      : Int = 1
+        for outfit    : Outfit,
+        garmentManager: GarmentWearLoggableProtocol,
+        in sessions   : [LaundrySession],
+        processGarment: ApplianceProcessGarmentProtocol,
+        each count    : Int = 1
     ) throws {
         outfit.wearCount    += count
         outfit.lastWornDate  = .now
         
-        for garment in outfit.garments {
-            try garmentManager.logWear(
-                for : garment,
-                used: applianceManager
-            )
+        let garmentsToWash = outfit.garments.filter { garment in
+            garmentManager.logWear(for: garment, each: 1)
+        }
+        
+        if !garmentsToWash.isEmpty {
+            try processGarment.processUnassignedGarments(garmentsToWash)
         }
         
         try update()
@@ -72,28 +73,25 @@ final class OutfitManager: Manager {
     
     
     func moveOutfitToWash(
-        for outfit: Outfit,
-        garmentManager: GarmentManager,
-        in sessions: [LaundrySession],
-        applianceManager: ApplianceManager
+        for outfit      : Outfit,
+        garmentManager  : GarmentWearLoggableProtocol,
+        in sessions     : [LaundrySession],
+        processGarment  : ApplianceProcessGarmentProtocol
     ) throws {
-        for garment in outfit.garments {
-            try garmentManager.logWear(
-                for : garment,
-                used: applianceManager,
-                each: 20
-            )
+        let garmentsToWash = outfit.garments.filter { garment in
+            garmentManager.logWear(for: garment, each: 20)
         }
         
-        try garmentManager.update()
+        if !garmentsToWash.isEmpty {
+            try processGarment.processUnassignedGarments(garmentsToWash)
+        }
+        
+        try update()
     }
     
     
     
-    func toggleOutfitLoan(
-        _ outfit      : Outfit,
-        garmentManager: GarmentManager
-    ) throws {
+    func toggleOutfitLoan(_ outfit: Outfit) throws {
         let newState: GarmentState = outfit.isOnLoan ? .available : .onLoan
         
         for garment in outfit.garments {
@@ -104,17 +102,17 @@ final class OutfitManager: Manager {
             }
         }
         
-        try garmentManager.update()
+        try update()
     }
     
     
     
     @MainActor
-    func processOutfits(_ outfits: [Outfit], with filter: FilterOutfitConfig) {
-        let filtered = FilterOutfitConfig.filterOutfits(
-            allOutfits: outfits,
-            config    : filter
-        )
+    func processOutfits(
+        _ outfits: [Outfit],
+        with filterManager: any FilterProtocol<Outfit>
+    ) {
+        let filtered = filterManager.filter(outfits)
         
         var newGrouped: [String: [Outfit]] = ["All": filtered]
         
@@ -128,7 +126,7 @@ final class OutfitManager: Manager {
         }
         
         let uniqueSeasons = Set(outfits.lazy.map { $0.season.title })
-        let newSeasons    = ["All"] + uniqueSeasons.sorted()
+        let newSeasons = ["All"] + uniqueSeasons.sorted()
         
         self.visibleOutfits   = filtered
         self.groupedOutfits   = newGrouped

@@ -6,8 +6,19 @@
 //
 
 import Foundation
+import SwiftData
 
-struct FilterGarmentConfig: Equatable, Sendable {
+protocol FilterProtocol<T>: Equatable, Sendable {
+    associatedtype T: PersistentModel
+    var isFiltering: Bool { get }
+    
+    mutating func reset()
+    func filter(_ items: [T]) -> [T]
+}
+
+struct FilterGarmentConfig: FilterProtocol {
+    typealias T = Garment
+        
     var selectedBrand      : Set<String>?             = nil
     var selectedSubCategory: Set<GarmentSubCategory>? = nil
     var selectedSeason     : Set<Season>?             = nil
@@ -26,6 +37,19 @@ struct FilterGarmentConfig: Equatable, Sendable {
                self.onlyClean
     }
     
+    nonisolated static func == (
+        lhs: FilterGarmentConfig,
+        rhs: FilterGarmentConfig
+    ) -> Bool {
+        lhs.selectedBrand       == rhs.selectedBrand &&
+        lhs.selectedSubCategory == rhs.selectedSubCategory &&
+        lhs.selectedSeason      == rhs.selectedSeason &&
+        lhs.selectedStyle       == rhs.selectedStyle &&
+        lhs.selectedColor       == rhs.selectedColor &&
+        lhs.selectedState       == rhs.selectedState &&
+        lhs.onlyClean           == rhs.onlyClean
+    }
+    
     mutating func reset() {
         self.selectedBrand       = nil
         self.selectedSubCategory = nil
@@ -36,44 +60,39 @@ struct FilterGarmentConfig: Equatable, Sendable {
         self.onlyClean           = false
     }
     
-    static func filterGarments(
-        allGarments: [Garment],
-        config     : Self
-    ) -> [Garment] {
+    func filter(_ items: [Garment]) -> [Garment] {
         
-        guard config.isFiltering else {
-            return allGarments
+        guard isFiltering else {
+            return items
         }
         
-        return allGarments.filter { garment in
+        return items.filter { garment in
             
-            // 1. Controlli Booleani Diretti (i più veloci da calcolare)
-            if config.onlyClean && garment.state != .available {
+            if onlyClean && garment.state != .available {
                 return false
             }
             
-            // 2. Filtri di Set
-            if let stateToFind = config.selectedState,
+            if let stateToFind = selectedState,
                !stateToFind.contains(garment.state) {
                 return false
             }
             
-            if let seasonToFind = config.selectedSeason,
+            if let seasonToFind = selectedSeason,
                !seasonToFind.contains(garment.season) {
                 return false
             }
             
-            if let styleToFind = config.selectedStyle,
+            if let styleToFind = selectedStyle,
                !styleToFind.contains(garment.style) {
                 return false
             }
             
-            if let subCategoryToFind = config.selectedSubCategory,
+            if let subCategoryToFind = selectedSubCategory,
                !subCategoryToFind.contains(garment.subCategory) {
                 return false
             }
             
-            if let brandToFind = config.selectedBrand {
+            if let brandToFind = selectedBrand {
                 guard let garmentBrand = garment.brand, brandToFind.contains(garmentBrand) else {
                     return false
                 }
@@ -84,7 +103,9 @@ struct FilterGarmentConfig: Equatable, Sendable {
     }
 }
 
-struct FilterOutfitConfig: Equatable {
+struct FilterOutfitConfig: FilterProtocol {
+    typealias T = Outfit
+    
     var recentWorn       : Bool               = false
     var selectedOccasions: Set<GarmentStyle>? = nil
     var selectedSeasons  : Set<Season>?       = nil
@@ -103,6 +124,19 @@ struct FilterOutfitConfig: Equatable {
         onlyFavorite
     }
     
+    nonisolated static func == (
+        lhs: FilterOutfitConfig,
+        rhs: FilterOutfitConfig
+    ) -> Bool {
+        lhs.recentWorn        == rhs.recentWorn &&
+        lhs.selectedOccasions == rhs.selectedOccasions &&
+        lhs.selectedSeasons   == rhs.selectedSeasons &&
+        lhs.selectedTone      == rhs.selectedTone &&
+        lhs.maxPrice          == rhs.maxPrice &&
+        lhs.onlyClean         == rhs.onlyClean &&
+        lhs.onlyFavorite      == rhs.onlyFavorite
+    }
+    
     mutating func reset() {
         recentWorn        = false
         selectedOccasions = nil
@@ -113,30 +147,27 @@ struct FilterOutfitConfig: Equatable {
         onlyFavorite      = false
     }
     
-    static func filterOutfits(
-        allOutfits: [Outfit],
-        config    : Self
-    ) -> [Outfit] {
+    func filter(_ items: [Outfit]) -> [Outfit] {
         
-        guard config.isFiltering else {
-            return allOutfits
+        guard isFiltering else {
+            return items
         }
         
-        var outfits = allOutfits.filter { outfit in
+        var outfits = items.filter { outfit in
             
-            if config.onlyClean && !outfit.isReadyToWear {
+            if onlyClean && !outfit.isReadyToWear {
                 return false
             }
             
-            if config.onlyFavorite && !outfit.isFavorite {
+            if onlyFavorite && !outfit.isFavorite {
                 return false
             }
             
-            if config.selectedTone != outfit.tone {
+            if selectedTone != outfit.tone {
                 return false
             }
             
-            if let selectedOccasions = config.selectedOccasions, !selectedOccasions.isEmpty {
+            if let selectedOccasions = selectedOccasions, !selectedOccasions.isEmpty {
                 
                 let outfitOccasionsSet = Set(outfit.occasion)
                 if outfitOccasionsSet.isDisjoint(
@@ -146,7 +177,7 @@ struct FilterOutfitConfig: Equatable {
                 }
             }
             
-            if let seasonsToFind = config.selectedSeasons,
+            if let seasonsToFind = selectedSeasons,
                 !seasonsToFind.isEmpty {
                 
                 if !seasonsToFind.contains(outfit.season) {
@@ -154,15 +185,14 @@ struct FilterOutfitConfig: Equatable {
                 }
             }
                         
-            if config.maxPrice > 0 &&
-                outfit.totalValue > config.maxPrice {
+            if maxPrice > 0 && outfit.totalValue > maxPrice {
                 return false
             }
             
             return true
         }
         
-        if config.recentWorn {
+        if recentWorn {
             outfits.sort {
                 let date0 = $0.lastWornDate ?? Date.distantPast
                 let date1 = $1.lastWornDate ?? Date.distantPast
