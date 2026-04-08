@@ -105,10 +105,12 @@ final class OutfitManager: Manager {
     
     @MainActor
     func processOutfits(
-        _ outfits: [Outfit],
-        with filterManager: any FilterProtocol<Outfit>
-    ) -> ProcessedOutfits {
-        let filtered = filterManager.filter(outfits)
+        _ outfits         : [Outfit],
+        state             : TabFilterService,
+        with viewModel    : OutfitViewModel
+    ) {
+        
+        let filtered = viewModel.filterManager.filter(outfits)
         
         var newGrouped: [String: [Outfit]] = ["All": filtered]
         
@@ -124,10 +126,14 @@ final class OutfitManager: Manager {
         let uniqueSeasons = Set(outfits.lazy.map { $0.season.title })
         let newSeasons = ["All"] + uniqueSeasons.sorted()
         
-        return ProcessedOutfits(
+        if state.items != newSeasons {
+            state.items = newSeasons
+        }
+        
+        viewModel.processedOutfit = Processed(
             visible: filtered,
             grouped: newGrouped,
-            seasons: newSeasons
+            tag    : newSeasons
         )
     }
 }

@@ -9,12 +9,6 @@ import SwiftUI
 import SwiftData
 
 struct OutfitView: View {
-        
-    @Environment(CaptureManager.self)
-    var manager
-        
-    @Environment(\.modelContext)
-    private var context
     
     @Environment(OutfitManager.self)
     private var outfitManager: OutfitManager
@@ -33,7 +27,7 @@ struct OutfitView: View {
     
     
     @State
-    private var outfitViemModel = OutfitViewModel()
+    private var outfitViewModel = OutfitViewModel()
         
     
     @Query(
@@ -43,66 +37,20 @@ struct OutfitView: View {
     private var outfits: [Outfit]
     
     
-    // MARK: - Static properties
-    
-    static private let columns = [
-        GridItem(.adaptive(minimum: 150), spacing: 20)
-    ]
-    
-    
     var body: some View {
-        Group {
-            if outfits.isEmpty {
-                ContentUnavailableView(
-                    "Outfits Empty",
-                    systemImage: "tshirt",
-                    description: Text("Time to create your drip")
-                )
-                .containerRelativeFrame(.vertical)
-                
-            } else if outfitViemModel.processedOutfit.visible.isEmpty {
-                ContentUnavailableView(
-                    "No Outfits Found",
-                    systemImage: "magnifyingglass",
-                    description: Text("Try adjusting your filters to see more results from your wardrobe.")
-                )
-                .containerRelativeFrame(.vertical)
-                
-            } else {
-                LiquidPagingView(
-                    selection  : self.$outfitState.selection,
-                    onProgressChange: { newVal in
-                        if self.outfitState.progress != newVal {
-                            self.outfitState.progress = newVal
-                        }
-                    },
-                    items      : self.outfitState.items,
-                    isEnabled  : self.outfitState.isPagesEnabled
-                ) { season in
-                    self.scrollableGrid(for: season)
+        bodyModifiers(
+            Group {
+                if outfits.isEmpty {
+                    emptyStateView
+                    
+                } else if outfitViewModel.processedOutfit.visible.isEmpty {
+                    emptyFilteredView
+                    
+                } else {
+                    pagingView
                 }
-                .ignoresSafeArea(.container, edges: .top)
-                
             }
-        }
-        .sensoryFeedback(.success, trigger: outfitViemModel.isDeleted)
-        .onChange(of: outfits, initial: true) {
-            outfitViemModel.updateData(
-                items: outfits,
-                in   : outfitState,
-                with : outfitManager
-            )
-        }
-        .onChange(of: outfitViemModel.filter, initial: true) {
-            outfitViemModel.updateData(
-                items: outfits,
-                in   : outfitState,
-                with : outfitManager
-            )
-        }
-        .onChange(of: outfitViemModel.filter.isFiltering) { _, newValue in
-            outfitState.hiddenSectionBar = newValue
-        }
+        )
         .toolbar {
             ToolbarItem(placement: .title) {
                 Text(String(repeating: " ", count: 150))
@@ -116,45 +64,34 @@ struct OutfitView: View {
             if !outfits.isEmpty {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Filter", systemImage: "line.3.horizontal.decrease") {
-                        outfitViemModel.isFilterSheetVisible = true
+                        outfitViewModel.isFilterSheetVisible = true
                     }
                 }
             }
             
             ToolbarItem(placement: .topBarTrailing) {
-                Button("Add", systemImage: "plus") { outfitViemModel.isAddOutfitSheetVisible = true }
+                Button("Add", systemImage: "plus") { outfitViewModel.isAddOutfitSheetVisible = true }
             }
         }
-        .navigationDestination(item: $outfitViemModel.navigatedOutfit) { item in
-            InfoOutfitView(item)
-                .onAppear {
-                    withAnimation {
-                        outfitState.hiddenSectionBar = true
-                    }
-                }
+        .sensoryFeedback(.success, trigger: outfitViewModel.isDeleted)
+        .onChange(of: outfits, initial: true) {
+            outfitManager.processOutfits(
+                outfits,
+                state: outfitState,
+                with: outfitViewModel
+            )
         }
-        .sheet(isPresented: $outfitViemModel.isAddOutfitSheetVisible) {
-            NavigationStack {
-                OutfitEditorView()
-            }
+        .onChange(of: outfitViewModel.filterManager, initial: true) {
+            outfitManager.processOutfits(
+                outfits,
+                state: outfitState,
+                with: outfitViewModel
+            )
         }
-        .sheet(item: $outfitViemModel.selectedItem) { outfit in
-            NavigationStack {
-                OutfitEditorView(outfit)
-            }
+        .onChange(of: outfitViewModel.filterManager.isFiltering) { _, newValue in
+            outfitState.hiddenSectionBar = newValue
         }
-        .sheet(isPresented: $outfitViemModel.isFilterSheetVisible) {
-            FilterOutfitView(filter: $outfitViemModel.filter)
-        }
-        .alert(
-            outfitViemModel.alertManager.title,
-            isPresented: $outfitViemModel.alertManager.isPresent
-        ) {
-            
-        } message: {
-            Text(outfitViemModel.alertManager.message)
-        }
-        .onChange(of: outfitViemModel.navigatedOutfit) { old, newValue in
+        .onChange(of: outfitViewModel.navigatedOutfit) { old, newValue in
             if newValue == nil {
                 withAnimation {
                     outfitState.hiddenSectionBar = false
@@ -166,36 +103,101 @@ struct OutfitView: View {
     
     // MARK: - Views
     
+    private var emptyStateView: some View {
+        ContentUnavailableView(
+            "Outfits Empty",
+            systemImage: "tshirt",
+            description: Text("Time to create your drip")
+        )
+        .containerRelativeFrame(.vertical)
+    }
+    
+    
+    private var emptyFilteredView: some View {
+        ContentUnavailableView(
+            "No Outfits Found",
+            systemImage: "magnifyingglass",
+            description: Text("Try adjusting your filters to see more results from your wardrobe.")
+        )
+        .containerRelativeFrame(.vertical)
+    }
+    
+    
+    private var pagingView: some View {
+        LiquidPagingView(
+            selection  : self.$outfitState.selection,
+            onProgressChange: { newVal in
+                if self.outfitState.progress != newVal {
+                    self.outfitState.progress = newVal
+                }
+            },
+            items      : self.outfitState.items,
+            isEnabled  : self.outfitState.isPagesEnabled
+        ) { season in
+            
+            let visibles = outfitViewModel.processedOutfit.grouped[season] ?? []
+            VerticalScrollGridView(items: visibles) { item in
+                outfitCard(item)
+            }
+            
+            
+        }
+        .ignoresSafeArea(.container, edges: .top)
+    }
+    
+    
     @ViewBuilder
-    private func scrollableGrid(for season: String) -> some View {
-        ScrollView(.vertical) {
-            LazyVGrid(columns: Self.columns, spacing: 20) {
-                
-                ForEach(outfitViemModel.processedOutfit.grouped[season] ?? [], id: \.id) { item in
-                    
-                    let subTitle = item.garments.count <= 1 ?
-                    "Incomplete outfit" : nil
-                    OutfitContextCard(
-                        outfit          : item,
-                        garmentManager  : garmentManager,
-                        applianceManager: applianceManager,
-                        manager         : outfitManager,
-                        subTitleAlert   : subTitle,
-                        selectedItem    : $outfitViemModel.selectedItem,
-                        navigatedOutfit : $outfitViemModel.navigatedOutfit
-                        
-                    ) { title, message in
-                        outfitViemModel.alertManager.title     = title
-                        outfitViemModel.alertManager.message   = message
-                        outfitViemModel.alertManager.isPresent = true
+    private func outfitCard(_ item: Outfit) -> some View {
+        let subTitle = item.garments.count <= 1 ? "Incomplete outfit" : nil
+        
+        OutfitContextCard(
+            outfit          : item,
+            garmentManager  : garmentManager,
+            applianceManager: applianceManager,
+            manager         : outfitManager,
+            subTitleAlert   : subTitle,
+            selectedItem    : $outfitViewModel.selectedItem,
+            navigatedOutfit : $outfitViewModel.navigatedOutfit
+            
+        ) { title, message in
+            outfitViewModel.alertManager.title     = title
+            outfitViewModel.alertManager.message   = message
+            outfitViewModel.alertManager.isPresent = true
+        }
+        .equatable()
+        .id(item.id)
+    }
+    
+    private func bodyModifiers(_ view: some View) -> some View {
+        view
+            .navigationDestination(item: $outfitViewModel.navigatedOutfit) { item in
+                InfoOutfitView(item)
+                    .onAppear {
+                        withAnimation {
+                            outfitState.hiddenSectionBar = true
+                        }
                     }
-                    .equatable()
-                    .id(item.id)
+            }
+            .sheet(isPresented: $outfitViewModel.isAddOutfitSheetVisible) {
+                NavigationStack {
+                    OutfitEditorView()
                 }
             }
-            .padding(.horizontal, 16)
-        }
-        .contentMargins(.top, 150, for: .scrollContent)
-        .scrollIndicators(.hidden)
+            .sheet(item: $outfitViewModel.selectedItem) { outfit in
+                NavigationStack {
+                    OutfitEditorView(outfit)
+                }
+            }
+            .sheet(isPresented: $outfitViewModel.isFilterSheetVisible) {
+                FilterOutfitView(filter: $outfitViewModel.filterManager)
+            }
+            .alert(
+                outfitViewModel.alertManager.title,
+                isPresented: $outfitViewModel.alertManager.isPresent
+            ) {
+                
+            } message: {
+                Text(outfitViewModel.alertManager.message)
+            }
     }
 }

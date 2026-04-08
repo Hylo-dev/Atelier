@@ -108,7 +108,8 @@ extension AtelierSchemaV1 {
             self.isCompleted       = false
         }
         
-        @MainActor func updateWarnings() {
+        @MainActor
+        func updateWarnings() {
             var newWarnings: Set<LaundryWarning> = []
             
             if garments.contains(where: { $0.category == .lingerie }) {

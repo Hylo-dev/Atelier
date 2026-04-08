@@ -10,18 +10,22 @@ import SwiftData
 
 struct WardrobeView: View {
         
-    @Environment(\.modelContext)
-    private var context
-    
-    
     @Environment(GarmentManager.self)
     private var garmentManager
     
     @Environment(ApplianceManager.self)
     private var applianceManager
+    
+    
+    // MARK: - Parameters Val
         
-    @Environment(CaptureManager.self)
-    private var manager
+    @Bindable
+    var wardrobeState: TabFilterService
+    
+    let title: String
+    
+    @State
+    private var wardrobeViewModel = WardrobeViewModel()
     
     
     @Query(
@@ -29,25 +33,7 @@ struct WardrobeView: View {
         order: .reverse
     )
     private var garments: [Garment]
-    
-    
-    // MARK: - Parameters Val
-    
-    let title: String
-    
-    @Bindable
-    var wardrobeState: TabFilterService
-    
-    @State
-    private var wardrobeViewModel = WardrobeViewModel()
 
-    
-    // MARK: - Static property
-    
-    static private let columns = [
-        GridItem(.adaptive(minimum: 150), spacing: 20)
-    ]
-    
     
     init(
         title        : String,
@@ -58,49 +44,35 @@ struct WardrobeView: View {
     }
     
     var body: some View {
-//        let _ = Self._printChanges()
         
-        Group {
-            if self.garments.isEmpty {
-                ContentUnavailableView(
-                    "Closet Empty",
-                    systemImage: "hanger",
-                    description: Text("Time to fill this closet up")
-                )
-                .containerRelativeFrame(.vertical)
-                
-            } else {
-                LiquidPagingView(
-                    selection: $wardrobeState.selection,
-                    onProgressChange: { newVal in
-                        if wardrobeState.progress != newVal {
-                            wardrobeState.progress = newVal
-                        }
-                    },
-                    items    : wardrobeState.items,
-                    isEnabled: wardrobeState.isPagesEnabled
-                ) { category in
-                    scrollableGrid(for: category)
+        bodyModifiers(
+            Group {
+                if garments.isEmpty {
+                    emptyView
+                    
+                } else if wardrobeViewModel.processedGarments.visible.isEmpty {
+                    emptyFilteredView
+                    
+                } else {
+                    pagingView
                 }
-                .ignoresSafeArea(.container, edges: .top)
-                
             }
-        }
+        )
         .onChange(of: garments, initial: true) {
-            wardrobeViewModel.updateData(
+            garmentManager.processGarments(
                 garments,
-                wardrobeState: wardrobeState,
-                service: garmentManager
+                state: wardrobeState,
+                with: wardrobeViewModel
             )
         }
-        .onChange(of: wardrobeViewModel.filter.isFiltering) {
-            wardrobeViewModel.updateData(
+        .onChange(of: wardrobeViewModel.filterManager.isFiltering) {
+            garmentManager.processGarments(
                 garments,
-                wardrobeState: wardrobeState,
-                service: garmentManager
+                state: wardrobeState,
+                with: wardrobeViewModel
             )
         }
-        .onChange(of: wardrobeViewModel.filter.isFiltering) { _, newValue in
+        .onChange(of: wardrobeViewModel.filterManager.isFiltering) { _, newValue in
             wardrobeState.hiddenSectionBar = newValue
         }
         .toolbar {
@@ -127,17 +99,6 @@ struct WardrobeView: View {
                 }
             }
         }
-        .navigationDestination(item: $wardrobeViewModel.navigatedGarment) { item in
-            InfoGarmentView(
-                item,
-                garmentManager: self.garmentManager
-            )
-            .onAppear {
-                withAnimation {
-                    wardrobeState.hiddenSectionBar = true
-                }
-            }
-        }
         .onChange(of: wardrobeViewModel.navigatedGarment) { old, newValue in
             if newValue == nil {
                 withAnimation {
@@ -145,62 +106,105 @@ struct WardrobeView: View {
                 }
             }
         }
-        .sheet(isPresented: $wardrobeViewModel.isAddGarmentSheetVisible) {
-            NavigationStack {
-                GarmentEditorView()
-            }
-        }
-        .sheet(item: $wardrobeViewModel.selectedItem) { germent in
-            NavigationStack {
-                GarmentEditorView(garment: germent)
-            }
-        }
-        .sheet(isPresented: $wardrobeViewModel.isFilterSheetVisible) {
-            FilterGarmentView(
-                filters: $wardrobeViewModel.filter,
-                brands : garmentManager.availableBrands
-            )
-        }
-        .alert(
-            wardrobeViewModel.alertManager.title,
-            isPresented: $wardrobeViewModel.alertManager.isPresent
-        ) {
-            
-        } message: {
-            Text(wardrobeViewModel.alertManager.message)
-        }
     }
     
     // MARK: - Subviews
     
-    @ViewBuilder
-    private func scrollableGrid(for category: String) -> some View {
-        ScrollView(.vertical) {
+    private var emptyView: some View {
+        ContentUnavailableView(
+            "Closet Empty",
+            systemImage: "hanger",
+            description: Text("Time to fill this closet up")
+        )
+        .containerRelativeFrame(.vertical)
+    }
+    
+    
+    private var emptyFilteredView: some View {
+        ContentUnavailableView(
+            "No Garments Found",
+            systemImage: "magnifyingglass",
+            description: Text("Try adjusting your filters to see more results from your wardrobe.")
+        )
+        .containerRelativeFrame(.vertical)
+    }
+    
+    
+    private var pagingView: some View {
+        LiquidPagingView(
+            selection: $wardrobeState.selection,
+            onProgressChange: { newVal in
+                if wardrobeState.progress != newVal {
+                    wardrobeState.progress = newVal
+                }
+            },
+            items    : wardrobeState.items,
+            isEnabled: wardrobeState.isPagesEnabled
+        ) { category in
             
-            LazyVGrid(columns: Self.columns, spacing: 20) {
-                let items = garmentManager.groupedGarments[category] ?? []
-                
-                ForEach(items, id: \.id) { item in
-                    
-                    GarmentContextCard(
-                        item            : item,
-                        manager         : garmentManager,
-                        processGarment  : applianceManager,
-                        selectedItem    : $wardrobeViewModel.selectedItem,
-                        navigatedGarment: $wardrobeViewModel.navigatedGarment
-                        
-                    ) { title, message in
-                        wardrobeViewModel.alertManager.title     = title
-                        wardrobeViewModel.alertManager.message   = message
-                        wardrobeViewModel.alertManager.isPresent = true
+            let visibles = wardrobeViewModel.processedGarments.grouped[category] ?? []
+            VerticalScrollGridView(items: visibles) { item in
+                garmentCard(item)
+            }
+            
+        }
+        .ignoresSafeArea(.container, edges: .top)
+    }
+    
+    
+    @ViewBuilder
+    private func garmentCard(_ item: Garment) -> some View {
+        GarmentContextCard(
+            item            : item,
+            manager         : garmentManager,
+            processGarment  : applianceManager,
+            selectedItem    : $wardrobeViewModel.selectedItem,
+            navigatedGarment: $wardrobeViewModel.navigatedGarment
+            
+        ) { title, message in
+            wardrobeViewModel.alertManager.title     = title
+            wardrobeViewModel.alertManager.message   = message
+            wardrobeViewModel.alertManager.isPresent = true
+        }
+        .id(item.id)
+    }
+    
+    private func bodyModifiers(_ view: some View) -> some View {
+        view
+            .navigationDestination(item: $wardrobeViewModel.navigatedGarment) { item in
+                InfoGarmentView(
+                    item,
+                    garmentManager: self.garmentManager
+                )
+                .onAppear {
+                    withAnimation {
+                        wardrobeState.hiddenSectionBar = true
                     }
-                    .id(item.id)
                 }
             }
-            .padding(.horizontal, 16)
-        }
-        .contentMargins(.top, 150, for: .scrollContent)
-        .scrollIndicators(.hidden)
-
+            .sheet(isPresented: $wardrobeViewModel.isAddGarmentSheetVisible) {
+                NavigationStack {
+                    GarmentEditorView()
+                }
+            }
+            .sheet(item: $wardrobeViewModel.selectedItem) { germent in
+                NavigationStack {
+                    GarmentEditorView(garment: germent)
+                }
+            }
+            .sheet(isPresented: $wardrobeViewModel.isFilterSheetVisible) {
+                FilterGarmentView(
+                    filters: $wardrobeViewModel.filterManager,
+                    brands : wardrobeViewModel.processedGarments.brands
+                )
+            }
+            .alert(
+                wardrobeViewModel.alertManager.title,
+                isPresented: $wardrobeViewModel.alertManager.isPresent
+            ) {
+                
+            } message: {
+                Text(wardrobeViewModel.alertManager.message)
+            }
     }
 }

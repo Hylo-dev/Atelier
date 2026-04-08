@@ -20,11 +20,11 @@ final class OutfitViewModel {
     
     var isAddOutfitSheetVisible: Bool
     
-    var filter: FilterOutfitConfig
+    var filterManager: FilterOutfitConfig
     
     var isFilterSheetVisible: Bool
     
-    var processedOutfit: ProcessedOutfits
+    var processedOutfit: Processed<Outfit>
     
     init() {
         self.alertManager            = AlertManager()
@@ -32,24 +32,8 @@ final class OutfitViewModel {
         self.navigatedOutfit         = nil
         self.isDeleted               = false
         self.isAddOutfitSheetVisible = false
-        self.filter                  = FilterOutfitConfig()
+        self.filterManager           = FilterOutfitConfig()
         self.isFilterSheetVisible    = false
-        self.processedOutfit         = ProcessedOutfits()
-    }
-    
-    @inline(__always)
-    func updateData(
-        items         : [Outfit],
-        in outfitState: TabFilterService,
-        with manager  : OutfitManager
-    ) {
-        processedOutfit = manager.processOutfits(
-            items,
-            with: filter
-        )
-        
-        if outfitState.items != processedOutfit.seasons {
-            outfitState.items = processedOutfit.seasons
-        }
+        self.processedOutfit         = Processed()
     }
 }

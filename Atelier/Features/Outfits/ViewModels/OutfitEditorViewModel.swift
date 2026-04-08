@@ -33,6 +33,7 @@ final class OutfitEditorViewModel {
     
     private let repository: any RepositoryProtocol<Outfit, any Manager<Outfit>>
     
+    
     var isFormValid: Bool {
         let isNameValid = !name.trimmingCharacters(
             in: .whitespaces

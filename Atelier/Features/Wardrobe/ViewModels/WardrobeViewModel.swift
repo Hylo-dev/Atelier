@@ -18,33 +18,20 @@ final class WardrobeViewModel {
     
     var navigatedGarment: Garment?
     
-    var filter: FilterGarmentConfig
+    var filterManager: FilterGarmentConfig
     
     var isFilterSheetVisible: Bool = false
+    
+    var processedGarments: Processed<Garment>
     
     init(filter: FilterGarmentConfig = FilterGarmentConfig()) {
         self.alertManager             = AlertManager()
         self.isAddGarmentSheetVisible = false
         self.selectedItem             = nil
         self.navigatedGarment         = nil
-        self.filter                   = filter
+        self.filterManager            = filter
         self.isFilterSheetVisible     = false
-    }
-    
-    @inline(__always)
-    func updateData(
-        _ garments   : [Garment],
-        wardrobeState: TabFilterService,
-        service      : GarmentProcessing
-    ) {
-        service.processGarments(
-            garments,
-            with: filter
-        )
-        
-        if wardrobeState.items != service.availableCategories {
-            wardrobeState.items = service.availableCategories
-        }
+        self.processedGarments        = Processed()
     }
 }
 

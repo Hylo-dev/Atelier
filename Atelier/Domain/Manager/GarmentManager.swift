@@ -17,12 +17,6 @@ final class GarmentManager: Manager, GarmentWearLoggable, GarmentProcessing {
     private let context: ModelContext
     private let imageService: ImageServiceProtocol
     
-    var visibleGarments: [Garment]           = []
-    var groupedGarments: [String: [Garment]] = [:]
-    var availableBrands: [String]            = []
-    var availableCategories: [String]        = []
-    
-    
     
     init(
         _ context: ModelContext,
@@ -114,10 +108,11 @@ final class GarmentManager: Manager, GarmentWearLoggable, GarmentProcessing {
     
     
     func processGarments(
-        _ garments: [Garment],
-        with filterManager: any FilterProtocol<Garment>
+        _ garments    : [Garment],
+        state         : TabFilterService,
+        with viewModel: WardrobeViewModel
     ) {
-        let filtered = filterManager.filter(garments)
+        let filtered = viewModel.filterManager.filter(garments)
         
         var newGrouped: [String: [Garment]] = ["All": filtered]
         
@@ -133,24 +128,20 @@ final class GarmentManager: Manager, GarmentWearLoggable, GarmentProcessing {
         let rawBrands    = Set(garments.compactMap { $0.brand })
         let sortedBrands = rawBrands.sorted()
         
-        let uniqueCategories = Set(garments.lazy.map { $0.category.title })
+        let uniqueCategories = Set(garments.lazy.map {
+            $0.category.title
+        })
         let newCategories    = ["All"] + uniqueCategories.sorted()
         
-        let newVisibleIDs  = filtered.map(\.id)
-        let currVisibleIDs = visibleGarments.map(\.id)
-        
-        if newVisibleIDs != currVisibleIDs {
-            self.visibleGarments = filtered
+        if state.items != newCategories {
+            state.items = newCategories
         }
         
-        self.groupedGarments = newGrouped
-        
-        if self.availableBrands != sortedBrands {
-            self.availableBrands = sortedBrands
-        }
-        
-        if self.availableCategories != newCategories {
-            self.availableCategories = newCategories
-        }
+        viewModel.processedGarments = Processed(
+            visible: filtered,
+            grouped: newGrouped,
+            brands : sortedBrands,
+            tag    : newCategories
+        )
     }
 }
