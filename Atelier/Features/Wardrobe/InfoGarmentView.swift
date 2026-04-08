@@ -22,9 +22,6 @@ struct InfoGarmentView: View {
     
     private var garmentManager: any Manager<Garment>
     
-    private let formattedDate: String
-    private let formattedPrice: String?
-    
     
     @State
     private var isModifySheetVisible: Bool = false
@@ -35,6 +32,10 @@ struct InfoGarmentView: View {
     @State
     private var isDeleted: Bool = false
     
+    
+    private let formattedDate : String
+    private let formattedPrice: String?
+    
 
     init(
         _ item        : Garment,
@@ -44,26 +45,29 @@ struct InfoGarmentView: View {
         self.color          = [Color(hex: item.color)]
         self.garmentManager = garmentManager
         
-        self.formattedDate = item.purchaseDate.formatted(date: .abbreviated, time: .omitted)
+        self.formattedDate = item.purchaseDate.formatted(
+            date: .abbreviated,
+            time: .omitted
+        )
         
         if let price = item.price {
-            self.formattedPrice = price.formatted(.currency(code: Locale.current.currency?.identifier ?? "EUR"))
-        } else {
-            self.formattedPrice = nil
-        }
+            self.formattedPrice = price.formatted(
+                .currency(
+                    code: Locale.current.currency?.identifier ?? "EUR"
+                )
+            )
+        } else { self.formattedPrice = nil }
     }
     
     
     var body: some View {
-        let _ = Self._printChanges()
-        
         HeroListView(
             item.imagePath,
             colorPlaceholder: color
         ) {
             titleSection
             
-        } content: { // MARK: - Sections
+        } content: {
             sectionStyleAndCategory
             
             if !item.composition.isEmpty {
@@ -73,7 +77,7 @@ struct InfoGarmentView: View {
             sectionCare
             
             if !item.outfits.isEmpty {
-                outfitsLazyRow
+                outfitsRow
             }
             
         }
@@ -82,8 +86,8 @@ struct InfoGarmentView: View {
             ToolbarItem {
                 Button(role: .destructive) {
                     alertManager.isPresent = true
-                    alertManager.title = "Delete Garment"
-                    alertManager.message = "Are you sure? This action cannot be undone."
+                    alertManager.title     = "Delete Garment"
+                    alertManager.message   = "Are you sure? This action cannot be undone."
                     
                 } label: {
                     Label("Delete", systemImage: "trash")
@@ -258,27 +262,19 @@ struct InfoGarmentView: View {
     }
     
     @ViewBuilder
-    private var outfitsLazyRow: some View {
-        SectionList(titleKey: "Outfits") {
+    private var outfitsRow: some View {
         
-            ScrollView(.horizontal) {
-                LazyHStack(spacing: 15) {
-                    ForEach(item.outfits, id: \.id) { outfit in
-                        
-                        ModelCardView(
-                            title    : outfit.name,
-                            imagePath: outfit.fullLookImagePath
-                        )
-                        .frame(width: 150, height: 250)
-                        
-                    }
-                }
-            }
+        HorizontalScrollList(
+            title: "Outfits",
+            items: item.outfits
+        ) { outfit in
+            ModelCardView(
+                title    : outfit.name,
+                imagePath: outfit.fullLookImagePath
+            )
+            .frame(width: 150, height: 250)
         }
-        .padding(.vertical, 10)
     }
-    
-
 }
 
 #Preview {

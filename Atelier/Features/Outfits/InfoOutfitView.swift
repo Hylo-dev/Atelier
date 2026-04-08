@@ -302,43 +302,17 @@ struct InfoOutfitView: View {
     
     @ViewBuilder
     private var garmentsLazyRow: some View {
-        SectionList(titleKey: "Items") {
-            
-            ScrollView(.horizontal) {
-                LazyHStack(spacing: 15) {
-                    ForEach(self.outfit.garments, id: \.id) { garment in
-                        
-                        ModelCardView(
-                            title      : garment.name,
-                            subheadline: garment.subCategory.rawValue,
-                            imagePath  : garment.imagePath
-                        )
-                        .frame(width: 150, height: 250)
-                        
-                    }
-                }
-            }
-        }
-        .padding(.vertical, 10)
-    }
-    
-    
-    // TODO: Calc weight color for each garment  
-    @ViewBuilder
-    private var outfitColors: some View {
         
-        HStack {
-            
-            ForEach(outfit.garments, id: \.id) { color in
-                
-                VStack {
-                    
-                    Text(color.color)
-                }
-                
-            }
-            
+        HorizontalScrollList(
+            title: "Items",
+            items: outfit.garments
+        ) { garment in
+            ModelCardView(
+                title      : garment.name,
+                subheadline: garment.subCategory.rawValue,
+                imagePath  : garment.imagePath
+            )
+            .frame(width: 150, height: 250)
         }
-        
     }
 }
