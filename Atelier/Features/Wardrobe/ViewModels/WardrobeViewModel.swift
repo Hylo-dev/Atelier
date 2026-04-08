@@ -14,9 +14,9 @@ final class WardrobeViewModel {
         
     var isAddGarmentSheetVisible: Bool = false
     
-    var selectedItem: Garment?
+    var editableItem: Garment?
     
-    var navigatedGarment: Garment?
+    var selectedItem: Garment?
     
     var filterManager: FilterGarmentConfig
     
@@ -27,8 +27,8 @@ final class WardrobeViewModel {
     init(filter: FilterGarmentConfig = FilterGarmentConfig()) {
         self.alertManager             = AlertManager()
         self.isAddGarmentSheetVisible = false
+        self.editableItem             = nil
         self.selectedItem             = nil
-        self.navigatedGarment         = nil
         self.filterManager            = filter
         self.isFilterSheetVisible     = false
         self.processedGarments        = Processed()

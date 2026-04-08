@@ -148,23 +148,13 @@ struct OutfitView: View {
     
     @ViewBuilder
     private func outfitCard(_ item: Outfit) -> some View {
-        let subTitle = item.garments.count <= 1 ? "Incomplete outfit" : nil
-        
         OutfitContextCard(
             outfit          : item,
             garmentManager  : garmentManager,
             applianceManager: applianceManager,
             manager         : outfitManager,
-            subTitleAlert   : subTitle,
-            selectedItem    : $outfitViewModel.selectedItem,
-            navigatedOutfit : $outfitViewModel.navigatedOutfit
-            
-        ) { title, message in
-            outfitViewModel.alertManager.title     = title
-            outfitViewModel.alertManager.message   = message
-            outfitViewModel.alertManager.isPresent = true
-        }
-        .equatable()
+            viewModel       : outfitViewModel
+        )
         .id(item.id)
     }
     

@@ -8,23 +8,20 @@
 import SwiftUI
 
 
-struct OutfitContextCard: View, Equatable {
-    let outfit          : Outfit
-    let garmentManager  : GarmentManager
-    let applianceManager: ApplianceManager
-    let manager         : OutfitManager
-    let subTitleAlert   : String?
-    let onError         : (String, String) -> Void
+struct OutfitContextCard: View {
+    private let item            : Outfit
+    private let garmentManager  : GarmentManager
+    private let applianceManager: ApplianceManager
+    private let manager         : OutfitManager
     
-    @Binding
-    var selectedItem: Outfit?
+    @Bindable
+    private var viewModel: OutfitViewModel
     
-    @Binding
-    var navigatedOutfit: Outfit?
-    
-    // MARK: - Deleted target
     @State
-    private var taskDeletedCompleted: Bool = false
+    private var taskDeletedCompleted: Bool
+    
+    @State
+    private var subTitle: String?
     
     
     init(
@@ -32,143 +29,138 @@ struct OutfitContextCard: View, Equatable {
         garmentManager  : GarmentManager,
         applianceManager: ApplianceManager,
         manager         : OutfitManager,
-        subTitleAlert   : String?,
-        selectedItem    : Binding<Outfit?>,
-        navigatedOutfit : Binding<Outfit?>,
-        onError         : @escaping (String, String) -> Void
+        viewModel       : OutfitViewModel
     ) {
         
-        self.outfit = outfit
-        self.garmentManager = garmentManager
-        self.applianceManager = applianceManager
-        self.manager = manager
-        self.subTitleAlert = subTitleAlert
-        self._selectedItem = selectedItem
-        self._navigatedOutfit = navigatedOutfit
-        self.onError = onError
-    }
-    
-    static func == (lhs: OutfitContextCard, rhs: OutfitContextCard) -> Bool {
-        return lhs.outfit.id == rhs.outfit.id &&
-        lhs.outfit.name == rhs.outfit.name &&
-        lhs.outfit.fullLookImagePath == rhs.outfit.fullLookImagePath &&
-        lhs.subTitleAlert == rhs.subTitleAlert &&
-        lhs.outfit.garments.count == rhs.outfit.garments.count
+        self.item                 = outfit
+        self.garmentManager       = garmentManager
+        self.applianceManager     = applianceManager
+        self.manager              = manager
+        self.viewModel            = viewModel
+        self.taskDeletedCompleted = false
     }
     
     var body: some View {
-        
-        Button {
-            navigatedOutfit = outfit
-            
-        } label: {
-            ModelCardView(
-                title      : self.outfit.name,
-                subheadline: self.subTitleAlert,
-                imagePath  : outfit.fullLookImagePath
-            )
-            .opacity(self.subTitleAlert != nil ? 0.7 : 1)
-            .contextMenu {
-                self.contextMenuButtons(for: self.outfit)
+        bodyContextMenu(
+            Button {
+                viewModel.navigatedOutfit = item
+                
+            } label: {
+                ModelCardView(
+                    title      : item.name,
+                    subheadline: subTitle,
+                    imagePath  : item.fullLookImagePath
+                )
+                .opacity(subTitle != nil ? 0.7 : 1)
+                
             }
-        }
+        )
         .buttonStyle(.plain)
         .sensoryFeedback(.success, trigger: self.taskDeletedCompleted)
+        .onAppear {
+            subTitle = item.garments.count <= 1 ? "Incomplete outfit" : nil
+        }
         
     }
     
-    @ViewBuilder
-    private func contextMenuButtons(for item: Outfit) -> some View {
-        
-        Button {
-            do {
-                try manager.moveOutfitToWash(
-                    for           : outfit,
-                    garmentManager: garmentManager,
-                    processGarment: applianceManager
-                )
-            } catch {
-                onError(
-                    "Error on move state",
-                    error.localizedDescription
-                )
-            }
-            
-        } label: {
-            Label("Wash Entire Outfit", systemImage: "washer")
-        }
-        
-        
-        Button {
-            do {
-                try manager.toggleOutfitLoan(outfit)
+    
+    private func bodyContextMenu(_ view: some View) -> some View {
+        view
+            .contextMenu {
+                Button {
+                    do {
+                        try manager.moveOutfitToWash(
+                            for           : item,
+                            garmentManager: garmentManager,
+                            processGarment: applianceManager
+                        )
+                    } catch {
+                        var alert = viewModel.alertManager
+                        
+                        alert.title = ""
+                        alert.message = error.localizedDescription
+                        alert.isPresent = true
+                    }
+                    
+                } label: {
+                    Label("Wash Entire Outfit", systemImage: "washer")
+                }
                 
-            } catch {
-                onError(
-                    "Error on set Loan State",
-                    error.localizedDescription
-                )
+                
+                Button {
+                    do {
+                        try manager.toggleOutfitLoan(item)
+                        
+                    } catch {
+                        var alert = viewModel.alertManager
+                        
+                        alert.title = "Error on set Loan State"
+                        alert.message = error.localizedDescription
+                        alert.isPresent = true
+                    }
+                    
+                } label: {
+                    let isOnLoan = item.isOnLoan
+                    Label(
+                        isOnLoan ? "Mark Outfit as Returned" : "Lend Entire Outfit",
+                        systemImage: isOnLoan ? "arrow.uturn.backward" : "person.2"
+                    )
+                }
+                
+                
+                
+                Divider()
+                
+                
+                
+                Button {
+                    do {
+                        try manager.logOutfitWear(
+                            for           : item,
+                            garmentManager: garmentManager,
+                            processGarment: applianceManager
+                        )
+                    } catch {
+                        var alert = viewModel.alertManager
+                        
+                        alert.title = "Error on loggin wear"
+                        alert.message = error.localizedDescription
+                        alert.isPresent = true
+                    }
+                    
+                } label: {
+                    Label("Log wear", systemImage: "checkmark.seal")
+                }
+                
+                
+                
+                Divider()
+                
+                
+                
+                Button {
+                    viewModel.selectedItem = item
+                } label: {
+                    Label("Edit Details", systemImage: "pencil")
+                }
+                
+                
+                Button(role: .destructive) {
+                    do {
+                        try self.manager.delete(item)
+                        self.taskDeletedCompleted.toggle()
+                    } catch {
+                        var alert = viewModel.alertManager
+                        
+                        alert.title = "Error on delete outfit"
+                        alert.message = error.localizedDescription
+                        alert.isPresent = true
+                    }
+                    
+                } label: {
+                    Label("Delete", systemImage: "trash")
+                }
+                
             }
-            
-        } label: {
-            let isOnLoan = outfit.isOnLoan
-            Label(
-                isOnLoan ? "Mark Outfit as Returned" : "Lend Entire Outfit",
-                systemImage: isOnLoan ? "arrow.uturn.backward" : "person.2"
-            )
-        }
-        
-        
-        
-        Divider()
-        
-        
-        
-        Button {
-            do {
-               try manager.logOutfitWear(
-                    for           : item,
-                    garmentManager: garmentManager,
-                    processGarment: applianceManager
-                )
-            } catch {
-                onError(
-                    "Error on loggin wear",
-                    error.localizedDescription
-                )
-            }
-            
-        } label: {
-            Label("Log wear", systemImage: "checkmark.seal")
-        }
-        
-        
-        
-        Divider()
-        
-        
-        
-        Button {
-            self.selectedItem = item
-        } label: {
-            Label("Edit Details", systemImage: "pencil")
-        }
-        
-        
-        Button(role: .destructive) {
-            do {
-                try self.manager.delete(item)
-                self.taskDeletedCompleted.toggle()
-            } catch {
-                onError(
-                    "Error on delete outfit",
-                    error.localizedDescription
-                )
-            }
-            
-        } label: {
-            Label("Delete", systemImage: "trash")
-        }
-        
     }
 }

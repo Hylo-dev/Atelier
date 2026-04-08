@@ -10,171 +10,167 @@ import SwiftUI
 
 struct GarmentContextCard: View {
     
-    var item            : Garment
-    let manager         : any GarmentWearLoggable
-    let applianceManager: ApplianceProcessing
-    let onError         : (String, String) -> Void
+    private var item            : Garment
+    private let manager         : any GarmentWearLoggable
+    private let applianceManager: ApplianceProcessing
     
-    @Binding
-    var selectedItem: Garment?
-    
-    @Binding
-    var navigatedGarment: Garment?
+    @Bindable
+    private var viewModel: WardrobeViewModel
     
     @State
-    private var didTriggerDelete: Bool = false
+    private var didTriggerDelete: Bool
     
     init(
-        item: Garment,
-        manager: any GarmentWearLoggable,
+        item          : Garment,
+        manager       : any GarmentWearLoggable,
         processGarment: ApplianceProcessing,
-        selectedItem: Binding<Garment?>,
-        navigatedGarment: Binding<Garment?>,
-        onError: @escaping (String, String) -> Void
+        viewModel     : WardrobeViewModel
     ) {
         self.item              = item
         self.manager           = manager
         self.applianceManager  = processGarment
-        self.onError           = onError
-        self._selectedItem     = selectedItem
-        self._navigatedGarment = navigatedGarment
-        self.didTriggerDelete  = didTriggerDelete
+        self.viewModel         = viewModel
+        self.didTriggerDelete  = false
     }
     
     var body: some View {
         
-        Button {
-            navigatedGarment = item
-        } label: {
-            ModelCardView(
-                title: self.item.name,
-                subheadline: self.item.brand,
-                imagePath: self.item.imagePath
-            )
-        }
+        bodyContextMenu(
+            Button {
+                viewModel.selectedItem = item
+            } label: {
+                ModelCardView(
+                    title      : item.name,
+                    subheadline: item.brand,
+                    imagePath  : item.imagePath
+                )
+            }
+        )
         .buttonStyle(.plain)
-        .contextMenu {
-            let isToWash  = item.isToWash
-            let loanState = item.state == .onLoan
-            
-            Text(item.name)
-            
-            Button {
-                let title: String
-                
-                do {
-                    if isToWash {
-                        title = "Error on reset wear"
-                        try manager.resetWear(
-                            for : item,
-                            used: applianceManager
-                        )
-                        
-                    } else {
-                        title = "Error on set state"
-                        try manager.setWashState(
-                            for : item,
-                            used: applianceManager
-                        )
-                    }
-                } catch {
-                    onError(
-                        title,
-                        error.localizedDescription
-                    )
-                }
-                
-                
-            } label: {
-                Label(
-                    isToWash ? "Mark as Clean" : "Move to Wash",
-                    systemImage: isToWash ? "sparkle" : "washer"
-                )
-            }
-            //        .disabled(!item.state.readyToWash)
-            //
-            Button {
-                item.state = loanState ? .available : .onLoan
-                do {
-                    try manager.update()
-                } catch {
-                    onError(
-                        "Error on update data",
-                        error.localizedDescription
-                    )
-                }
-                
-            } label: {
-                Label(
-                    loanState ? "Mark as Returned" : "Mark as Lent",
-                    systemImage: loanState ? "arrow.uturn.backward" : "person.2"
-                )
-            }
-            .disabled(!item.state.readyToLent)
-            
-            
-            
-            Divider()
-            
-            
-            
-            Button {
-                do {
-                    let needWashing = manager.logWear(for: item, each: 1)
-                    
-                    if needWashing {
-                        try applianceManager.processUnassignedGarments([item])
-                    }
-                    
-                } catch {
-                    onError(
-                        "Error on loggin wear",
-                        error.localizedDescription
-                    )
-                }
-                
-            } label: {
-                Label("Log wear", systemImage: "checkmark.seal")
-            }
-            
-            
-            Button {
-                
-            } label: {
-                Label("Add to Outfit", systemImage: "tshirt")
-            }
-            
-            
-            
-            Divider()
-            
-            
-            
-            Button {
-                self.selectedItem = item
-                
-            } label: {
-                Label("Edit Details", systemImage: "pencil")
-            }
-            
-            Button(role: .destructive) {
-                didTriggerDelete.toggle()
-                
-                do {
-                    try manager.delete(item)
-                    
-                } catch {
-                    onError(
-                        "Error on deleted data",
-                        error.localizedDescription
-                    )
-                }
-                
-            } label: {
-                Label("Delete", systemImage: "trash")
-            }
-        }
         .sensoryFeedback(.success, trigger: didTriggerDelete)
         .id(item.id)
+    }
+    
+    private func bodyContextMenu(_ view: some View) -> some View {
+        view
+            .contextMenu {
+                let isToWash  = item.isToWash
+                let loanState = item.state == .onLoan
+                
+                Text(item.name)
+                
+                Button {
+                    let title: String
+                    
+                    do {
+                        if isToWash {
+                            title = "Error on reset wear"
+                            try manager.resetWear(
+                                for : item,
+                                used: applianceManager
+                            )
+                            
+                        } else {
+                            title = "Error on set state"
+                            try manager.setWashState(
+                                for : item,
+                                used: applianceManager
+                            )
+                        }
+                    } catch {
+                        var alert = viewModel.alertManager
+                        alert.title = title
+                        alert.message = error.localizedDescription
+                        alert.isPresent = true
+                    }
+                    
+                    
+                } label: {
+                    Label(
+                        isToWash ? "Mark as Clean" : "Move to Wash",
+                        systemImage: isToWash ? "sparkle" : "washer"
+                    )
+                }
+                //        .disabled(!item.state.readyToWash)
+                //
+                Button {
+                    item.state = loanState ? .available : .onLoan
+                    do {
+                        try manager.update()
+                    } catch {
+                        var alert = viewModel.alertManager
+                        alert.title = "Error on update data"
+                        alert.message = error.localizedDescription
+                        alert.isPresent = true
+                    }
+                    
+                } label: {
+                    Label(
+                        loanState ? "Mark as Returned" : "Mark as Lent",
+                        systemImage: loanState ? "arrow.uturn.backward" : "person.2"
+                    )
+                }
+                .disabled(!item.state.readyToLent)
+                
+                
+                
+                Divider()
+                
+                
+                
+                Button {
+                    do {
+                        let needWashing = manager.logWear(for: item, each: 1)
+                        
+                        if needWashing {
+                            try applianceManager.processUnassignedGarments([item])
+                        }
+                        
+                    } catch {
+                        var alert = viewModel.alertManager
+                        alert.title = "Error on loggin wear"
+                        alert.message = error.localizedDescription
+                        alert.isPresent = true
+                    }
+                    
+                } label: {
+                    Label("Log wear", systemImage: "checkmark.seal")
+                }
+                
+                
+                Button {
+                    
+                } label: {
+                    Label("Add to Outfit", systemImage: "tshirt")
+                }
+                
+                
+                Divider()
+                
+                
+                Button {
+                    viewModel.editableItem = item
+                    
+                } label: {
+                    Label("Edit Details", systemImage: "pencil")
+                }
+                
+                Button(role: .destructive) {
+                    didTriggerDelete.toggle()
+                    
+                    do {
+                        try manager.delete(item)
+                        
+                    } catch {
+                        var alert = viewModel.alertManager
+                        alert.title = "Error on deleted data"
+                        alert.message = error.localizedDescription
+                        alert.isPresent = true
+                    }
+                    
+                } label: {
+                    Label("Delete", systemImage: "trash")
+                }
+            }
     }
 }

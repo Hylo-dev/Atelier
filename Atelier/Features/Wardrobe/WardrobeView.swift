@@ -99,7 +99,7 @@ struct WardrobeView: View {
                 }
             }
         }
-        .onChange(of: wardrobeViewModel.navigatedGarment) { old, newValue in
+        .onChange(of: wardrobeViewModel.selectedItem) { old, newValue in
             if newValue == nil {
                 withAnimation {
                     wardrobeState.hiddenSectionBar = false
@@ -158,20 +158,14 @@ struct WardrobeView: View {
             item            : item,
             manager         : garmentManager,
             processGarment  : applianceManager,
-            selectedItem    : $wardrobeViewModel.selectedItem,
-            navigatedGarment: $wardrobeViewModel.navigatedGarment
-            
-        ) { title, message in
-            wardrobeViewModel.alertManager.title     = title
-            wardrobeViewModel.alertManager.message   = message
-            wardrobeViewModel.alertManager.isPresent = true
-        }
+            viewModel       : wardrobeViewModel
+        )
         .id(item.id)
     }
     
     private func bodyModifiers(_ view: some View) -> some View {
         view
-            .navigationDestination(item: $wardrobeViewModel.navigatedGarment) { item in
+            .navigationDestination(item: $wardrobeViewModel.selectedItem) { item in
                 InfoGarmentView(
                     item,
                     garmentManager: self.garmentManager
@@ -187,7 +181,7 @@ struct WardrobeView: View {
                     GarmentEditorView()
                 }
             }
-            .sheet(item: $wardrobeViewModel.selectedItem) { germent in
+            .sheet(item: $wardrobeViewModel.editableItem) { germent in
                 NavigationStack {
                     GarmentEditorView(garment: germent)
                 }
