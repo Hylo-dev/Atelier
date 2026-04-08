@@ -31,7 +31,7 @@ final class OutfitEditorViewModel {
     
     var alertManager: AlertManager
     
-    private let repository: any RepositoryProtocol<Outfit, any OutfitManaging>
+    private let repository: any RepositoryProtocol<Outfit, any Manager<Outfit>>
     
     var isFormValid: Bool {
         let isNameValid = !name.trimmingCharacters(
@@ -45,7 +45,7 @@ final class OutfitEditorViewModel {
     
     init(
         _ item: Outfit?,
-        repository: any RepositoryProtocol<Outfit, any OutfitManaging> = OutfitRepository(),
+        repository: any RepositoryProtocol<Outfit, any Manager<Outfit>> = OutfitRepository(),
         alertManager: AlertManager = AlertManager()
     ) {
         self.item = item
@@ -67,7 +67,7 @@ final class OutfitEditorViewModel {
     
     func handleFinishAction(
         image  : UIImage?,
-        manager: any OutfitManaging,
+        manager: any Manager<Outfit>,
         dismiss: @escaping () -> Void
     ) {
         do {

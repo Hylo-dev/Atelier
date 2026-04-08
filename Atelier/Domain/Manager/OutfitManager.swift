@@ -12,13 +12,10 @@ import Foundation
 
 @Observable
 @MainActor
-final class OutfitManager: OutfitManaging {
+final class OutfitManager: Manager {
     private let context: ModelContext
     private let imageService: ImageServiceProtocol
     
-    var visibleOutfits  : [Outfit]           = []
-    var groupedOutfits  : [String: [Outfit]] = [:]
-    var availableSeasons: [String]           = []
     
     init(
         _ context: ModelContext,
@@ -110,7 +107,7 @@ final class OutfitManager: OutfitManaging {
     func processOutfits(
         _ outfits: [Outfit],
         with filterManager: any FilterProtocol<Outfit>
-    ) {
+    ) -> ProcessedOutfits {
         let filtered = filterManager.filter(outfits)
         
         var newGrouped: [String: [Outfit]] = ["All": filtered]
@@ -127,8 +124,10 @@ final class OutfitManager: OutfitManaging {
         let uniqueSeasons = Set(outfits.lazy.map { $0.season.title })
         let newSeasons = ["All"] + uniqueSeasons.sorted()
         
-        self.visibleOutfits   = filtered
-        self.groupedOutfits   = newGrouped
-        self.availableSeasons = newSeasons
+        return ProcessedOutfits(
+            visible: filtered,
+            grouped: newGrouped,
+            seasons: newSeasons
+        )
     }
 }

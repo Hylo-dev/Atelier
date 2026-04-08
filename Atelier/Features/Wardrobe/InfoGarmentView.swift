@@ -20,7 +20,7 @@ struct InfoGarmentView: View {
     
     private let color: [Color]
     
-    private var garmentManager: any GarmentManaging
+    private var garmentManager: any Manager<Garment>
     
     private let formattedDate: String
     private let formattedPrice: String?
@@ -37,8 +37,8 @@ struct InfoGarmentView: View {
     
 
     init(
-        _ item: Garment,
-        garmentManager: any GarmentManaging
+        _ item        : Garment,
+        garmentManager: any Manager<Garment>
     ) {
         self.item           = item
         self.color          = [Color(hex: item.color)]

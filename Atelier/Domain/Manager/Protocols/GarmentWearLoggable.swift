@@ -6,7 +6,7 @@
 //
 
 
-protocol GarmentWearLoggable: GarmentManaging {
+protocol GarmentWearLoggable: Manager<Garment> {
     func logWear(
         for item  : Garment,
         each count: Int

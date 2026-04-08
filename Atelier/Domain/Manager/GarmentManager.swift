@@ -13,7 +13,7 @@ import UIKit
 
 @Observable
 @MainActor
-final class GarmentManager: GarmentManaging, GarmentWearLoggable, GarmentProcessing {
+final class GarmentManager: Manager, GarmentWearLoggable, GarmentProcessing {
     private let context: ModelContext
     private let imageService: ImageServiceProtocol
     

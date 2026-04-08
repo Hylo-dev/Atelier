@@ -93,7 +93,7 @@ struct HomeView: View {
                 
             case .outfitBuilder:
                 OutfitView(
-                    seasonsState: outfitState,
+                    outfitState: outfitState,
                     title       : title
                 )
                 

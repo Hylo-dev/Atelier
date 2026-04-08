@@ -38,7 +38,7 @@ final class GarmentEditorViewModel {
     var showScan = false
     
     
-    private let repository: any RepositoryProtocol<Garment, any GarmentManaging>
+    private let repository: any RepositoryProtocol<Garment, any Manager<Garment>>
     
     var currentTotalComposition: Int {
         Int(
@@ -55,7 +55,7 @@ final class GarmentEditorViewModel {
     
     init (
         _ item: Garment?,
-        repository: any RepositoryProtocol<Garment, any GarmentManaging> = GarmentRepository(),
+        repository: any RepositoryProtocol<Garment, any Manager<Garment>> = GarmentRepository(),
         alertManager: AlertManager = AlertManager()
     ) {
         self.name  = item?.name  ?? ""
@@ -190,7 +190,7 @@ final class GarmentEditorViewModel {
     func handleFinishAction(
         _ item             : Garment?,
         image              : UIImage?,
-        garmentLoggable    : any GarmentWearLoggable,
+        garmentLoggable    : any Manager<Garment>,
         applianceProcessing: ApplianceProcessing,
         dismiss            : @escaping () -> Void
     ) {

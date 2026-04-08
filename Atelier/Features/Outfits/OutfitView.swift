@@ -9,39 +9,10 @@ import SwiftUI
 import SwiftData
 
 struct OutfitView: View {
-    
-    // MARK: - Param values
-    
+        
     @Environment(CaptureManager.self)
     var manager
-    
-    @Bindable
-    var seasonsState: TabFilterService
-    
-    var title: String
-    
-    
-    
-    @State
-    private var alertManager: AlertManager = AlertManager()
-    
-    
-    
-    // MARK: - Edit Sheet value
-    
-    @State
-    private var selectedItem: Outfit?
-    
-    @State
-    private var navigatedOutfit: Outfit?
-    
-    @State
-    private var isDeleted: Bool = false
-    
-    
-    
-    // MARK: - Private Attributes values
-    
+        
     @Environment(\.modelContext)
     private var context
     
@@ -55,36 +26,21 @@ struct OutfitView: View {
     private var applianceManager: ApplianceManager
     
     
+    @Bindable
+    var outfitState: TabFilterService
+    
+    var title: String
+    
+    
+    @State
+    private var outfitViemModel = OutfitViewModel()
+        
     
     @Query(
         sort : \Outfit.lastWornDate,
         order: .reverse
     )
     private var outfits: [Outfit]
-    
-    @Query(
-        sort : \LaundrySession.dateCreated,
-        order: .reverse
-    )
-    private var laundrySessions: [LaundrySession]
-    
-    
-    
-    // MARK: - Add Outfit Sheet values
-    
-    @State
-    private var isAddOutfitSheetVisible: Bool = false
-    
-    
-    
-    // MARK: - Filter Outfit Sheet values
-    
-    @State
-    private var filter = FilterOutfitConfig()
-    
-    @State
-    private var isFilterSheetVisible: Bool = false
-    
     
     
     // MARK: - Static properties
@@ -93,24 +49,6 @@ struct OutfitView: View {
         GridItem(.adaptive(minimum: 150), spacing: 20)
     ]
     
-    
-    
-    // MARK: - Refresh Trigger
-    
-    private var outfitsUpdateTrigger: Int {
-        var hasher = Hasher()
-        
-        for outfit in outfits {
-            hasher.combine(outfit.id)
-            hasher.combine(outfit.name)
-            hasher.combine(outfit.season.title)
-            hasher.combine(outfit.fullLookImagePath)
-            hasher.combine(outfit.garments.count)
-            hasher.combine(outfit.lastWornDate)
-        }
-        
-        return hasher.finalize()
-    }
     
     var body: some View {
         Group {
@@ -122,7 +60,7 @@ struct OutfitView: View {
                 )
                 .containerRelativeFrame(.vertical)
                 
-            } else if outfitManager.visibleOutfits.isEmpty {
+            } else if outfitViemModel.processedOutfit.visible.isEmpty {
                 ContentUnavailableView(
                     "No Outfits Found",
                     systemImage: "magnifyingglass",
@@ -132,14 +70,14 @@ struct OutfitView: View {
                 
             } else {
                 LiquidPagingView(
-                    selection  : self.$seasonsState.selection,
+                    selection  : self.$outfitState.selection,
                     onProgressChange: { newVal in
-                        if self.seasonsState.progress != newVal {
-                            self.seasonsState.progress = newVal
+                        if self.outfitState.progress != newVal {
+                            self.outfitState.progress = newVal
                         }
                     },
-                    items      : self.seasonsState.items,
-                    isEnabled  : self.seasonsState.isPagesEnabled
+                    items      : self.outfitState.items,
+                    isEnabled  : self.outfitState.isPagesEnabled
                 ) { season in
                     self.scrollableGrid(for: season)
                 }
@@ -147,15 +85,23 @@ struct OutfitView: View {
                 
             }
         }
-        .sensoryFeedback(.success, trigger: isDeleted)
-        .onChange(of: outfitsUpdateTrigger, initial: true) {
-            self.updateData()
+        .sensoryFeedback(.success, trigger: outfitViemModel.isDeleted)
+        .onChange(of: outfits, initial: true) {
+            outfitViemModel.updateData(
+                items: outfits,
+                in   : outfitState,
+                with : outfitManager
+            )
         }
-        .onChange(of: self.filter) {
-            self.updateData()
+        .onChange(of: outfitViemModel.filter, initial: true) {
+            outfitViemModel.updateData(
+                items: outfits,
+                in   : outfitState,
+                with : outfitManager
+            )
         }
-        .onChange(of: filter.isFiltering) { _, newValue in
-            seasonsState.hiddenSectionBar = newValue
+        .onChange(of: outfitViemModel.filter.isFiltering) { _, newValue in
+            outfitState.hiddenSectionBar = newValue
         }
         .toolbar {
             ToolbarItem(placement: .title) {
@@ -170,48 +116,48 @@ struct OutfitView: View {
             if !outfits.isEmpty {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Filter", systemImage: "line.3.horizontal.decrease") {
-                        self.isFilterSheetVisible = true
+                        outfitViemModel.isFilterSheetVisible = true
                     }
                 }
             }
             
             ToolbarItem(placement: .topBarTrailing) {
-                Button("Add", systemImage: "plus") { self.isAddOutfitSheetVisible = true }
+                Button("Add", systemImage: "plus") { outfitViemModel.isAddOutfitSheetVisible = true }
             }
         }
-        .navigationDestination(item: $navigatedOutfit) { item in
+        .navigationDestination(item: $outfitViemModel.navigatedOutfit) { item in
             InfoOutfitView(item)
                 .onAppear {
                     withAnimation {
-                        seasonsState.hiddenSectionBar = true
+                        outfitState.hiddenSectionBar = true
                     }
                 }
         }
-        .sheet(isPresented: self.$isAddOutfitSheetVisible) {
+        .sheet(isPresented: $outfitViemModel.isAddOutfitSheetVisible) {
             NavigationStack {
                 OutfitEditorView()
             }
         }
-        .sheet(item: self.$selectedItem) { outfit in
+        .sheet(item: $outfitViemModel.selectedItem) { outfit in
             NavigationStack {
                 OutfitEditorView(outfit)
             }
         }
-        .sheet(isPresented: self.$isFilterSheetVisible) {
-            FilterOutfitView(filter: self.$filter)
+        .sheet(isPresented: $outfitViemModel.isFilterSheetVisible) {
+            FilterOutfitView(filter: $outfitViemModel.filter)
         }
         .alert(
-            alertManager.title,
-            isPresented: $alertManager.isPresent
+            outfitViemModel.alertManager.title,
+            isPresented: $outfitViemModel.alertManager.isPresent
         ) {
             
         } message: {
-            Text(alertManager.message)
+            Text(outfitViemModel.alertManager.message)
         }
-        .onChange(of: navigatedOutfit) { old, newValue in
+        .onChange(of: outfitViemModel.navigatedOutfit) { old, newValue in
             if newValue == nil {
                 withAnimation {
-                    seasonsState.hiddenSectionBar = false
+                    outfitState.hiddenSectionBar = false
                 }
             }
         }
@@ -225,24 +171,23 @@ struct OutfitView: View {
         ScrollView(.vertical) {
             LazyVGrid(columns: Self.columns, spacing: 20) {
                 
-                ForEach(outfitManager.groupedOutfits[season] ?? [], id: \.id) { item in
+                ForEach(outfitViemModel.processedOutfit.grouped[season] ?? [], id: \.id) { item in
                     
                     let subTitle = item.garments.count <= 1 ?
                     "Incomplete outfit" : nil
                     OutfitContextCard(
                         outfit          : item,
-                        sessions        : laundrySessions,
                         garmentManager  : garmentManager,
                         applianceManager: applianceManager,
-                        manager         : self.outfitManager,
+                        manager         : outfitManager,
                         subTitleAlert   : subTitle,
-                        selectedItem    : self.$selectedItem,
-                        navigatedOutfit : $navigatedOutfit
+                        selectedItem    : $outfitViemModel.selectedItem,
+                        navigatedOutfit : $outfitViemModel.navigatedOutfit
                         
                     ) { title, message in
-                        alertManager.title     = title
-                        alertManager.message   = message
-                        alertManager.isPresent = true
+                        outfitViemModel.alertManager.title     = title
+                        outfitViemModel.alertManager.message   = message
+                        outfitViemModel.alertManager.isPresent = true
                     }
                     .equatable()
                     .id(item.id)
@@ -252,186 +197,5 @@ struct OutfitView: View {
         }
         .contentMargins(.top, 150, for: .scrollContent)
         .scrollIndicators(.hidden)
-    }
-    
-    
-    // MARK: - Handlers
-    
-    @inline(__always)
-    private func updateData() {
-        self.outfitManager.processOutfits(self.outfits, with: self.filter)
-        
-        if self.seasonsState.items != outfitManager.availableSeasons {
-            self.seasonsState.items = outfitManager.availableSeasons
-        }
-    }
-}
-
-fileprivate
-struct OutfitContextCard: View, Equatable {
-    let outfit          : Outfit
-    let sessions        : [LaundrySession]
-    let garmentManager  : GarmentManager
-    let applianceManager: ApplianceManager
-    let manager         : OutfitManager
-    let subTitleAlert   : String?
-    let onError         : (String, String) -> Void
-    
-    @Binding
-    var selectedItem: Outfit?
-    
-    @Binding
-    var navigatedOutfit: Outfit?
-    
-    // MARK: - Deleted target
-    @State
-    private var taskDeletedCompleted: Bool = false
-    
-    
-    init(
-        outfit          : Outfit,
-        sessions        : [LaundrySession],
-        garmentManager  : GarmentManager,
-        applianceManager: ApplianceManager,
-        manager         : OutfitManager,
-        subTitleAlert   : String?,
-        selectedItem    : Binding<Outfit?>,
-        navigatedOutfit : Binding<Outfit?>,
-        onError         : @escaping (String, String) -> Void
-    ) {
-        
-        self.outfit = outfit
-        self.sessions = sessions
-        self.garmentManager = garmentManager
-        self.applianceManager = applianceManager
-        self.manager = manager
-        self.subTitleAlert = subTitleAlert
-        self._selectedItem = selectedItem
-        self._navigatedOutfit = navigatedOutfit
-        self.onError = onError
-    }
-    
-    static func == (lhs: OutfitContextCard, rhs: OutfitContextCard) -> Bool {
-        return lhs.outfit.id == rhs.outfit.id &&
-        lhs.outfit.name == rhs.outfit.name &&
-        lhs.outfit.fullLookImagePath == rhs.outfit.fullLookImagePath &&
-        lhs.subTitleAlert == rhs.subTitleAlert &&
-        lhs.outfit.garments.count == rhs.outfit.garments.count
-    }
-    
-    var body: some View {
-        
-        Button {
-            navigatedOutfit = outfit
-            
-        } label: {
-            ModelCardView(
-                title      : self.outfit.name,
-                subheadline: self.subTitleAlert,
-                imagePath  : outfit.fullLookImagePath
-            )
-            .opacity(self.subTitleAlert != nil ? 0.7 : 1)
-            .contextMenu {
-                self.contextMenuButtons(for: self.outfit)
-            }
-        }
-        .buttonStyle(.plain)
-        .sensoryFeedback(.success, trigger: self.taskDeletedCompleted)
-        
-    }
-    
-    @ViewBuilder
-    private func contextMenuButtons(for item: Outfit) -> some View {
-        
-        Button {
-            do {
-                try manager.moveOutfitToWash(
-                    for           : outfit,
-                    garmentManager: garmentManager,
-                    processGarment: applianceManager
-                )
-            } catch {
-                onError(
-                    "Error on move state",
-                    error.localizedDescription
-                )
-            }
-            
-        } label: {
-            Label("Wash Entire Outfit", systemImage: "washer")
-        }
-        
-        
-        Button {
-            do {
-                try manager.toggleOutfitLoan(outfit)
-                
-            } catch {
-                onError(
-                    "Error on set Loan State",
-                    error.localizedDescription
-                )
-            }
-            
-        } label: {
-            let isOnLoan = outfit.isOnLoan
-            Label(
-                isOnLoan ? "Mark Outfit as Returned" : "Lend Entire Outfit",
-                systemImage: isOnLoan ? "arrow.uturn.backward" : "person.2"
-            )
-        }
-        
-        
-        
-        Divider()
-        
-        
-        
-        Button {
-            do {
-               try manager.logOutfitWear(
-                    for           : item,
-                    garmentManager: garmentManager,
-                    processGarment: applianceManager
-                )
-            } catch {
-                onError(
-                    "Error on loggin wear",
-                    error.localizedDescription
-                )
-            }
-            
-        } label: {
-            Label("Log wear", systemImage: "checkmark.seal")
-        }
-        
-        
-        
-        Divider()
-        
-        
-        
-        Button {
-            self.selectedItem = item
-        } label: {
-            Label("Edit Details", systemImage: "pencil")
-        }
-        
-        
-        Button(role: .destructive) {
-            do {
-                try self.manager.delete(item)
-                self.taskDeletedCompleted.toggle()
-            } catch {
-                onError(
-                    "Error on delete outfit",
-                    error.localizedDescription
-                )
-            }
-            
-        } label: {
-            Label("Delete", systemImage: "trash")
-        }
-        
     }
 }

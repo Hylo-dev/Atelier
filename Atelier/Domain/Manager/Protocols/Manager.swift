@@ -7,7 +7,7 @@
 
 import SwiftData
 
-protocol Manager {
+protocol Manager<T> {
     associatedtype T: PersistentModel
     
     func insert(_ element: T) throws

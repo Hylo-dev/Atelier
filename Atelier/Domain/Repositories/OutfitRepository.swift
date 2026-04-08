@@ -9,7 +9,7 @@ import UIKit
 
 struct OutfitRepository: RepositoryProtocol {
     typealias T = Outfit
-    typealias M = any OutfitManaging
+    typealias M = Manager<Outfit>
     
     private let imageService: ImageServiceProtocol
     
@@ -20,7 +20,7 @@ struct OutfitRepository: RepositoryProtocol {
     func create(
         item   : Outfit,
         image  : UIImage?,
-        manager: any OutfitManaging
+        manager: any Manager<Outfit>
     ) throws {
         
         if let imageToSave = image {
@@ -44,7 +44,7 @@ struct OutfitRepository: RepositoryProtocol {
     func update(
         item   : Outfit,
         image  : UIImage?,
-        manager: any OutfitManaging
+        manager: any Manager<Outfit>
     ) throws {
         if let imageToSave = image {
             if let oldPath = item.fullLookImagePath {
