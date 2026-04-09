@@ -61,7 +61,7 @@ struct FilterOutfitConfig: @MainActor FilterProtocol {
         let isToneNone = selectedTone == .none
         
         // Trasformiamo i Set in Array per il confronto
-        let occasionsList = (selectedOccasions ?? []).map { $0.rawValue }
+//        let occasionsList = (selectedOccasions ?? []).map { $0.rawValue }
         let seasonsList = (selectedSeasons ?? []).map { $0.rawValue }
         
         let noSeasonFilter = seasonsList.isEmpty

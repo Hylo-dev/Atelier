@@ -75,11 +75,9 @@ struct OutfitContextCard: View {
                             processGarment: applianceManager
                         )
                     } catch {
-                        var alert = viewModel.alertManager
-                        
-                        alert.title = ""
-                        alert.message = error.localizedDescription
-                        alert.isPresent = true
+                        viewModel.alertManager.title = ""
+                        viewModel.alertManager.message = error.localizedDescription
+                        viewModel.alertManager.isPresent = true
                     }
                     
                 } label: {
@@ -92,11 +90,9 @@ struct OutfitContextCard: View {
                         try manager.toggleOutfitLoan(item)
                         
                     } catch {
-                        var alert = viewModel.alertManager
-                        
-                        alert.title = "Error on set Loan State"
-                        alert.message = error.localizedDescription
-                        alert.isPresent = true
+                        viewModel.alertManager.title = "Error on set Loan State"
+                        viewModel.alertManager.message = error.localizedDescription
+                        viewModel.alertManager.isPresent = true
                     }
                     
                 } label: {
@@ -121,11 +117,9 @@ struct OutfitContextCard: View {
                             processGarment: applianceManager
                         )
                     } catch {
-                        var alert = viewModel.alertManager
-                        
-                        alert.title = "Error on loggin wear"
-                        alert.message = error.localizedDescription
-                        alert.isPresent = true
+                        viewModel.alertManager.title = "Error on loggin wear"
+                        viewModel.alertManager.message = error.localizedDescription
+                        viewModel.alertManager.isPresent = true
                     }
                     
                 } label: {
@@ -150,11 +144,9 @@ struct OutfitContextCard: View {
                         try self.manager.delete(item)
                         self.taskDeletedCompleted.toggle()
                     } catch {
-                        var alert = viewModel.alertManager
-                        
-                        alert.title = "Error on delete outfit"
-                        alert.message = error.localizedDescription
-                        alert.isPresent = true
+                        viewModel.alertManager.title = "Error on delete outfit"
+                        viewModel.alertManager.message = error.localizedDescription
+                        viewModel.alertManager.isPresent = true
                     }
                     
                 } label: {
