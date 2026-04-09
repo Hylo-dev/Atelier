@@ -10,47 +10,51 @@ import SwiftData
 
 struct OutfitListContent: View {
     
+    @Environment(OutfitManager.self)
+    private var outfitManager
+    
+    @Environment(GarmentManager.self)
+    private var garmentManager
+    
+    @Environment(ApplianceManager.self)
+    private var applianceManager
+    
     @Query
     private var outfits: [Outfit]
     
-    let filterManager   : FilterManager<FilterOutfitConfig>
-    let outfitViewModel : OutfitViewModel
-    let outfitManager   : OutfitManager
-    let garmentManager  : GarmentManager
-    let applianceManager: ApplianceManager
+    @Bindable
+    private var filterManager: FilterManager<FilterOutfitConfig>
+    
+    @Bindable
+    private var outfitViewModel : OutfitViewModel
     
     @Bindable
     var outfitState: TabFilterService
     
     init(
-        predicate       : Predicate<Outfit>?,
-        filterManager   : FilterManager<FilterOutfitConfig>,
-        outfitViewModel : OutfitViewModel,
-        outfitManager   : OutfitManager,
-        garmentManager  : GarmentManager,
-        applianceManager: ApplianceManager,
-        outfitState     : TabFilterService
+        filterManager  : FilterManager<FilterOutfitConfig>,
+        outfitViewModel: OutfitViewModel,
+        outfitState    : TabFilterService
     ) {
+        self.filterManager   = filterManager
+        self.outfitViewModel = outfitViewModel
+        self.outfitState     = outfitState
+        
         _outfits = Query(
-            filter: predicate,
+            filter: filterManager.predicate,
             sort  : \Outfit.name,
             order : .reverse
         )
-        
-        self.filterManager    = filterManager
-        self.outfitViewModel  = outfitViewModel
-        self.outfitManager    = outfitManager
-        self.garmentManager   = garmentManager
-        self.applianceManager = applianceManager
-        self.outfitState      = outfitState
     }
     
     var body: some View {
         Group {
             if outfits.isEmpty && !filterManager.isFiltering {
                 emptyStateView
+                
             } else if outfits.isEmpty && filterManager.isFiltering {
                 emptyFilteredView
+                
             } else {
                 pagingView
             }
@@ -90,6 +94,7 @@ struct OutfitListContent: View {
             isEnabled       : self.outfitState.isPagesEnabled
         ) { season in
             let visibles = outfitViewModel.processedOutfit.grouped[season] ?? []
+            
             VerticalScrollGridView(items: visibles) { item in
                 OutfitContextCard(
                     outfit          : item,
@@ -98,7 +103,7 @@ struct OutfitListContent: View {
                     manager         : outfitManager,
                     viewModel       : outfitViewModel
                 )
-                .id(item.persistentModelID) // Cruciale per la fluidità dello scroll
+                .id(item.persistentModelID)
             }
         }
         .ignoresSafeArea(.container, edges: .top)

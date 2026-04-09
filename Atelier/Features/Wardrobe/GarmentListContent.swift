@@ -30,20 +30,19 @@ struct GarmentListContent: View {
     var wardrobeState: TabFilterService
     
     init(
-        predicate: Predicate<Garment>,
-        filterManager: FilterManager<FilterGarmentConfig>,
+        filterManager    : FilterManager<FilterGarmentConfig>,
         wardrobeViewModel: WardrobeViewModel,
-        wardrobeState: TabFilterService
+        wardrobeState    : TabFilterService
     ) {
-        _garments = Query(
-            filter: predicate,
-            sort  : \Garment.name,
-            order : .reverse
-        )
-        
         self.filterManager     = filterManager
         self.wardrobeViewModel = wardrobeViewModel
         self.wardrobeState     = wardrobeState
+        
+        _garments = Query(
+            filter: filterManager.predicate,
+            sort  : \Garment.name,
+            order : .reverse
+        )
     }
     
     var body: some View {

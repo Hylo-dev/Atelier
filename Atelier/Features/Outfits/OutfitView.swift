@@ -42,25 +42,21 @@ struct OutfitView: View {
         
         bodyModifiers(
             ZStack {
-                // Usiamo un ID basato sul predicato per forzare la transizione fluida
-                // Se il predicato è nil, usiamo "all", altrimenti un identificativo univoco
-                let filterID = filterManager.predicate.description.hashValue
-                
                 OutfitListContent(
-                    predicate       : filterManager.predicate,
-                    filterManager   : filterManager,
-                    outfitViewModel : outfitViewModel,
-                    outfitManager   : outfitManager,
-                    garmentManager  : garmentManager,
-                    applianceManager: applianceManager,
-                    outfitState     : outfitState
+                    filterManager  : filterManager,
+                    outfitViewModel: outfitViewModel,
+                    outfitState    : outfitState
                 )
-                .id(filterID)
-                .transition(.opacity.combined(with: .scale(scale: 0.98)))
             }
-            .animation(.snappy(duration: 0.35, extraBounce: 0), value: filterManager.predicate.description)
+            .animation(
+                .snappy,
+                value: filterManager.predicate.description
+            )
         )
-        .sensoryFeedback(.success, trigger: outfitViewModel.isDeleted)
+        .sensoryFeedback(
+            .success,
+            trigger: outfitViewModel.isDeleted
+        )
         .toolbar {
             ToolbarItem(placement: .title) {
                 Text(String(repeating: " ", count: 150))

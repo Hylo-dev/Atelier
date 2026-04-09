@@ -30,12 +30,14 @@ struct WardrobeView: View {
         
         bodyModifiers(
             GarmentListContent(
-                predicate: filterManager.predicate,
-                filterManager: filterManager,
+                filterManager    : filterManager,
                 wardrobeViewModel: wardrobeViewModel,
-                wardrobeState: wardrobeState
+                wardrobeState    : wardrobeState
             )
-            .animation(.snappy, value: filterManager.predicate.description)
+            .animation(
+                .snappy,
+                value: filterManager.predicate.description
+            )
         )
         .toolbar {
             ToolbarItem(placement: .title) {
