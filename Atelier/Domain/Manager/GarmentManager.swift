@@ -119,12 +119,14 @@ final class GarmentManager: Manager, GarmentWearLoggable, GarmentProcessing {
         let actor = GroupActor()
         let result = await actor.computeGroups(from: dtos)
         
+        let garmentDict = Dictionary(
+            uniqueKeysWithValues: garments.map { ($0.persistentModelID, $0) }
+        )
+        
         var finalGrouped: [String: [Garment]] = [:]
         
         for (category, ids) in result.groupedIDs {
-            finalGrouped[category] = garments.filter {
-                ids.contains($0.persistentModelID)
-            }
+            finalGrouped[category] = ids.compactMap { garmentDict[$0] }
         }
         
         finalGrouped["All"] = garments

@@ -6,6 +6,7 @@
 //
 
 import Observation
+import SwiftUI
 
 @Observable
 final class WardrobeViewModel {
@@ -43,7 +44,11 @@ final class WardrobeViewModel {
             let result = await manager.process(newGarments)
             
             if !Task.isCancelled {
-                processedGarments = result                
+                await MainActor.run {
+                    withAnimation(.snappy) {
+                        processedGarments = result
+                    }
+                }
             }
         }
     }

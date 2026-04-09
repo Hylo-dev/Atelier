@@ -69,7 +69,7 @@ struct HomeView: View {
                 }
             }
         }
-        .tabViewBottomAccessory(isEnabled: currentState.isToolbarEnabled) {
+        .tabViewBottomAccessory(isEnabled: isTopAppBarVisible(selectedTab)) {
             LiquidCategoryBarView(state: currentState)
         }
     }
@@ -106,7 +106,25 @@ struct HomeView: View {
                 )
         }
     }
-
+    
+    
+    private func isTopAppBarVisible(_ tab: AppTab?) -> Bool {
+        
+        switch tab {
+            case .wardrobe:
+                wardrobeState.isToolbarEnabled
+                
+            case .outfitBuilder:
+                outfitState.isToolbarEnabled
+                
+            case .care:
+                careState.isToolbarEnabled
+                
+            default: false
+        }
+        
+    }
+    
     
     private var sidebarLayout: some View {
         NavigationSplitView {

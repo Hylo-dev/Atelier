@@ -90,12 +90,10 @@ struct FilteredOutfitView: View {
         .onChange(of: outfits, initial: true) { oldOutfits, newOutfits in
             //            guard oldGarments != newGarments else { return }
             
-            withAnimation {
-                outfitViewModel.handleGarmentChange(
-                    newOutfits,
-                    manager: outfitManager
-                )
-            }
+            outfitViewModel.handleGarmentChange(
+                newOutfits,
+                manager: outfitManager
+            )
         }
         .onChange(of: outfitViewModel.processedOutfit) { _, newValue in
             outfitState.items = newValue.tag

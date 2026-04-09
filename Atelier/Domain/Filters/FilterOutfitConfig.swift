@@ -64,44 +64,15 @@ struct FilterOutfitConfig: @MainActor FilterProtocol {
         let occasionsList = (selectedOccasions ?? []).map { $0.rawValue }
         let seasonsList = (selectedSeasons ?? []).map { $0.rawValue }
         
-        let noOccasionFilter = occasionsList.isEmpty
         let noSeasonFilter = seasonsList.isEmpty
         
         
-        let cleanFilter = #Predicate<Outfit> { outfit in
-            !isOnlyClean || outfit.isReadyToWearRaw
-        }
-        
-        let favoriteFilter = #Predicate<Outfit> { outfit in
-            !isOnlyFavorite || outfit.isFavorite
-        }
-        
-        let toneFilter = #Predicate<Outfit> { outfit in
-            isToneNone || outfit.toneRaw == selectedToneRaw
-        }
-        
-        let priceFilter = #Predicate<Outfit> { outfit in
-            limitPrice <= 0 || outfit.totalValue <= limitPrice
-        }
-        
-        let seasonFilter = #Predicate<Outfit> { outfit in
-            noSeasonFilter || seasonsList.contains(outfit.seasonRaw)
-        }
-        
-        let occasionFilter = #Predicate<Outfit> { outfit in
-            noOccasionFilter || occasionsList.contains { occasion in
-                outfit.occasionsRaw.contains(occasion)
-                
-            }
-        }
-        
         return #Predicate<Outfit> { outfit in
-            cleanFilter.evaluate(outfit) &&
-            favoriteFilter.evaluate(outfit) &&
-            toneFilter.evaluate(outfit) &&
-            priceFilter.evaluate(outfit) &&
-            seasonFilter.evaluate(outfit) &&
-            occasionFilter.evaluate(outfit)
+            (!isOnlyClean || outfit.isReadyToWearRaw) &&
+            (!isOnlyFavorite || outfit.isFavorite) &&
+            (isToneNone || outfit.toneRaw == selectedToneRaw) &&
+            (limitPrice <= 0 || outfit.totalValue <= limitPrice) &&
+            (noSeasonFilter || seasonsList.contains(outfit.seasonRaw))
         }
     }
     
