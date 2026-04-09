@@ -17,27 +17,35 @@ struct FilteredWardrobeContent: View {
     @Environment(ApplianceManager.self)
     private var applianceManager
     
+    let title: String
     
     @Query
     private var garments: [Garment]
     
     
     @Bindable
-    var wardrobeState: TabFilterService
+    private var wardrobeState: TabFilterService
     
     @Bindable
-    var wardrobeViewModel: WardrobeViewModel
+    private var wardrobeViewModel: WardrobeViewModel
+    
+    @Bindable
+    private var filterManager: FilterManager
+    
     
     init(
-        predicate        : Predicate<Garment>,
+        _ title          : String,
+        filterManager    : FilterManager,
         wardrobeState    : TabFilterService,
         wardrobeViewModel: WardrobeViewModel
     ) {
+        self.title             = title
+        self.filterManager     = filterManager
         self.wardrobeState     = wardrobeState
         self.wardrobeViewModel = wardrobeViewModel
         
         _garments = Query(
-            filter: predicate,
+            filter: filterManager.predicate,
             sort  : \Garment.name,
             order : .reverse
         )
@@ -45,23 +53,52 @@ struct FilteredWardrobeContent: View {
     
     var body: some View {
         Group {
-            if garments.isEmpty && !wardrobeViewModel.filterManager.isFiltering {
+            if garments.isEmpty && !filterManager.config.isFiltering {
                 emptyView
                 
-            } else if garments.isEmpty && wardrobeViewModel.filterManager.isFiltering {
+            } else if garments.isEmpty && filterManager.config.isFiltering {
                 emptyFilteredView
                 
             } else {
                 pagingView
             }
         }
+        .toolbar {
+            ToolbarItem(placement: .title) {
+                Text(String(repeating: " ", count: 150))
+                    .overlay(alignment: .leading) {
+                        Text(title)
+                            .font(.title)
+                            .fontWeight(.bold)
+                    }
+            }
+            
+            if !garments.isEmpty {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Filter", systemImage: "line.3.horizontal.decrease") {
+                        wardrobeViewModel.isFilterSheetVisible = true
+                    }
+                }
+            }
+            
+            ToolbarItem(placement: .topBarTrailing) {
+                Button("Add", systemImage: "plus") {
+                    wardrobeViewModel.isAddGarmentSheetVisible = true
+                }
+            }
+        }
         .onChange(of: garments, initial: true) { _, newGarments in
             
-            garmentManager.processGarments(
-                newGarments,
-                state: wardrobeState,
-                with: wardrobeViewModel
-            )
+            Task {
+                let processed = garmentManager.process(newGarments)
+                
+                await MainActor.run {
+                    wardrobeViewModel.processedGarments = processed
+                    
+                    wardrobeState.items = wardrobeViewModel.processedGarments.tag
+
+                }
+            }
         }
     }
     

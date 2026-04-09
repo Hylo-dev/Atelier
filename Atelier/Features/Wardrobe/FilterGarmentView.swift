@@ -12,20 +12,17 @@ struct FilterGarmentView: View {
     @Environment(\.dismiss)
     private var dismiss
     
-    @Binding
-    private var filters: FilterGarmentConfig
+    @Bindable
+    private var manager: FilterManager
     
-    @Query
-    private var garments: [Garment]
-        
-    init(filters: Binding<FilterGarmentConfig>) {
-        _garments = Query(
-            filter: #Predicate { $0.brand != nil },
-            sort  : \Garment.name,
-            order : .reverse
-        )
-        
-        self._filters = filters
+    let brands: [String]
+    
+    init(
+        manager: FilterManager,
+        brands : [String]
+    ) {
+        self.manager = manager
+        self.brands  = brands
     }
     
     var body: some View {
@@ -38,7 +35,7 @@ struct FilterGarmentView: View {
                             ForEach(Season.allCases, id: \.self) { season in
                                 PillFilter(
                                     item: season,
-                                    selection: $filters.selectedSeason
+                                    selection: $manager.config.selectedSeason
                                 )
                             }
                         }
@@ -51,7 +48,7 @@ struct FilterGarmentView: View {
                             ForEach(GarmentStyle.allCases, id: \.self) { style in
                                 PillFilter(
                                     item: style,
-                                    selection: $filters.selectedStyle
+                                    selection: $manager.config.selectedStyle
                                 )
                             }
                         }
@@ -62,8 +59,8 @@ struct FilterGarmentView: View {
                 }
                 
                 Section("Identity") {
-                    if garments.count > 1 ||
-                        filters.selectedBrand != nil {
+                    if brands.count > 1 ||
+                        manager.config.selectedBrand != nil {
                         
                         brandLink
                     }
@@ -74,7 +71,7 @@ struct FilterGarmentView: View {
                 // SECTION 3: CONDITION & CARE
                 Section("Condition & Care") {
                     conditionLink
-                    Toggle("Show Clean Only", isOn: $filters.onlyClean)
+                    Toggle("Show Clean Only", isOn: $manager.config.onlyClean)
                 }
             }
             .navigationTitle("Filters")
@@ -84,10 +81,10 @@ struct FilterGarmentView: View {
                     Button("Close", systemImage: "xmark") { dismiss() }
                 }
                 
-                if filters.isFiltering {
+                if manager.config.isFiltering {
                     ToolbarItem(placement: .topBarTrailing) {
                         Button("Reset", systemImage: "arrow.trianglehead.clockwise") {
-                            withAnimation { filters.reset() }
+                            withAnimation { manager.resetFilters() }
                         }
                     }
                     
@@ -108,25 +105,33 @@ struct FilterGarmentView: View {
     
     private var brandLink: some View {
         NavigationLink {
-            StringSelectionView(title: "Brand", items: garments.map { $0.brand ?? "" }, selection: setBinding(for: \.selectedBrand))
+            StringSelectionView(
+                title: "Brand",
+                items: brands,
+                selection: $manager.config.selectedBrand.unwrappedSet()
+            )
         } label: {
-            filterRow(title: "Brand", count: filters.selectedBrand?.count ?? 0)
+            filterRow(title: "Brand", count: manager.config.selectedBrand?.count ?? 0)
         }
     }
     
     private var modelLink: some View {
         NavigationLink {
-            GenericSelectionView<GarmentSubCategory>(selection: setBinding(for: \.selectedSubCategory))
+            GenericSelectionView<GarmentSubCategory>(
+                selection: $manager.config.selectedSubCategory.unwrappedSet()
+            )
         } label: {
-            filterRow(title: "Model", count: filters.selectedSubCategory?.count ?? 0)
+            filterRow(title: "Model", count: manager.config.selectedSubCategory?.count ?? 0)
         }
     }
     
     private var conditionLink: some View {
         NavigationLink {
-            GenericSelectionView<GarmentState>(selection: setBinding(for: \.selectedCondition))
+            GenericSelectionView<GarmentState>(
+                selection: $manager.config.selectedCondition.unwrappedSet()
+            )
         } label: {
-            filterRow(title: "Condition", count: filters.selectedCondition?.count ?? 0)
+            filterRow(title: "Condition", count: manager.config.selectedCondition?.count ?? 0)
         }
     }
     
@@ -136,14 +141,6 @@ struct FilterGarmentView: View {
             Spacer()
             Text(count == 0 ? "All" : "\(count) selected")
                 .foregroundStyle(count == 0 ? .secondary : Color.accentColor)
-        }
-    }
-    
-    private func setBinding<T>(for keyPath: WritableKeyPath<FilterGarmentConfig, Set<T>?>) -> Binding<Set<T>> {
-        Binding {
-            self.filters[keyPath: keyPath] ?? []
-        } set: {
-            self.filters[keyPath: keyPath] = $0.isEmpty ? nil : $0
         }
     }
 }
@@ -179,5 +176,14 @@ struct PillFilter<T: RawRepresentable & Hashable & Identifiable>: View where T.R
                     selection = currentSet.isEmpty ? nil : currentSet
                 }
             }
+    }
+}
+
+extension Binding {
+    func unwrappedSet<T>() -> Binding<Set<T>> where Value == Set<T>? {
+        Binding<Set<T>>(
+            get: { self.wrappedValue ?? [] },
+            set: { self.wrappedValue = $0.isEmpty ? nil : $0 }
+        )
     }
 }

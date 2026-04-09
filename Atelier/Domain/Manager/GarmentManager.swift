@@ -107,13 +107,7 @@ final class GarmentManager: Manager, GarmentWearLoggable, GarmentProcessing {
     }
     
     
-    func processGarments(
-        _ garments    : [Garment],
-        state         : TabFilterService,
-        with viewModel: WardrobeViewModel
-    ) {
-//        let filtered = viewModel.filterManager.filter(garments)
-        
+    func process(_ garments: [Garment]) -> Processed<Garment> {
         var newGrouped: [String: [Garment]] = ["All": garments]
         
         let groupedByCategory = Dictionary(
@@ -133,11 +127,7 @@ final class GarmentManager: Manager, GarmentWearLoggable, GarmentProcessing {
         })
         let newCategories    = ["All"] + uniqueCategories.sorted()
         
-        if state.items != newCategories {
-            state.items = newCategories
-        }
-        
-        viewModel.processedGarments = Processed(
+        return Processed(
             visible: garments,
             grouped: newGrouped,
             brands : sortedBrands,

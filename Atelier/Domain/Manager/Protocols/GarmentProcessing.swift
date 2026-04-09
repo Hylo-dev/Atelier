@@ -6,9 +6,5 @@
 //
 
 protocol GarmentProcessing {    
-    func processGarments(
-        _ garments    : [Garment],
-        state         : TabFilterService,
-        with viewModel: WardrobeViewModel
-    )
+    func process(_ garments: [Garment]) -> Processed<Garment>
 }

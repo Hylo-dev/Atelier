@@ -13,9 +13,6 @@ struct WardrobeView: View {
     @Environment(GarmentManager.self)
     private var garmentManager
     
-    @Environment(ApplianceManager.self)
-    private var applianceManager
-    
     
     // MARK: - Parameters Val
         
@@ -27,12 +24,9 @@ struct WardrobeView: View {
     @State
     private var wardrobeViewModel = WardrobeViewModel()
     
-    
-    @Query(
-        sort : \Garment.name,
-        order: .reverse
-    )
-    private var garments: [Garment]
+    @State
+    private var filterManager = FilterManager()
+
 
     
     init(
@@ -47,37 +41,14 @@ struct WardrobeView: View {
         
         bodyModifiers(
             FilteredWardrobeContent(
-                predicate        : wardrobeViewModel.filterManager.predicate,
+                title,
+                filterManager    : filterManager,
                 wardrobeState    : wardrobeState,
                 wardrobeViewModel: wardrobeViewModel
             )
         )
-        .onChange(of: wardrobeViewModel.filterManager.isFiltering) { _, newValue in
+        .onChange(of: filterManager.config.isFiltering) { _, newValue in
             wardrobeState.hiddenSectionBar = newValue
-        }
-        .toolbar {
-            ToolbarItem(placement: .title) {
-                Text(String(repeating: " ", count: 150))
-                    .overlay(alignment: .leading) {
-                        Text(title)
-                            .font(.title)
-                            .fontWeight(.bold)
-                    }
-            }
-            
-            if !garments.isEmpty {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("Filter", systemImage: "line.3.horizontal.decrease") {
-                        wardrobeViewModel.isFilterSheetVisible = true
-                    }
-                }
-            }
-            
-            ToolbarItem(placement: .topBarTrailing) {
-                Button("Add", systemImage: "plus") {
-                    wardrobeViewModel.isAddGarmentSheetVisible = true
-                }
-            }
         }
         .onChange(of: wardrobeViewModel.selectedItem) { old, newValue in
             if newValue == nil {
@@ -116,7 +87,8 @@ struct WardrobeView: View {
             }
             .sheet(isPresented: $wardrobeViewModel.isFilterSheetVisible) {
                 FilterGarmentView(
-                    filters: $wardrobeViewModel.filterManager
+                    manager: filterManager,
+                    brands : wardrobeViewModel.processedGarments.brands
                 )
             }
             .alert(

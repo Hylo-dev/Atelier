@@ -17,19 +17,16 @@ final class WardrobeViewModel {
     var editableItem: Garment?
     
     var selectedItem: Garment?
-    
-    var filterManager: FilterGarmentConfig
-    
+        
     var isFilterSheetVisible: Bool = false
     
     var processedGarments: Processed<Garment>
     
-    init(filter: FilterGarmentConfig = FilterGarmentConfig()) {
+    init() {
         self.alertManager             = AlertManager()
         self.isAddGarmentSheetVisible = false
         self.editableItem             = nil
         self.selectedItem             = nil
-        self.filterManager            = filter
         self.isFilterSheetVisible     = false
         self.processedGarments        = Processed()
     }
