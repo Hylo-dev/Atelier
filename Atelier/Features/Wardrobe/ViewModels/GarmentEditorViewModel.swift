@@ -236,6 +236,11 @@ final class GarmentEditorViewModel {
         item.brand          = self.brand.isEmpty ? nil : brand
         item.price          = self.price
         item.color          = self.color.toHex() ?? "#FFFFFF"
+        
+        if let state = selectedState {
+            item.state = state
+        }
+        
         item.composition    = Array(self.selectedComposition)
         item.category       = self.selectedCategory
         item.subCategory    = self.selectedSubCategory

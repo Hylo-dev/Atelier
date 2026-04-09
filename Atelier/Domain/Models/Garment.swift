@@ -30,12 +30,36 @@ extension AtelierSchemaV1 {
         var price       : Double?
         var color       : String
         var composition : [GarmentComposition]
-        var category    : GarmentCategory
-        var subCategory : GarmentSubCategory
-        var season      : Season
-        var style       : GarmentStyle
         var purchaseDate: Date
-        var state       : GarmentState
+        var category    : GarmentCategory
+        
+        var subCategoryRaw: String
+        @MainActor
+        var subCategory: GarmentSubCategory {
+            get { (GarmentSubCategory(rawValue: subCategoryRaw) ?? category.subCategory.first)! }
+            set { subCategoryRaw = newValue.rawValue }
+        }
+        
+        
+        var seasonRaw: String
+        var season: Season {
+            get { Season(rawValue: seasonRaw) ?? .summer }
+            set { seasonRaw = newValue.rawValue }
+        }
+        
+        
+        var styleRaw: String
+        var style: GarmentStyle {
+            get { GarmentStyle(rawValue: styleRaw) ?? .casual }
+            set { styleRaw = newValue.rawValue }
+        }
+        
+        
+        var stateRaw: String
+        var state: GarmentState {
+            get { GarmentState(rawValue: stateRaw) ?? .available }
+            set { stateRaw = newValue.rawValue }
+        }
         
         // MARK: Handler Washing
         var isBinAssigned: Bool
@@ -92,15 +116,15 @@ extension AtelierSchemaV1 {
             self.color          = color
             self.composition    = composition
             self.category       = category
-            self.subCategory    = subCategory
-            self.season         = season
-            self.style          = style
+            self.subCategoryRaw = subCategory.rawValue
+            self.seasonRaw      = season.rawValue
+            self.styleRaw       = style.rawValue
             self.purchaseDate   = purchaseDate
             
             self.isBinAssigned  = isBinAssigned
             self.forceWash      = false
             
-            self.state          = .available
+            self.stateRaw       = GarmentState.available.rawValue
             
             self.washingSymbols = washingSymbols
             self.wearCount      = 0

@@ -112,12 +112,12 @@ final class GarmentManager: Manager, GarmentWearLoggable, GarmentProcessing {
         state         : TabFilterService,
         with viewModel: WardrobeViewModel
     ) {
-        let filtered = viewModel.filterManager.filter(garments)
+//        let filtered = viewModel.filterManager.filter(garments)
         
-        var newGrouped: [String: [Garment]] = ["All": filtered]
+        var newGrouped: [String: [Garment]] = ["All": garments]
         
         let groupedByCategory = Dictionary(
-            grouping: filtered,
+            grouping: garments,
             by      : { $0.category.title }
         )
         
@@ -138,7 +138,7 @@ final class GarmentManager: Manager, GarmentWearLoggable, GarmentProcessing {
         }
         
         viewModel.processedGarments = Processed(
-            visible: filtered,
+            visible: garments,
             grouped: newGrouped,
             brands : sortedBrands,
             tag    : newCategories

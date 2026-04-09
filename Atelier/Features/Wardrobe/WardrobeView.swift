@@ -46,32 +46,12 @@ struct WardrobeView: View {
     var body: some View {
         
         bodyModifiers(
-            Group {
-                if garments.isEmpty {
-                    emptyView
-                    
-                } else if wardrobeViewModel.processedGarments.visible.isEmpty {
-                    emptyFilteredView
-                    
-                } else {
-                    pagingView
-                }
-            }
+            FilteredWardrobeContent(
+                predicate        : wardrobeViewModel.filterManager.predicate,
+                wardrobeState    : wardrobeState,
+                wardrobeViewModel: wardrobeViewModel
+            )
         )
-        .onChange(of: garments, initial: true) {
-            garmentManager.processGarments(
-                garments,
-                state: wardrobeState,
-                with: wardrobeViewModel
-            )
-        }
-        .onChange(of: wardrobeViewModel.filterManager.isFiltering) {
-            garmentManager.processGarments(
-                garments,
-                state: wardrobeState,
-                with: wardrobeViewModel
-            )
-        }
         .onChange(of: wardrobeViewModel.filterManager.isFiltering) { _, newValue in
             wardrobeState.hiddenSectionBar = newValue
         }
@@ -108,60 +88,8 @@ struct WardrobeView: View {
         }
     }
     
+    
     // MARK: - Subviews
-    
-    private var emptyView: some View {
-        ContentUnavailableView(
-            "Closet Empty",
-            systemImage: "hanger",
-            description: Text("Time to fill this closet up")
-        )
-        .containerRelativeFrame(.vertical)
-    }
-    
-    
-    private var emptyFilteredView: some View {
-        ContentUnavailableView(
-            "No Garments Found",
-            systemImage: "magnifyingglass",
-            description: Text("Try adjusting your filters to see more results from your wardrobe.")
-        )
-        .containerRelativeFrame(.vertical)
-    }
-    
-    
-    private var pagingView: some View {
-        LiquidPagingView(
-            selection: $wardrobeState.selection,
-            onProgressChange: { newVal in
-                if wardrobeState.progress != newVal {
-                    wardrobeState.progress = newVal
-                }
-            },
-            items    : wardrobeState.items,
-            isEnabled: wardrobeState.isPagesEnabled
-        ) { category in
-            
-            let visibles = wardrobeViewModel.processedGarments.grouped[category] ?? []
-            VerticalScrollGridView(items: visibles) { item in
-                garmentCard(item)
-            }
-            
-        }
-        .ignoresSafeArea(.container, edges: .top)
-    }
-    
-    
-    @ViewBuilder
-    private func garmentCard(_ item: Garment) -> some View {
-        GarmentContextCard(
-            item            : item,
-            manager         : garmentManager,
-            processGarment  : applianceManager,
-            viewModel       : wardrobeViewModel
-        )
-        .id(item.id)
-    }
     
     private func bodyModifiers(_ view: some View) -> some View {
         view

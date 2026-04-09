@@ -174,7 +174,6 @@ struct InfoCareView: View {
     private var garmentsGridSection: some View {
         
         Section("Garments") {
-            
             let useTwoRows = item.garments.count > 3
             let rows = Array(
                 repeating: GridItem(.fixed(125), spacing: 15),
@@ -185,13 +184,11 @@ struct InfoCareView: View {
                 .horizontal,
                 showsIndicators: false
             ) {
-                
                 LazyHGrid(
                     rows     : rows,
                     alignment: .center,
                     spacing  : 15
                 ) {
-                    
                     ForEach(item.garments, id: \.id) { garment in
                         ModelCardView(
                             title    : garment.name,
@@ -199,14 +196,10 @@ struct InfoCareView: View {
                         )
                         .frame(width: 150, height: 250)
                     }
-                    
                 }
-                
             }
         }
-        
     }
-    
     
     
     @ViewBuilder

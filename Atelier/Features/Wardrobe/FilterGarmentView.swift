@@ -112,9 +112,9 @@ struct FilterGarmentView: View {
     
     private var conditionLink: some View {
         NavigationLink {
-            GenericSelectionView<GarmentState>(selection: setBinding(for: \.selectedState))
+            GenericSelectionView<GarmentState>(selection: setBinding(for: \.selectedCondition))
         } label: {
-            filterRow(title: "Condition", count: filters.selectedState?.count ?? 0)
+            filterRow(title: "Condition", count: filters.selectedCondition?.count ?? 0)
         }
     }
     
