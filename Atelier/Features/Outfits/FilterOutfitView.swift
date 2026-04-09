@@ -27,10 +27,12 @@ struct FilterOutfitView: View {
                                     item: season,
                                     selection: $manager.config.selectedSeasons
                                 )
+                                .equatable()
                             }
                         }
                         
-                        Divider().padding(.leading)
+                        Divider()
+                            .padding(.leading)
                         
                         filterHorizontalScroll(title: "Occasions") {
                             ForEach(GarmentStyle.allCases, id: \.self) { style in
@@ -38,6 +40,7 @@ struct FilterOutfitView: View {
                                     item: style,
                                     selection: $manager.config.selectedOccasions
                                 )
+                                .equatable()
                             }
                         }
                     }

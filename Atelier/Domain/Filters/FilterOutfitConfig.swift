@@ -8,7 +8,7 @@
 import Foundation
 
 
-final class FilterOutfitConfig: @MainActor FilterProtocol {
+struct FilterOutfitConfig: @MainActor FilterProtocol {
     typealias T = Outfit
     
     var recentWorn       : Bool
@@ -39,7 +39,7 @@ final class FilterOutfitConfig: @MainActor FilterProtocol {
         self.onlyFavorite      = false
     }
         
-    func reset() {
+    mutating func reset() {
         recentWorn        = false
         selectedOccasions = nil
         selectedSeasons   = nil
@@ -54,24 +54,18 @@ final class FilterOutfitConfig: @MainActor FilterProtocol {
             return #Predicate { _ in true }
         }
                 
-        let isOnlyClean   : Bool   = onlyClean
-        let isOnlyFavorite: Bool   = onlyFavorite
-        let isToneNone    : Bool   = selectedTone == Tone.none
-        let limitPrice    : Double = maxPrice
+        let isOnlyClean = onlyClean
+        let isOnlyFavorite = onlyFavorite
+        let limitPrice = maxPrice
+        let selectedToneRaw = selectedTone.rawValue
+        let isToneNone = selectedTone == .none
         
+        // Trasformiamo i Set in Array per il confronto
+        let occasionsList = (selectedOccasions ?? []).map { $0.rawValue }
+        let seasonsList = (selectedSeasons ?? []).map { $0.rawValue }
         
-        let selectedOccasionsList: [String] = (selectedOccasions ?? []).map {
-            $0.rawValue
-        }
-        
-        let selectedSeasonsList: [String] = (selectedSeasons ?? []).map {
-            $0.rawValue
-        }
-        
-        
-        let filterByOccasions = selectedOccasionsList.isEmpty
-        let filterBySeasons = selectedSeasonsList.isEmpty
-        let filterByTone: String = selectedTone.rawValue
+        let noOccasionFilter = occasionsList.isEmpty
+        let noSeasonFilter = seasonsList.isEmpty
         
         
         let cleanFilter = #Predicate<Outfit> { outfit in
@@ -83,7 +77,7 @@ final class FilterOutfitConfig: @MainActor FilterProtocol {
         }
         
         let toneFilter = #Predicate<Outfit> { outfit in
-            !isToneNone || outfit.toneRaw == filterByTone
+            isToneNone || outfit.toneRaw == selectedToneRaw
         }
         
         let priceFilter = #Predicate<Outfit> { outfit in
@@ -91,11 +85,14 @@ final class FilterOutfitConfig: @MainActor FilterProtocol {
         }
         
         let seasonFilter = #Predicate<Outfit> { outfit in
-            filterBySeasons || selectedSeasonsList.contains(outfit.seasonRaw)
+            noSeasonFilter || seasonsList.contains(outfit.seasonRaw)
         }
         
         let occasionFilter = #Predicate<Outfit> { outfit in
-            filterByOccasions || outfit.occasionsRaw.contains(selectedOccasionsList)
+            noOccasionFilter || occasionsList.contains { occasion in
+                outfit.occasionsRaw.contains(occasion)
+                
+            }
         }
         
         return #Predicate<Outfit> { outfit in

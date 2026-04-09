@@ -41,6 +41,8 @@ struct OutfitView: View {
     
     
     var body: some View {
+        let _ = Self._printChanges()
+        
         bodyModifiers(
             FilteredOutfitView(
                 title,
@@ -50,7 +52,7 @@ struct OutfitView: View {
             )
         )
         .sensoryFeedback(.success, trigger: outfitViewModel.isDeleted)
-        .onChange(of: outfitViewModel.filterManager.isFiltering) { _, newValue in
+        .onChange(of: filterManager.isFiltering) { _, newValue in
             outfitState.hiddenSectionBar = newValue
         }
         .onChange(of: outfitViewModel.navigatedOutfit) { old, newValue in
@@ -82,7 +84,10 @@ struct OutfitView: View {
                     OutfitEditorView(outfit)
                 }
             }
-            .sheet(isPresented: $outfitViewModel.isFilterSheetVisible) {
+            .sheet(
+                isPresented: $outfitViewModel.isFilterSheetVisible,
+                onDismiss  : { filterManager.update() }
+            ) {
                 FilterOutfitView(manager: filterManager)
             }
             .alert(

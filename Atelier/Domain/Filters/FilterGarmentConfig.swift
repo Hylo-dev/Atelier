@@ -7,7 +7,7 @@
 
 import Foundation
 
-final class FilterGarmentConfig: @MainActor FilterProtocol {
+struct FilterGarmentConfig: @MainActor FilterProtocol {
     typealias T = Garment
     
     var selectedBrand      : Set<String>?             = nil
@@ -38,7 +38,7 @@ final class FilterGarmentConfig: @MainActor FilterProtocol {
         self.onlyClean           = false
     }
     
-    func reset() {
+    mutating func reset() {
         selectedBrand       = nil
         selectedSubCategory = nil
         selectedSeason      = nil

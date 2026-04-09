@@ -96,6 +96,9 @@ struct FilteredWardrobeContent: View {
                 manager: garmentManager
             )
         }
+        .onChange(of: wardrobeViewModel.processedGarments) { _, newValue in
+            wardrobeState.items = newValue.tag
+        }
     }
     
     // MARK: - Subviews

@@ -19,9 +19,7 @@ final class OutfitViewModel {
     var isDeleted: Bool
     
     var isAddOutfitSheetVisible: Bool
-    
-    var filterManager: FilterOutfitConfig
-    
+        
     var isFilterSheetVisible: Bool
     
     var processedOutfit: Processed<Outfit>
@@ -34,7 +32,6 @@ final class OutfitViewModel {
         self.navigatedOutfit         = nil
         self.isDeleted               = false
         self.isAddOutfitSheetVisible = false
-        self.filterManager           = FilterOutfitConfig()
         self.isFilterSheetVisible    = false
         self.processedOutfit         = Processed()
     }

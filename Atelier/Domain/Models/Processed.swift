@@ -7,7 +7,7 @@
 
 import SwiftData
 
-struct Processed<T: PersistentModel> {
+struct Processed<T: PersistentModel>: Equatable {
     let grouped: [String: [T]]
     let brands : [String]
     let tag    : [String]
