@@ -88,7 +88,7 @@ struct FilteredOutfitView: View {
             }
         }
         .onChange(of: outfits, initial: true) { oldOutfits, newOutfits in
-            //            guard oldGarments != newGarments else { return }
+            guard oldOutfits != newOutfits else { return }
             
             outfitViewModel.handleGarmentChange(
                 newOutfits,
@@ -97,6 +97,9 @@ struct FilteredOutfitView: View {
         }
         .onChange(of: outfitViewModel.processedOutfit) { _, newValue in
             outfitState.items = newValue.tag
+        }
+        .onChange(of: filterManager.isFiltering) { _, newValue in
+            outfitState.hiddenSectionBar = newValue
         }
     }
     

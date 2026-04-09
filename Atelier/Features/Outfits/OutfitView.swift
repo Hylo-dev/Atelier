@@ -45,9 +45,6 @@ struct OutfitView: View {
             )
         )
         .sensoryFeedback(.success, trigger: outfitViewModel.isDeleted)
-        .onChange(of: filterManager.isFiltering) { _, newValue in
-            outfitState.hiddenSectionBar = newValue
-        }
         .onChange(of: outfitViewModel.navigatedOutfit) { old, newValue in
             if newValue == nil {
                 withAnimation {

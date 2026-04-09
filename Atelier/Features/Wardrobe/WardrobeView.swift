@@ -47,9 +47,6 @@ struct WardrobeView: View {
                 wardrobeViewModel: wardrobeViewModel
             )
         )
-        .onChange(of: filterManager.isFiltering) { _, newValue in
-            wardrobeState.hiddenSectionBar = newValue
-        }
         .onChange(of: wardrobeViewModel.selectedItem) { old, newValue in
             if newValue == nil {
                 withAnimation {

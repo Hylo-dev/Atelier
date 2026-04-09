@@ -15,6 +15,7 @@ import Foundation
 final class OutfitManager: Manager {
     private let context: ModelContext
     private let imageService: ImageServiceProtocol
+    private let groupActor = GroupActor()
     
     
     init(
@@ -111,8 +112,7 @@ final class OutfitManager: Manager {
             )
         }
         
-        let actor = GroupActor()
-        let result = await actor.computeGroups(from: dtos)
+        let result = await groupActor.computeGroups(from: dtos)
         
         let outfitDict = Dictionary(
             uniqueKeysWithValues: outfits.map { ($0.persistentModelID, $0) }

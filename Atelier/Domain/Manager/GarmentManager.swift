@@ -16,6 +16,7 @@ import UIKit
 final class GarmentManager: Manager, GarmentWearLoggable, GarmentProcessing {
     private let context: ModelContext
     private let imageService: ImageServiceProtocol
+    private let groupActor = GroupActor()
     
     
     init(
@@ -116,8 +117,7 @@ final class GarmentManager: Manager, GarmentWearLoggable, GarmentProcessing {
             )
         }
         
-        let actor = GroupActor()
-        let result = await actor.computeGroups(from: dtos)
+        let result = await groupActor.computeGroups(from: dtos)
         
         let garmentDict = Dictionary(
             uniqueKeysWithValues: garments.map { ($0.persistentModelID, $0) }
