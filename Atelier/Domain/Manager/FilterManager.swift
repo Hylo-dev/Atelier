@@ -21,6 +21,6 @@ class FilterManager {
     }
     
     func resetFilters() {
-        config = FilterGarmentConfig()
+        config.reset()
     }
 }

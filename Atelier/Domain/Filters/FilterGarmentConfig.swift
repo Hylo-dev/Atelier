@@ -37,6 +37,16 @@ struct FilterGarmentConfig: Equatable {
         onlyClean
     }
     
+    mutating func reset() {
+        selectedBrand       = nil
+        selectedSubCategory = nil
+        selectedSeason      = nil
+        selectedStyle       = nil
+        selectedColor       = nil
+        selectedCondition   = nil
+        onlyClean           = false
+    }
+    
     func generatePredicate() -> Predicate<Garment> {
         let availableRaw = GarmentState.available.rawValue
         
