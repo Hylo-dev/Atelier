@@ -89,7 +89,7 @@ struct FilteredWardrobeContent: View {
             }
         }
         .onChange(of: garments, initial: true) { oldGarments, newGarments in
-//            guard oldGarments != newGarments else { return }
+            guard oldGarments != newGarments else { return }
             
             wardrobeViewModel.handleGarmentChange(
                 newGarments,
@@ -98,6 +98,9 @@ struct FilteredWardrobeContent: View {
         }
         .onChange(of: wardrobeViewModel.processedGarments) { _, newValue in
             wardrobeState.items = newValue.tag
+        }
+        .onChange(of: filterManager.isFiltering) { _, newValue in
+            wardrobeState.hiddenSectionBar = newValue
         }
     }
     
