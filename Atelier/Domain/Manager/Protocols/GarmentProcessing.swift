@@ -6,5 +6,5 @@
 //
 
 protocol GarmentProcessing {    
-    func process(_ garments: [Garment]) -> Processed<Garment>
+    func process(_ garments: [Garment]) async -> Processed<Garment>
 }

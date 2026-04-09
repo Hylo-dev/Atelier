@@ -28,11 +28,10 @@ struct HomeView: View {
     
     private var currentState: TabFilterService {
         switch selectedTab {
-            case .wardrobe:      return wardrobeState
-            case .outfitBuilder: return outfitState
-            case .care:          return careState
-                
-            default:             return wardrobeState
+            case .wardrobe     : wardrobeState
+            case .outfitBuilder: outfitState
+            case .care         : careState
+            default            : wardrobeState
         }
     }
 	
@@ -70,9 +69,7 @@ struct HomeView: View {
                 }
             }
         }
-        .tabViewBottomAccessory(
-            isEnabled: self.isTopAppBarVisible(self.selectedTab)
-        ) {
+        .tabViewBottomAccessory(isEnabled: currentState.isToolbarEnabled) {
             LiquidCategoryBarView(state: currentState)
         }
     }
@@ -109,25 +106,7 @@ struct HomeView: View {
                 )
         }
     }
-    
-    
-    private func isTopAppBarVisible(_ tab: AppTab?) -> Bool {
-        
-        switch tab {
-            case .wardrobe:
-                wardrobeState.isToolbarEnabled
-                
-            case .outfitBuilder:
-                outfitState.isToolbarEnabled
-                
-            case .care:
-                careState.isToolbarEnabled
-                
-            default: false
-        }
-        
-    }
-    
+
     
     private var sidebarLayout: some View {
         NavigationSplitView {

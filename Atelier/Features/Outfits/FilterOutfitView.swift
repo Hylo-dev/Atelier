@@ -10,211 +10,150 @@ import SwiftUI
 struct FilterOutfitView: View {
     
     @Environment(\.dismiss)
-    var dismiss
+    private var dismiss
     
-    @Binding
-    var filter: FilterOutfitConfig
-    
+    @Bindable
+    var manager: FilterManager<FilterOutfitConfig>
     
     var body: some View {
         NavigationStack {
             Form {
+                // SECTION 1: STYLE & OCCASION (Pills)
+                Section("Style & Occasion") {
+                    VStack(alignment: .leading, spacing: 0) {
+                        filterHorizontalScroll(title: "Seasons") {
+                            ForEach(Season.allCases, id: \.self) { season in
+                                PillFilter(
+                                    item: season,
+                                    selection: $manager.config.selectedSeasons
+                                )
+                            }
+                        }
+                        
+                        Divider().padding(.leading)
+                        
+                        filterHorizontalScroll(title: "Occasions") {
+                            ForEach(GarmentStyle.allCases, id: \.self) { style in
+                                PillFilter(
+                                    item: style,
+                                    selection: $manager.config.selectedOccasions
+                                )
+                            }
+                        }
+                    }
+                    .listRowInsets(EdgeInsets())
+                }
                 
-                // MARK: Sections
-                sectionColorAnalysis
+                // SECTION 2: COLOR ANALYSIS
+                Section("Color & Tone") {
+                    Picker("Tone", selection: $manager.config.selectedTone) {
+                        ForEach(Tone.allCases, id: \.self) { tone in
+                            Text(tone.rawValue.capitalized).tag(tone)
+                        }
+                    }
+                    .tint(.secondary)
+                    
+//                    colorLink
+                }
                 
-                sectionAttributes
+                // SECTION 3: STATUS
+                Section("Status") {
+                    Toggle("Favorites Only", isOn: $manager.config.onlyFavorite)
+                    Toggle("Clean Only", isOn: $manager.config.onlyClean)
+                    Toggle("Recently Worn", isOn: $manager.config.recentWorn)
+                }
                 
-                sectionStatus
-                
-                sectionValue
+                // SECTION 4: VALUE
+                Section("Estimated Value") {
+                    VStack(spacing: 8) {
+                        HStack {
+                            Text("Max Price")
+                            Spacer()
+                            Text(manager.config.maxPrice == 0 ? "All" : manager.config.maxPrice.formatted(.currency(code: "EUR")))
+                                .foregroundStyle(.secondary)
+                        }
+                        Slider(value: $manager.config.maxPrice, in: 0...5000, step: 50)
+                    }
+                    .padding(.vertical, 4)
+                }
             }
             .navigationTitle("Filters")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel", systemImage: "xmark") {
-                        self.dismiss()
-                    }
+                    Button("Cancel", systemImage: "xmark") { dismiss() }
                 }
                 
-                if self.filter.isFiltering {
-                    ToolbarItem {
+                if manager.isFiltering {
+                    ToolbarItem(placement: .topBarTrailing) {
                         Button("Reset", systemImage: "arrow.counterclockwise") {
-                            withAnimation {
-                                self.filter.reset()
-                            }
+                            withAnimation { manager.resetFilters() }
                         }
                     }
                 }
                 
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Done", systemImage: "checkmark") {
-                        dismiss()
-                    }
-                    .fontWeight(.bold)
+                    Button("Done", systemImage: "checkmark") { dismiss() }
+                        .fontWeight(.bold)
                 }
             }
-            .onChange(of: self.filter.selectedOccasions) { _, newStyles in
-                if let styles = newStyles, !styles.isEmpty && filter.onlyClean {
-                    filter.onlyClean = false
-                }
-            }
-        }
-    }
-    
-    
-    
-    // MARK: - Subviews
-    
-    
-    
-    @ViewBuilder
-    private var sectionAttributes: some View {
-        Section("Attributes") {
-            
-            filterNavigationLink(
-                title      : "Occasions",
-                selection  : self.setBinding(
-                    for: \.selectedOccasions
-                ),
-                destination: GenericSelectionView<GarmentStyle>(
-                    selection: self.setBinding(for: \.selectedOccasions)
-                )
-            )
-            
-            filterNavigationLink(
-                title      : "Seasons",
-                selection  : self.setBinding(
-                    for: \.selectedSeasons
-                ),
-                destination: GenericSelectionView<Season>(
-                    selection: self.setBinding(for: \.selectedSeasons),
-                    useSystemIcon: true
-                )
-            )
-        }
-        
-    }
-    
-    @ViewBuilder
-    private var sectionStatus: some View {
-        Section("Status") {
-            Toggle("Favorites Only", isOn: $filter.onlyFavorite)
-            Toggle("Clean Only", isOn: self.$filter.onlyClean)
-            Toggle("Recently Worn", isOn: self.$filter.recentWorn)
-        }
-    }
-    
-    
-    @ViewBuilder
-    private var sectionValue: some View {
-        Section("Estimated Value") {
-            HStack {
-                Text("Max Price")
-                
-                Spacer()
-                
-                Group {
-                    if filter.maxPrice == 0 {
-                        Text("All")
-                        
-                    } else {
-                        Text(
-                            filter.maxPrice.formatted(
-                                .currency(code: "EUR")
-                            )
-                        )
-                    }
-                }
-                .foregroundStyle(.secondary)
-                
-            }
-            Slider(value: $filter.maxPrice, in: 0...5000, step: 50)
-        }
-    }
-    
-    
-    
-    // MARK: - Helpers
-    
-    private func setBinding<T>(
-        for keyPath: WritableKeyPath<FilterOutfitConfig,
-        Set<T>?>
-    ) -> Binding<Set<T>> {
-        Binding {
-            self.filter[keyPath: keyPath] ?? []
-            
-        } set: { newValue in
-            self.filter[keyPath: keyPath] = newValue.isEmpty ? nil : newValue
-        }
-    }
-    
-    @ViewBuilder
-    private func filterNavigationLink<T, Destination: View>(
-        title      : String,
-        selection  : Binding<Set<T>>,
-        destination: Destination
-    ) -> some View {
-        
-        NavigationLink {
-            destination
-                .navigationTitle(title)
-        } label: {
-            HStack {
-                Text(title)
-                
-                Spacer()
-                
-                if selection.wrappedValue.isEmpty {
-                    Text("All")
-                        .foregroundStyle(.secondary)
-                    
-                } else {
-                    Text("\(selection.wrappedValue.count) selected")
-                        .foregroundStyle(Color.accentColor)
-                        .fontWeight(.medium)
+            // Logica di business: se selezioni un'occasione, disabilita il filtro "solo puliti" (o viceversa)
+            .onChange(of: manager.config.selectedOccasions) { _, newValue in
+                if let val = newValue, !val.isEmpty && manager.config.onlyClean {
+                    manager.config.onlyClean = false
                 }
             }
         }
     }
     
-    @ViewBuilder
-    private var sectionColorAnalysis: some View {
-        Section("Color & Tone") {
-
-            Picker("Tone", selection: $filter.selectedTone) {
-                ForEach(Tone.allCases, id: \.rawValue) { tone in
-                    Text(tone.rawValue)
-                        .tag(tone)
-                }
-            }
-            .padding(.vertical, 5)
-            .tint(.secondary)
-            
-//            NavigationLink {
-//                ColorSelectionView(selection: $filter.selectedColors)
-//                    .navigationTitle("Dominant Colors")
-//            } label: {
-//                LabeledContent("Colors") {
-//                    if filter.selectedColors.isEmpty {
-//                        Text("All")
-//                            .foregroundStyle(.secondary)
-//                    } else {
-//                        HStack(spacing: 4) {
-//                            ForEach(Array(filter.selectedColors).prefix(3), id: \.self) { color in
-//                                Circle()
-//                                    .fill(color)
-//                                    .frame(width: 12, height: 12)
-//                            }
-//                            if filter.selectedColors.count > 3 {
-//                                Text("+\(filter.selectedColors.count - 3)")
-//                                    .font(.caption2)
-//                            }
+    // MARK: - Sublinks & Helpers
+    
+//    private var colorLink: some View {
+//        NavigationLink {
+//            ColorSelectionView(selection: $manager.config.selectedColors.unwrappedSet())
+//                .navigationTitle("Dominant Colors")
+//        } label: {
+//            HStack {
+//                Text("Colors")
+//                Spacer()
+//                if manager.config.selectedColors.isEmpty {
+//                    Text("All").foregroundStyle(.secondary)
+//                } else {
+//                    HStack(spacing: 4) {
+//                        ForEach(Array(manager.config.selectedColors).prefix(3), id: \.self) { color in
+//                            Circle()
+//                                .fill(color)
+//                                .frame(width: 12, height: 12)
+//                        }
+//                        if manager.config.selectedColors.count > 3 {
+//                            Text("+\(manager.config.selectedColors.count - 3)")
+//                                .font(.caption2)
+//                                .foregroundStyle(.accent)
 //                        }
 //                    }
 //                }
 //            }
+//        }
+//    }
+    
+    @ViewBuilder
+    private func filterHorizontalScroll<Content: View>(title: String, @ViewBuilder content: () -> Content) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(title)
+                .font(.caption)
+                .fontWeight(.medium)
+                .foregroundStyle(.secondary)
+                .padding(.horizontal, 15)
+                .padding(.top, 10)
+            
+            ScrollView(.horizontal, showsIndicators: false) {
+                LazyHStack(spacing: 12) {
+                    content()
+                }
+                .padding(.horizontal, 15)
+                .padding(.bottom, 12)
+            }
         }
     }
 }
+

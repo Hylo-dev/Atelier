@@ -107,31 +107,31 @@ final class GarmentManager: Manager, GarmentWearLoggable, GarmentProcessing {
     }
     
     
-    func process(_ garments: [Garment]) -> Processed<Garment> {
-        var newGrouped: [String: [Garment]] = ["All": garments]
-        
-        let groupedByCategory = Dictionary(
-            grouping: garments,
-            by      : { $0.category.title }
-        )
-        
-        for (category, items) in groupedByCategory {
-            newGrouped[category] = items
+    func process(_ garments: [Garment]) async -> Processed<Garment> {
+        let dtos = garments.map { garment in
+            GarmentDTO(
+                id           : garment.persistentModelID,
+                firstLabel   : garment.brand,
+                secondLabel  : garment.category.title
+            )
         }
         
-        let rawBrands    = Set(garments.compactMap { $0.brand })
-        let sortedBrands = rawBrands.sorted()
+        let actor = GroupActor()
+        let result = await actor.computeGroups(from: dtos)
         
-        let uniqueCategories = Set(garments.lazy.map {
-            $0.category.title
-        })
-        let newCategories    = ["All"] + uniqueCategories.sorted()
+        var finalGrouped: [String: [Garment]] = [:]
         
+        for (category, ids) in result.groupedIDs {
+            finalGrouped[category] = garments.filter {
+                ids.contains($0.persistentModelID)
+            }
+        }
+        
+        finalGrouped["All"] = garments
         return Processed(
-            visible: garments,
-            grouped: newGrouped,
-            brands : sortedBrands,
-            tag    : newCategories
+            grouped: finalGrouped,
+            brands : result.brands,
+            tag    : result.tags
         )
     }
 }

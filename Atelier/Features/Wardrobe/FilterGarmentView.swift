@@ -13,12 +13,12 @@ struct FilterGarmentView: View {
     private var dismiss
     
     @Bindable
-    private var manager: FilterManager
+    private var manager: FilterManager<FilterGarmentConfig>
     
     let brands: [String]
     
     init(
-        manager: FilterManager,
+        manager: FilterManager<FilterGarmentConfig>,
         brands : [String]
     ) {
         self.manager = manager
@@ -50,6 +50,7 @@ struct FilterGarmentView: View {
                                     item: style,
                                     selection: $manager.config.selectedStyle
                                 )
+                                .equatable()
                             }
                         }
                         .padding(15)
@@ -81,7 +82,7 @@ struct FilterGarmentView: View {
                     Button("Close", systemImage: "xmark") { dismiss() }
                 }
                 
-                if manager.config.isFiltering {
+                if manager.isFiltering {
                     ToolbarItem(placement: .topBarTrailing) {
                         Button("Reset", systemImage: "arrow.trianglehead.clockwise") {
                             withAnimation { manager.resetFilters() }
@@ -145,39 +146,6 @@ struct FilterGarmentView: View {
     }
 }
 
-struct PillFilter<T: RawRepresentable & Hashable & Identifiable>: View where T.RawValue == String {
-    let item: T
-    
-    @Binding
-    var selection: Set<T>?
-    
-    var body: some View {
-        let isSelected = selection?.contains(item) ?? false
-        
-        Text(item.rawValue.capitalized)
-            .font(.system(size: 14, weight: .medium))
-            .padding(.horizontal, 16)
-            .padding(.vertical, 8)
-            .background(
-                isSelected ? Color.accentColor : Color(.tertiarySystemFill)
-            )
-            .foregroundStyle(isSelected ? .white : .primary)
-            .clipShape(Capsule())
-            .onTapGesture {
-                var currentSet = selection ?? []
-                
-                if currentSet.contains(item) {
-                    currentSet.remove(item)
-                } else {
-                    currentSet.insert(item)
-                }
-                
-                withAnimation {
-                    selection = currentSet.isEmpty ? nil : currentSet
-                }
-            }
-    }
-}
 
 extension Binding {
     func unwrappedSet<T>() -> Binding<Set<T>> where Value == Set<T>? {

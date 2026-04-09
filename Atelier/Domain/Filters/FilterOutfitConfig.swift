@@ -8,16 +8,16 @@
 import Foundation
 
 
-struct FilterOutfitConfig: FilterProtocol {
+final class FilterOutfitConfig: @MainActor FilterProtocol {
     typealias T = Outfit
     
-    var recentWorn       : Bool               = false
-    var selectedOccasions: Set<GarmentStyle>? = nil
-    var selectedSeasons  : Set<Season>?       = nil
-    var selectedTone     : Tone               = .none
-    var maxPrice         : Double             = 0
-    var onlyClean        : Bool               = false
-    var onlyFavorite     : Bool               = false
+    var recentWorn       : Bool
+    var selectedOccasions: Set<GarmentStyle>?
+    var selectedSeasons  : Set<Season>?
+    var selectedTone     : Tone
+    var maxPrice         : Double
+    var onlyClean        : Bool
+    var onlyFavorite     : Bool
     
     var isFiltering: Bool {
         recentWorn                 ||
@@ -29,7 +29,87 @@ struct FilterOutfitConfig: FilterProtocol {
         onlyFavorite
     }
     
-    nonisolated static func == (
+    init() {
+        self.recentWorn        = false
+        self.selectedOccasions = nil
+        self.selectedSeasons   = nil
+        self.selectedTone      = .none
+        self.maxPrice          = 0
+        self.onlyClean         = false
+        self.onlyFavorite      = false
+    }
+        
+    func reset() {
+        recentWorn        = false
+        selectedOccasions = nil
+        selectedSeasons   = nil
+        selectedTone      = .none
+        maxPrice          = 0
+        onlyClean         = false
+        onlyFavorite      = false
+    }
+    
+    func generatePredicate() -> Predicate<Outfit> {
+        guard isFiltering else {
+            return #Predicate { _ in true }
+        }
+                
+        let isOnlyClean   : Bool   = onlyClean
+        let isOnlyFavorite: Bool   = onlyFavorite
+        let isToneNone    : Bool   = selectedTone == Tone.none
+        let limitPrice    : Double = maxPrice
+        
+        
+        let selectedOccasionsList: [String] = (selectedOccasions ?? []).map {
+            $0.rawValue
+        }
+        
+        let selectedSeasonsList: [String] = (selectedSeasons ?? []).map {
+            $0.rawValue
+        }
+        
+        
+        let filterByOccasions = selectedOccasionsList.isEmpty
+        let filterBySeasons = selectedSeasonsList.isEmpty
+        let filterByTone: String = selectedTone.rawValue
+        
+        
+        let cleanFilter = #Predicate<Outfit> { outfit in
+            !isOnlyClean || outfit.isReadyToWearRaw
+        }
+        
+        let favoriteFilter = #Predicate<Outfit> { outfit in
+            !isOnlyFavorite || outfit.isFavorite
+        }
+        
+        let toneFilter = #Predicate<Outfit> { outfit in
+            !isToneNone || outfit.toneRaw == filterByTone
+        }
+        
+        let priceFilter = #Predicate<Outfit> { outfit in
+            limitPrice <= 0 || outfit.totalValue <= limitPrice
+        }
+        
+        let seasonFilter = #Predicate<Outfit> { outfit in
+            filterBySeasons || selectedSeasonsList.contains(outfit.seasonRaw)
+        }
+        
+        let occasionFilter = #Predicate<Outfit> { outfit in
+            filterByOccasions || outfit.occasionsRaw.contains(selectedOccasionsList)
+        }
+        
+        return #Predicate<Outfit> { outfit in
+            cleanFilter.evaluate(outfit) &&
+            favoriteFilter.evaluate(outfit) &&
+            toneFilter.evaluate(outfit) &&
+            priceFilter.evaluate(outfit) &&
+            seasonFilter.evaluate(outfit) &&
+            occasionFilter.evaluate(outfit)
+        }
+    }
+    
+    
+    static func == (
         lhs: FilterOutfitConfig,
         rhs: FilterOutfitConfig
     ) -> Bool {
@@ -40,73 +120,5 @@ struct FilterOutfitConfig: FilterProtocol {
         lhs.maxPrice          == rhs.maxPrice &&
         lhs.onlyClean         == rhs.onlyClean &&
         lhs.onlyFavorite      == rhs.onlyFavorite
-    }
-    
-    mutating func reset() {
-        recentWorn        = false
-        selectedOccasions = nil
-        selectedSeasons   = nil
-        selectedTone      = .none
-        maxPrice          = 0
-        onlyClean         = false
-        onlyFavorite      = false
-    }
-    
-    func filter(_ items: [Outfit]) -> [Outfit] {
-        
-        guard isFiltering else {
-            return items
-        }
-        
-        var outfits = items.filter { outfit in
-            
-            if onlyClean && !outfit.isReadyToWear {
-                return false
-            }
-            
-            if onlyFavorite && !outfit.isFavorite {
-                return false
-            }
-            
-            if selectedTone != .none &&
-                selectedTone != outfit.tone {
-                return false
-            }
-            
-            if let selectedOccasions = selectedOccasions, !selectedOccasions.isEmpty {
-                
-                let outfitOccasionsSet = Set(outfit.occasion)
-                if outfitOccasionsSet.isDisjoint(
-                    with: selectedOccasions
-                ) {
-                    return false
-                }
-            }
-            
-            if let seasonsToFind = selectedSeasons,
-                !seasonsToFind.isEmpty {
-                
-                if !seasonsToFind.contains(outfit.season) {
-                    return false
-                }
-            }
-                        
-            if maxPrice > 0 && outfit.totalValue > maxPrice {
-                return false
-            }
-            
-            return true
-        }
-        
-        if recentWorn {
-            outfits.sort {
-                let date0 = $0.lastWornDate ?? Date.distantPast
-                let date1 = $1.lastWornDate ?? Date.distantPast
-                
-                return date0 > date1
-            }
-        }
-        
-        return outfits
     }
 }

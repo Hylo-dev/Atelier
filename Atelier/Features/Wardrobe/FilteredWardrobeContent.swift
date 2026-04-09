@@ -30,12 +30,11 @@ struct FilteredWardrobeContent: View {
     private var wardrobeViewModel: WardrobeViewModel
     
     @Bindable
-    private var filterManager: FilterManager
-    
+    private var filterManager: FilterManager<FilterGarmentConfig>
     
     init(
         _ title          : String,
-        filterManager    : FilterManager,
+        filterManager    : FilterManager<FilterGarmentConfig>,
         wardrobeState    : TabFilterService,
         wardrobeViewModel: WardrobeViewModel
     ) {
@@ -52,11 +51,13 @@ struct FilteredWardrobeContent: View {
     }
     
     var body: some View {
+//        let _ = Self._printChanges()
+        
         Group {
-            if garments.isEmpty && !filterManager.config.isFiltering {
+            if garments.isEmpty && !filterManager.isFiltering {
                 emptyView
                 
-            } else if garments.isEmpty && filterManager.config.isFiltering {
+            } else if garments.isEmpty && filterManager.isFiltering {
                 emptyFilteredView
                 
             } else {
@@ -87,18 +88,13 @@ struct FilteredWardrobeContent: View {
                 }
             }
         }
-        .onChange(of: garments, initial: true) { _, newGarments in
+        .onChange(of: garments, initial: true) { oldGarments, newGarments in
+//            guard oldGarments != newGarments else { return }
             
-            Task {
-                let processed = garmentManager.process(newGarments)
-                
-                await MainActor.run {
-                    wardrobeViewModel.processedGarments = processed
-                    
-                    wardrobeState.items = wardrobeViewModel.processedGarments.tag
-
-                }
-            }
+            wardrobeViewModel.handleGarmentChange(
+                newGarments,
+                manager: garmentManager
+            )
         }
     }
     

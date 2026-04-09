@@ -7,18 +7,9 @@
 
 import Foundation
 
-//
-//  FilterConfig.swift
-//  Atelier
-//
-//  Created by Eliomar Alejandro Rodriguez Ferrer on 18/02/26.
-//
-
-import Foundation
-
-import Foundation
-
-struct FilterGarmentConfig: Equatable {
+final class FilterGarmentConfig: @MainActor FilterProtocol {
+    typealias T = Garment
+    
     var selectedBrand      : Set<String>?             = nil
     var selectedSubCategory: Set<GarmentSubCategory>? = nil
     var selectedSeason     : Set<Season>?             = nil
@@ -28,7 +19,7 @@ struct FilterGarmentConfig: Equatable {
     var onlyClean          : Bool                     = false
     
     var isFiltering: Bool {
-        return selectedBrand != nil ||
+        selectedBrand != nil ||
         selectedSubCategory  != nil ||
         selectedSeason       != nil ||
         selectedStyle        != nil ||
@@ -37,7 +28,17 @@ struct FilterGarmentConfig: Equatable {
         onlyClean
     }
     
-    mutating func reset() {
+    init() {
+        self.selectedBrand       = nil
+        self.selectedSubCategory = nil
+        self.selectedSeason      = nil
+        self.selectedStyle       = nil
+        self.selectedColor       = nil
+        self.selectedCondition   = nil
+        self.onlyClean           = false
+    }
+    
+    func reset() {
         selectedBrand       = nil
         selectedSubCategory = nil
         selectedSeason      = nil
@@ -48,6 +49,10 @@ struct FilterGarmentConfig: Equatable {
     }
     
     func generatePredicate() -> Predicate<Garment> {
+        guard isFiltering else {
+            return #Predicate { _ in true }
+        }
+        
         let availableRaw = GarmentState.available.rawValue
         
         let selectedStates        = Array(selectedCondition ?? []).map { $0.rawValue }
@@ -92,7 +97,7 @@ struct FilterGarmentConfig: Equatable {
         }
     }
     
-    nonisolated static func == (lhs: FilterGarmentConfig, rhs: FilterGarmentConfig) -> Bool {
+    static func == (lhs: FilterGarmentConfig, rhs: FilterGarmentConfig) -> Bool {
         lhs.selectedBrand       == rhs.selectedBrand &&
         lhs.selectedSubCategory == rhs.selectedSubCategory &&
         lhs.selectedSeason      == rhs.selectedSeason &&

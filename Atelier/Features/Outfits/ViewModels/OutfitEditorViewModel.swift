@@ -117,6 +117,7 @@ final class OutfitEditorViewModel {
         item.lastWornDate      = self.lastWornDate
         item.fullLookImagePath = self.fullLookImagePath
         item.wearCount         = self.wearCount
-        item.garments          = Array(self.garments)
+        item.garments          = Array(garments)
+        item.totalValue        = garments.reduce(0) { $0 + ($1.price ?? 0) }
     }
 }

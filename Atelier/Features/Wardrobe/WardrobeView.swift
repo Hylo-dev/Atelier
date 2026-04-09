@@ -25,8 +25,7 @@ struct WardrobeView: View {
     private var wardrobeViewModel = WardrobeViewModel()
     
     @State
-    private var filterManager = FilterManager()
-
+    private var filterManager = FilterManager<FilterGarmentConfig>()
 
     
     init(
@@ -38,6 +37,7 @@ struct WardrobeView: View {
     }
     
     var body: some View {
+        let _ = Self._printChanges()
         
         bodyModifiers(
             FilteredWardrobeContent(
@@ -47,7 +47,7 @@ struct WardrobeView: View {
                 wardrobeViewModel: wardrobeViewModel
             )
         )
-        .onChange(of: filterManager.config.isFiltering) { _, newValue in
+        .onChange(of: filterManager.isFiltering) { _, newValue in
             wardrobeState.hiddenSectionBar = newValue
         }
         .onChange(of: wardrobeViewModel.selectedItem) { old, newValue in
@@ -85,7 +85,12 @@ struct WardrobeView: View {
                     GarmentEditorView(garment: germent)
                 }
             }
-            .sheet(isPresented: $wardrobeViewModel.isFilterSheetVisible) {
+            .sheet(
+                isPresented: $wardrobeViewModel.isFilterSheetVisible,
+                onDismiss: {
+                    filterManager.update()
+                }
+            ) {
                 FilterGarmentView(
                     manager: filterManager,
                     brands : wardrobeViewModel.processedGarments.brands

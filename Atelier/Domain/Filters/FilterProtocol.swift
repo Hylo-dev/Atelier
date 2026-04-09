@@ -6,12 +6,15 @@
 //
 
 import SwiftData
+import Foundation
 
-
-protocol FilterProtocol<T>: Equatable, Sendable {
+protocol FilterProtocol<T>: Equatable, AnyObject {
     associatedtype T: PersistentModel
+    
     var isFiltering: Bool { get }
     
-    mutating func reset()
-    func filter(_ items: [T]) -> [T]
+    func reset()
+    func generatePredicate() -> Predicate<T>
+    
+    init()
 }

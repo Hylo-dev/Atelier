@@ -101,39 +101,31 @@ final class OutfitManager: Manager {
         try update()
     }
     
-    
-    
-    @MainActor
-    func processOutfits(
-        _ outfits         : [Outfit],
-        state             : TabFilterService,
-        with viewModel    : OutfitViewModel
-    ) {
         
-        let filtered = viewModel.filterManager.filter(outfits)
+    func process(_ outfits: [Outfit]) async -> Processed<Outfit> {
         
-        var newGrouped: [String: [Outfit]] = ["All": filtered]
-        
-        let groupedBySeason = Dictionary(
-            grouping: filtered,
-            by      : { $0.season.title }
-        )
-        
-        for (season, items) in groupedBySeason {
-            newGrouped[season] = items
+        let dtos = outfits.map { outfit in
+            OutfitDTO(
+                id         : outfit.persistentModelID,
+                secondLabel: outfit.season.title
+            )
         }
         
-        let uniqueSeasons = Set(outfits.lazy.map { $0.season.title })
-        let newSeasons = ["All"] + uniqueSeasons.sorted()
+        let actor = GroupActor()
+        let result = await actor.computeGroups(from: dtos)
         
-        if state.items != newSeasons {
-            state.items = newSeasons
+        var finalGrouped: [String: [Outfit]] = [:]
+        for (category, ids) in result.groupedIDs {
+            finalGrouped[category] = outfits.filter {
+                ids.contains($0.persistentModelID)
+            }
         }
         
-        viewModel.processedOutfit = Processed(
-            visible: filtered,
-            grouped: newGrouped,
-            tag    : newSeasons
+        finalGrouped["All"] = outfits
+        return Processed(
+            grouped: finalGrouped,
+            brands : result.brands,
+            tag    : result.tags
         )
     }
 }

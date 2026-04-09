@@ -22,6 +22,8 @@ final class WardrobeViewModel {
     
     var processedGarments: Processed<Garment>
     
+    private var processingTask: Task<Void, Never>? = nil
+    
     init() {
         self.alertManager             = AlertManager()
         self.isAddGarmentSheetVisible = false
@@ -29,6 +31,21 @@ final class WardrobeViewModel {
         self.selectedItem             = nil
         self.isFilterSheetVisible     = false
         self.processedGarments        = Processed()
+    }
+    
+    func handleGarmentChange(
+        _ newGarments: [Garment],
+        manager: GarmentManager
+    ) {
+        processingTask?.cancel()
+        
+        processingTask = Task {
+            let result = await manager.process(newGarments)
+            
+            if !Task.isCancelled {
+                processedGarments = result                
+            }
+        }
     }
 }
 

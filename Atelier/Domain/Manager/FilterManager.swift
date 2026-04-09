@@ -8,19 +8,25 @@
 
 import Foundation
 import Observation
+import SwiftData
 
 @Observable
-class FilterManager {
-    private(set) var predicate: Predicate<Garment> = #Predicate { _ in true }
+class FilterManager<Config: FilterProtocol> {
     
-    var config = FilterGarmentConfig() {
-        didSet {
-            guard config != oldValue else { return }
-            predicate = config.generatePredicate()
-        }
+    private(set) var predicate: Predicate<Config.T> = #Predicate { _ in true }
+    
+    var config: Config
+    var isFiltering: Bool { config.isFiltering }
+    
+    init(config: Config = Config()) {
+        self.config = config
     }
     
     func resetFilters() {
         config.reset()
+    }
+    
+    func update() {
+        predicate = config.generatePredicate()
     }
 }
