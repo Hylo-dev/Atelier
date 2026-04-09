@@ -39,31 +39,50 @@ struct FilterGarmentConfig { // : FilterProtocol TODO: Set this when modified al
     var predicate: Predicate<Garment> {
         let availableRaw = GarmentState.available.rawValue
         
-        let selectedStates = (selectedCondition ?? []).map { $0.rawValue }
-        let selectedSeasons = (selectedSeason ?? []).map { $0.rawValue }
-        let selectedStyles = (selectedStyle ?? []).map {
-            $0.rawValue
-        }
-        let selectedSubCategories = (selectedSubCategory ?? []).map {
-            $0.rawValue
-        }
-//        let selectedBrands = Array(selectedBrand ?? [])
+        let selectedStates        = Array(selectedCondition ?? []).map { $0.rawValue }
+        let selectedSeasons       = Array(selectedSeason ?? []).map { $0.rawValue }
+        let selectedStyles        = Array(selectedStyle ?? []).map { $0.rawValue }
+        let selectedSubCategories = Array(selectedSubCategory ?? []).map { $0.rawValue }
+        let selectedBrands: [String?]        = Array(selectedBrand ?? [])
         
-        let filterByState  = selectedStates.isEmpty
-        let filterBySeason = selectedSeasons.isEmpty
-        let filterByStyle  = selectedStyles.isEmpty
+        let filterByState         = selectedStates.isEmpty
+        let filterBySeason        = selectedSeasons.isEmpty
+        let filterByStyle         = selectedStyles.isEmpty
         let filterBySubCategories = selectedSubCategories.isEmpty
-//        let filterByBrands = selectedBrands.isEmpty
-
+        let filterByBrands        = selectedBrands.isEmpty
+        let isOnlyClean           = onlyClean
         
-        return #Predicate<Garment> { garment in
-            (!onlyClean || garment.stateRaw == availableRaw) &&
-            (filterByState || selectedStates.contains(garment.stateRaw)) &&
-            (filterBySeason || selectedSeasons.contains(garment.seasonRaw)) &&
-            (filterByStyle || selectedStyles.contains(garment.styleRaw)) &&
-            (filterBySubCategories || selectedSubCategories.contains(garment.subCategoryRaw))
-//            &&
-//            (filterByBrands || (garment.brand != nil && selectedBrands.contains(garment.brand ?? "")))
+        let cleaned = #Predicate<Garment> { garment in
+            !isOnlyClean || garment.stateRaw == availableRaw
+        }
+        
+        let stateFinded = #Predicate<Garment> { garment in
+            filterByState || selectedStates.contains(garment.stateRaw)
+        }
+        
+        let seasonFinded = #Predicate<Garment> { garment in
+            filterBySeason || selectedSeasons.contains(garment.seasonRaw)
+        }
+        
+        let styleFinded = #Predicate<Garment> { garment in
+            filterByStyle || selectedStyles.contains(garment.styleRaw)
+        }
+        
+        let subCategoryFinded = #Predicate<Garment> { garment in
+            filterBySubCategories || selectedSubCategories.contains(garment.subCategoryRaw)
+        }
+        
+        let brandFinded = #Predicate<Garment> { garment in
+            filterByBrands || selectedBrands.contains(garment.brand)
+        }
+        
+        return #Predicate<Garment> {
+            cleaned.evaluate($0) &&
+            stateFinded.evaluate($0) &&
+            seasonFinded.evaluate($0) &&
+            styleFinded.evaluate($0) &&
+            subCategoryFinded.evaluate($0) &&
+            brandFinded.evaluate($0)
         }
     }
     

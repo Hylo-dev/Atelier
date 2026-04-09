@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		1FC16FD92F79D81D006A1B74 /* Glur in Frameworks */ = {isa = PBXBuildFile; productRef = 1FC16FD82F79D81D006A1B74 /* Glur */; };
+		1FC170402F87CC40006A1B74 /* CompoundPredicate in Frameworks */ = {isa = PBXBuildFile; productRef = 1FC1703F2F87CC40006A1B74 /* CompoundPredicate */; };
 		1FDB2D752F4669E800D02704 /* Nuke in Frameworks */ = {isa = PBXBuildFile; productRef = 1FDB2D742F4669E800D02704 /* Nuke */; };
 		1FDB2D772F4669E800D02704 /* NukeUI in Frameworks */ = {isa = PBXBuildFile; productRef = 1FDB2D762F4669E800D02704 /* NukeUI */; };
 		1FED73E72F6868AC00F5FBEB /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1FED73E62F6868AC00F5FBEB /* WidgetKit.framework */; };
@@ -121,6 +122,7 @@
 				1FDB2D752F4669E800D02704 /* Nuke in Frameworks */,
 				1FDB2D772F4669E800D02704 /* NukeUI in Frameworks */,
 				1FC16FD92F79D81D006A1B74 /* Glur in Frameworks */,
+				1FC170402F87CC40006A1B74 /* CompoundPredicate in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -191,6 +193,7 @@
 				1FDB2D742F4669E800D02704 /* Nuke */,
 				1FDB2D762F4669E800D02704 /* NukeUI */,
 				1FC16FD82F79D81D006A1B74 /* Glur */,
+				1FC1703F2F87CC40006A1B74 /* CompoundPredicate */,
 			);
 			productName = Atelier;
 			productReference = 1F8318342F422D3B00713CCA /* Atelier.app */;
@@ -248,6 +251,7 @@
 			packageReferences = (
 				1FDB2D732F4669E800D02704 /* XCRemoteSwiftPackageReference "Nuke" */,
 				1FC16FD72F79D81D006A1B74 /* XCRemoteSwiftPackageReference "Glur" */,
+				1FC1703E2F87CC40006A1B74 /* XCRemoteSwiftPackageReference "CompoundPredicate" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 1F8318352F422D3B00713CCA /* Products */;
@@ -651,6 +655,14 @@
 				minimumVersion = 1.1.0;
 			};
 		};
+		1FC1703E2F87CC40006A1B74 /* XCRemoteSwiftPackageReference "CompoundPredicate" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/NoahKamara/CompoundPredicate.git";
+			requirement = {
+				branch = main;
+				kind = branch;
+			};
+		};
 		1FDB2D732F4669E800D02704 /* XCRemoteSwiftPackageReference "Nuke" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/kean/Nuke";
@@ -666,6 +678,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 1FC16FD72F79D81D006A1B74 /* XCRemoteSwiftPackageReference "Glur" */;
 			productName = Glur;
+		};
+		1FC1703F2F87CC40006A1B74 /* CompoundPredicate */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 1FC1703E2F87CC40006A1B74 /* XCRemoteSwiftPackageReference "CompoundPredicate" */;
+			productName = CompoundPredicate;
 		};
 		1FDB2D742F4669E800D02704 /* Nuke */ = {
 			isa = XCSwiftPackageProductDependency;

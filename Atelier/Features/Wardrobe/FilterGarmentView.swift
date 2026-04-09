@@ -6,15 +6,27 @@
 //
 
 import SwiftUI
+import SwiftData
 
 struct FilterGarmentView: View {
     @Environment(\.dismiss)
-    var dismiss
+    private var dismiss
     
     @Binding
-    var filters: FilterGarmentConfig
+    private var filters: FilterGarmentConfig
     
-    var brands: [String]
+    @Query
+    private var garments: [Garment]
+        
+    init(filters: Binding<FilterGarmentConfig>) {
+        _garments = Query(
+            filter: #Predicate { $0.brand != nil },
+            sort  : \Garment.name,
+            order : .reverse
+        )
+        
+        self._filters = filters
+    }
     
     var body: some View {
         NavigationStack {
@@ -49,14 +61,14 @@ struct FilterGarmentView: View {
                     
                 }
                 
-                if brands.count > 1 || filters.selectedSubCategory != nil {
-                    Section("Identity") {
-                        if brands.count > 1 {
-                            brandLink
-                        }
+                Section("Identity") {
+                    if garments.count > 1 ||
+                        filters.selectedBrand != nil {
                         
-                        modelLink
+                        brandLink
                     }
+                    
+                    modelLink
                 }
                 
                 // SECTION 3: CONDITION & CARE
@@ -96,7 +108,7 @@ struct FilterGarmentView: View {
     
     private var brandLink: some View {
         NavigationLink {
-            StringSelectionView(title: "Brand", items: brands, selection: setBinding(for: \.selectedBrand))
+            StringSelectionView(title: "Brand", items: garments.map { $0.brand ?? "" }, selection: setBinding(for: \.selectedBrand))
         } label: {
             filterRow(title: "Brand", count: filters.selectedBrand?.count ?? 0)
         }

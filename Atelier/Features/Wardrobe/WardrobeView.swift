@@ -116,8 +116,7 @@ struct WardrobeView: View {
             }
             .sheet(isPresented: $wardrobeViewModel.isFilterSheetVisible) {
                 FilterGarmentView(
-                    filters: $wardrobeViewModel.filterManager,
-                    brands : wardrobeViewModel.processedGarments.brands
+                    filters: $wardrobeViewModel.filterManager
                 )
             }
             .alert(
