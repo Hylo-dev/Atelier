@@ -101,13 +101,16 @@ final class OutfitEditorViewModel {
     
     
     private func createOutfitObject() -> Outfit {
-        return Outfit(
+        let outfit = Outfit(
             name             : self.name,
             garments         : Array(self.garments),
             season           : self.selectedSeason,
             fullLookImagePath: self.fullLookImagePath,
             occasion         : Array(self.selectedOccasion)
         )
+        
+        outfit.refreshAllMetadata()
+        return outfit
     }
     
     private func updateProperties(of item: Outfit) {
@@ -119,5 +122,7 @@ final class OutfitEditorViewModel {
         item.wearCount         = self.wearCount
         item.garments          = Array(garments)
         item.totalValue        = garments.reduce(0) { $0 + ($1.price ?? 0) }
+        
+        item.refreshAllMetadata()
     }
 }

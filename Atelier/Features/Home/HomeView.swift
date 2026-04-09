@@ -90,8 +90,8 @@ struct HomeView: View {
                 
             case .outfitBuilder:
                 OutfitView(
-                    outfitState: outfitState,
-                    title       : title
+                    title       : title,
+                    outfitState: outfitState
                 )
                 
             case .care:

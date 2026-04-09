@@ -78,10 +78,9 @@ struct GarmentContextCard: View {
                             )
                         }
                     } catch {
-                        var alert = viewModel.alertManager
-                        alert.title = title
-                        alert.message = error.localizedDescription
-                        alert.isPresent = true
+                        viewModel.alertManager.title = title
+                        viewModel.alertManager.message = error.localizedDescription
+                        viewModel.alertManager.isPresent = true
                     }
                     
                     
@@ -98,10 +97,9 @@ struct GarmentContextCard: View {
                     do {
                         try manager.update()
                     } catch {
-                        var alert = viewModel.alertManager
-                        alert.title = "Error on update data"
-                        alert.message = error.localizedDescription
-                        alert.isPresent = true
+                        viewModel.alertManager.title = "Error on update data"
+                        viewModel.alertManager.message = error.localizedDescription
+                        viewModel.alertManager.isPresent = true
                     }
                     
                 } label: {
@@ -127,10 +125,9 @@ struct GarmentContextCard: View {
                         }
                         
                     } catch {
-                        var alert = viewModel.alertManager
-                        alert.title = "Error on loggin wear"
-                        alert.message = error.localizedDescription
-                        alert.isPresent = true
+                        viewModel.alertManager.title = "Error on loggin wear"
+                        viewModel.alertManager.message = error.localizedDescription
+                        viewModel.alertManager.isPresent = true
                     }
                     
                 } label: {
@@ -162,10 +159,9 @@ struct GarmentContextCard: View {
                         try manager.delete(item)
                         
                     } catch {
-                        var alert = viewModel.alertManager
-                        alert.title = "Error on deleted data"
-                        alert.message = error.localizedDescription
-                        alert.isPresent = true
+                        viewModel.alertManager.title = "Error on deleted data"
+                        viewModel.alertManager.message = error.localizedDescription
+                        viewModel.alertManager.isPresent = true
                     }
                     
                 } label: {

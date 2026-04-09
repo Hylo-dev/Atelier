@@ -133,8 +133,9 @@ final class LaundryControlService: LaundryControlManaging {
     
     
     func markAsComplete(_ session: LaundrySession) throws {
-        session.status      = .completed
-        session.isCompleted = true
+        session.status           = .completed
+        session.isCompleted      = true
+        session.completationDate = .now
         
         for garment in session.garments {
             garment.state                = .available

@@ -19,33 +19,79 @@ struct OutfitView: View {
     @Environment(ApplianceManager.self)
     private var applianceManager: ApplianceManager
     
-    
     @State
     private var outfitViewModel = OutfitViewModel()
     
     @State
     private var filterManager = FilterManager<FilterOutfitConfig>()
     
-    
-    @Bindable
     var outfitState: TabFilterService
     
     var title: String
     
+    init(
+        title    : String,
+        outfitState: TabFilterService
+    ) {
+        self.title           = title
+        self.outfitState     = outfitState
+    }
     
     var body: some View {
         let _ = Self._printChanges()
         
         bodyModifiers(
-            FilteredOutfitView(
-                title,
-                filterManager  : filterManager,
-                outfitState    : outfitState,
-                outfitViewModel: outfitViewModel
-            )
+            ZStack {
+                // Usiamo un ID basato sul predicato per forzare la transizione fluida
+                // Se il predicato è nil, usiamo "all", altrimenti un identificativo univoco
+                let filterID = filterManager.predicate.description.hashValue
+                
+                OutfitListContent(
+                    predicate       : filterManager.predicate,
+                    filterManager   : filterManager,
+                    outfitViewModel : outfitViewModel,
+                    outfitManager   : outfitManager,
+                    garmentManager  : garmentManager,
+                    applianceManager: applianceManager,
+                    outfitState     : outfitState
+                )
+                .id(filterID)
+                .transition(.opacity.combined(with: .scale(scale: 0.98)))
+            }
+            .animation(.snappy(duration: 0.35, extraBounce: 0), value: filterManager.predicate.description)
         )
         .sensoryFeedback(.success, trigger: outfitViewModel.isDeleted)
-        .onChange(of: outfitViewModel.navigatedOutfit) { old, newValue in
+        .toolbar {
+            ToolbarItem(placement: .title) {
+                Text(String(repeating: " ", count: 150))
+                    .overlay(alignment: .leading) {
+                        Text(self.title)
+                            .font(.title)
+                            .fontWeight(.bold)
+                    }
+            }
+            
+            if !outfitState.items.isEmpty {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Filter", systemImage: "line.3.horizontal.decrease") {
+                        outfitViewModel.isFilterSheetVisible = true
+                    }
+                }
+            }
+            
+            ToolbarItem(placement: .topBarTrailing) {
+                Button("Add", systemImage: "plus") { outfitViewModel.isAddOutfitSheetVisible = true }
+            }
+        }
+        .onChange(of: outfitViewModel.processedOutfit) { _, newValue in
+            if outfitState.items != newValue.tag {
+                outfitState.items = newValue.tag
+            }
+        }
+        .onChange(of: filterManager.isFiltering) { _, newValue in
+            outfitState.hiddenSectionBar = newValue
+        }
+        .onChange(of: outfitViewModel.navigatedOutfit) { _, newValue in
             if newValue == nil {
                 withAnimation {
                     outfitState.hiddenSectionBar = false
@@ -76,7 +122,11 @@ struct OutfitView: View {
             }
             .sheet(
                 isPresented: $outfitViewModel.isFilterSheetVisible,
-                onDismiss  : { filterManager.update() }
+                onDismiss  : {
+                    withAnimation(.snappy) {
+                        filterManager.update()
+                    }
+                }
             ) {
                 FilterOutfitView(manager: filterManager)
             }
@@ -84,7 +134,6 @@ struct OutfitView: View {
                 outfitViewModel.alertManager.title,
                 isPresented: $outfitViewModel.alertManager.isPresent
             ) {
-                
             } message: {
                 Text(outfitViewModel.alertManager.message)
             }

@@ -9,94 +9,91 @@ import SwiftUI
 import SwiftData
 
 struct WardrobeView: View {
-        
     @Environment(GarmentManager.self)
     private var garmentManager
     
-    
-    // MARK: - Parameters Val
-        
-    @Bindable
-    var wardrobeState: TabFilterService
+    @Environment(ApplianceManager.self)
+    private var applianceManager
     
     let title: String
+    
+    var wardrobeState: TabFilterService
     
     @State
     private var wardrobeViewModel = WardrobeViewModel()
     
     @State
     private var filterManager = FilterManager<FilterGarmentConfig>()
-
-    
-    init(
-        title        : String,
-        wardrobeState: TabFilterService
-    ) {
-        self.title         = title
-        self.wardrobeState = wardrobeState
-    }
     
     var body: some View {
         let _ = Self._printChanges()
         
         bodyModifiers(
-            FilteredWardrobeContent(
-                title,
-                filterManager    : filterManager,
-                wardrobeState    : wardrobeState,
-                wardrobeViewModel: wardrobeViewModel
+            GarmentListContent(
+                predicate: filterManager.predicate,
+                filterManager: filterManager,
+                wardrobeViewModel: wardrobeViewModel,
+                wardrobeState: wardrobeState
             )
+            .animation(.snappy, value: filterManager.predicate.description)
         )
-        .onChange(of: wardrobeViewModel.selectedItem) { old, newValue in
-            if newValue == nil {
-                withAnimation {
-                    wardrobeState.hiddenSectionBar = false
+        .toolbar {
+            ToolbarItem(placement: .title) {
+                Text(String(repeating: " ", count: 150))
+                    .overlay(alignment: .leading) {
+                        Text(title)
+                            .font(.title)
+                            .fontWeight(.bold)
+                    }
+            }
+            
+            ToolbarItem(placement: .topBarTrailing) {
+                Button("Filter", systemImage: "line.3.horizontal.decrease") {
+                    wardrobeViewModel.isFilterSheetVisible = true
                 }
+            }
+            
+            ToolbarItem(placement: .topBarTrailing) {
+                Button("Add", systemImage: "plus") {
+                    wardrobeViewModel.isAddGarmentSheetVisible = true
+                }
+            }
+        }
+        .onChange(of: wardrobeViewModel.processedGarments) { _, newValue in
+            if wardrobeState.items != newValue.tag {
+                wardrobeState.items = newValue.tag
+            }
+        }
+        .onChange(of: filterManager.isFiltering) { _, newValue in
+            wardrobeState.hiddenSectionBar = newValue
+        }
+        .onChange(of: wardrobeViewModel.selectedItem) { _, newValue in
+            if newValue == nil {
+                withAnimation { wardrobeState.hiddenSectionBar = false }
             }
         }
     }
     
-    
-    // MARK: - Subviews
-    
     private func bodyModifiers(_ view: some View) -> some View {
         view
             .navigationDestination(item: $wardrobeViewModel.selectedItem) { item in
-                InfoGarmentView(
-                    item,
-                    garmentManager: self.garmentManager
-                )
-                .onAppear {
-                    withAnimation {
-                        wardrobeState.hiddenSectionBar = true
+                InfoGarmentView(item, garmentManager: self.garmentManager)
+                    .onAppear {
+                        withAnimation { wardrobeState.hiddenSectionBar = true }
                     }
-                }
             }
             .sheet(isPresented: $wardrobeViewModel.isAddGarmentSheetVisible) {
-                NavigationStack {
-                    GarmentEditorView()
-                }
+                NavigationStack { GarmentEditorView() }
             }
-            .sheet(item: $wardrobeViewModel.editableItem) { germent in
-                NavigationStack {
-                    GarmentEditorView(garment: germent)
-                }
+            .sheet(isPresented: $wardrobeViewModel.isFilterSheetVisible, onDismiss: {
+                withAnimation(.snappy) { filterManager.update() }
+            }) {
+                FilterGarmentView(manager: filterManager, brands: wardrobeViewModel.processedGarments.brands)
             }
-            .sheet(
-                isPresented: $wardrobeViewModel.isFilterSheetVisible,
-                onDismiss: {
-                    filterManager.update()
-                }
-            ) {
-                FilterGarmentView(
-                    manager: filterManager,
-                    brands : wardrobeViewModel.processedGarments.brands
-                )
+            .sheet(item: $wardrobeViewModel.editableItem) { garment in
+                NavigationStack { GarmentEditorView(garment: garment) }
             }
-            .alert(
-                wardrobeViewModel.alertManager.title,
-                isPresented: $wardrobeViewModel.alertManager.isPresent
-            ) {
+            .alert(wardrobeViewModel.alertManager.title, isPresented: $wardrobeViewModel.alertManager.isPresent) {
                 
             } message: {
                 Text(wardrobeViewModel.alertManager.message)

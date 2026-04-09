@@ -29,6 +29,9 @@ struct InfoCareView: View {
     @State
     private var didTriggerDelete: Bool = false
     
+    @State
+    private var isDeleted: Bool = false
+    
     
     
     init(_ item: LaundrySession) {
@@ -54,7 +57,7 @@ struct InfoCareView: View {
             
             symbolsSection
         }
-        .sensoryFeedback(.success, trigger: didTriggerDelete)
+        .sensoryFeedback(.success, trigger: isDeleted)
         .toolbar {
             
             ToolbarItemGroup {
@@ -99,6 +102,7 @@ struct InfoCareView: View {
             
             Button("Delete", role: .destructive) {
                 do {
+                    isDeleted.toggle()
                     try manager.delete(item)
                     
                 } catch {

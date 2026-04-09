@@ -54,27 +54,12 @@ extension AtelierSchemaV1 {
         
         var totalValue: Double
         
-        
-        var colors: [ColorWeight] {
-            guard !garments.isEmpty else { return [] }
-            
-            return ColorWeight.from(
-                garments.map { $0.color }
-            )
-            .sorted { $0.weight >= $1.weight && $0.id >= $1.id }
-        }
+        var colors: [ColorWeight]
         
         var isReadyToWearRaw: Bool
         @MainActor
         var isReadyToWear: Bool {
-            get {
-                guard !garments.isEmpty else { return false }
-                
-                let result = garments.allSatisfy { $0.state == .available }
-                isReadyToWearRaw = result
-                
-                return result
-            }
+            garments.allSatisfy { $0.state == .available }
         }
         
         @MainActor
@@ -94,27 +79,9 @@ extension AtelierSchemaV1 {
         
         // TODO: Potential bug, because the tone is a computed varible
         var toneRaw: String
-        @MainActor
-        var tone: Tone {
-            get {
-                guard !garments.isEmpty else { return .none }
-                
-                var temperatureValue = 0.0
-                var garmentsWeight = 0.0
-                
-                garments.forEach { garment in
-                    let color  = Color(hex: garment.color)
-                    let weight = garment.subCategory.weight
-                    
-                    garmentsWeight   += weight
-                    temperatureValue += weight * color.temperatureValue
-                }
-                
-                let tone = Tone(score: temperatureValue / garmentsWeight)
-                
-                toneRaw = tone.rawValue
-                return tone
-            }
+        var tone   : Tone {
+            get { Tone(rawValue: toneRaw) ?? .cool }
+            set { toneRaw = newValue.rawValue }
         }
         
         init(
@@ -142,25 +109,58 @@ extension AtelierSchemaV1 {
             
             self.occasionsRaw      = occasion.map { $0.rawValue }
             
-            self.totalValue        = garments.reduce(0) { $0 + ($1.price ?? 0) }
+            self.totalValue        = 0
             self.toneRaw           = ""
+            self.colors            = []
             self.isReadyToWearRaw  = true
         }
+        
+        @MainActor
+        func refreshAllMetadata() {
+            self.totalValue = garments.reduce(0) {
+                $0 + ($1.price ?? 0)
+            }
+            
+            if garments.isEmpty {
+                self.colors = []
+                
+            } else {
+                let result = ColorWeight.from(
+                    garments.map { $0.color }
+                )
+                
+                self.colors = result.sorted {
+                    if $0.weight != $1.weight {
+                        return $0.weight > $1.weight
+                    }
+                    
+                    return $0.id < $1.id
+                }
+            }
+            
+            calcTone()
+        }
+        
+        @MainActor
+        private func calcTone() {
+            guard !garments.isEmpty else {
+                self.tone = .none
+                return
+            }
+            
+            var temperatureValue = 0.0
+            var garmentsWeight = 0.0
+            
+            garments.forEach { garment in
+                let color  = Color(hex: garment.color)
+                let weight = garment.subCategory.weight
+                
+                garmentsWeight   += weight
+                temperatureValue += weight * color.temperatureValue
+            }
+            
+            self.tone = Tone(score: temperatureValue / garmentsWeight)
+        }
 
-//
-//        init() {
-//            self.id                = UUID()
-//            self.name              = ""
-//            self.garments          = []
-//            self.season            = .summer
-//            self.occasion          = [.casual]
-//            self.creationDate      = .now
-//            self.lastWornDate      = nil
-//            self.wearCount         = 0
-//            self.isFavorite        = false
-//            self.notes             = nil
-//            self.fullLookImagePath = nil
-//        }
-//        
     }
 }
