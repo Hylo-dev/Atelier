@@ -26,10 +26,10 @@ struct GarmentListContent: View {
     
     
     @Bindable
-    var filterManager: FilterManager<FilterGarmentConfig>
+    private var filterManager: FilterManager<FilterGarmentConfig>
     
     @Bindable
-    var wardrobeViewModel: WardrobeViewModel
+    private var wardrobeViewModel: WardrobeViewModel
     
     @Bindable
     var wardrobeState: TabFilterService

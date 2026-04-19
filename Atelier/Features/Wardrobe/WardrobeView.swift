@@ -9,6 +9,7 @@ import SwiftUI
 import SwiftData
 
 struct WardrobeView: View {
+    
     @Environment(GarmentManager.self)
     private var garmentManager
     
@@ -26,7 +27,7 @@ struct WardrobeView: View {
     private var filterManager = FilterManager<FilterGarmentConfig>()
     
     var body: some View {
-        let _ = Self._printChanges()
+//        let _ = Self._printChanges()
         
         bodyModifiers(
             GarmentListContent(

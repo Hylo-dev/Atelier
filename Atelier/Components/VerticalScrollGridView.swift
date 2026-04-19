@@ -9,10 +9,12 @@ import SwiftUI
 import SwiftData
 
 struct VerticalScrollGridView<T: PersistentModel, Content: View>: View {
-    let items: [T]
+    private let items: [T]
     
     @ViewBuilder
-    var content: (T) -> Content
+    private var content: (T) -> Content
+    
+    private var insets: CGFloat
     
     private let columns = [
         GridItem(.adaptive(minimum: 150), spacing: 20)
@@ -20,9 +22,11 @@ struct VerticalScrollGridView<T: PersistentModel, Content: View>: View {
     
     init(
         items  : [T],
+        insets : CGFloat = 150,
         @ViewBuilder content: @escaping (T) -> Content
     ) {
         self.items   = items
+        self.insets  = insets
         self.content = content
     }
     
@@ -35,7 +39,7 @@ struct VerticalScrollGridView<T: PersistentModel, Content: View>: View {
             }
             .padding(.horizontal, 16)
         }
-        .contentMargins(.top, 150, for: .scrollContent)
+        .contentMargins(.top, insets, for: .scrollContent)
         .scrollIndicators(.hidden)
     }
 }

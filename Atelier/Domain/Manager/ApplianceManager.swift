@@ -21,6 +21,8 @@ final class ApplianceManager: Manager, ApplianceProcessing, LaundrySessionManagi
     private let assignmentService: LaundryAssignmentManaging
     private let controlService: LaundryControlManaging
     
+    private let groupActor = GroupActor()
+    
     var timerPulse: Publishers.Autoconnect<Timer.TimerPublisher>
     
     init(
@@ -139,5 +141,33 @@ final class ApplianceManager: Manager, ApplianceProcessing, LaundrySessionManagi
         if let session = try context.fetch(descriptor).first {
             try finishWashing(session)
         }
+    }
+    
+    func process(_ sessions: [LaundrySession]) async -> Processed<LaundrySession> {
+        let dtos = sessions.map { session in
+            SessionDTO(
+                id         : session.persistentModelID,
+                firstLabel : nil,
+                secondLabel: session.bin.displayName
+            )
+        }
+        
+        let result = await groupActor.computeGroups(from: dtos)
+        
+        let garmentDict = Dictionary(
+            uniqueKeysWithValues: sessions.map { ($0.persistentModelID, $0) }
+        )
+        
+        var finalGrouped: [String: [LaundrySession]] = [:]
+        
+        for (category, ids) in result.groupedIDs {
+            finalGrouped[category] = ids.compactMap { garmentDict[$0] }
+        }
+        
+        finalGrouped["All"] = sessions
+        return Processed(
+            grouped: finalGrouped,
+            tag    : result.tags
+        )
     }
 }
