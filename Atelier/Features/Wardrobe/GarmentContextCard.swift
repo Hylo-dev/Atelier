@@ -14,11 +14,13 @@ struct GarmentContextCard: View {
     private let manager         : any GarmentWearLoggable
     private let applianceManager: ApplianceProcessing
     
+    
     @Bindable
     private var viewModel: WardrobeViewModel
     
     @State
     private var didTriggerDelete: Bool
+    
     
     init(
         item          : Garment,
@@ -56,9 +58,7 @@ struct GarmentContextCard: View {
             .contextMenu {
                 let isToWash  = item.isToWash
                 let loanState = item.state == .onLoan
-                
-                Text(item.name)
-                
+                                
                 Button {
                     let title: String
                     

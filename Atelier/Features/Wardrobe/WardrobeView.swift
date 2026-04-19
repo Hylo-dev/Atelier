@@ -30,6 +30,7 @@ struct WardrobeView: View {
         
         bodyModifiers(
             GarmentListContent(
+                title            : title,
                 filterManager    : filterManager,
                 wardrobeViewModel: wardrobeViewModel,
                 wardrobeState    : wardrobeState
@@ -39,28 +40,6 @@ struct WardrobeView: View {
                 value: filterManager.predicate.description
             )
         )
-        .toolbar {
-            ToolbarItem(placement: .title) {
-                Text(String(repeating: " ", count: 150))
-                    .overlay(alignment: .leading) {
-                        Text(title)
-                            .font(.title)
-                            .fontWeight(.bold)
-                    }
-            }
-            
-            ToolbarItem(placement: .topBarTrailing) {
-                Button("Filter", systemImage: "line.3.horizontal.decrease") {
-                    wardrobeViewModel.isFilterSheetVisible = true
-                }
-            }
-            
-            ToolbarItem(placement: .topBarTrailing) {
-                Button("Add", systemImage: "plus") {
-                    wardrobeViewModel.isAddGarmentSheetVisible = true
-                }
-            }
-        }
         .onChange(of: wardrobeViewModel.processedGarments) { _, newValue in
             if wardrobeState.items != newValue.tag {
                 wardrobeState.items = newValue.tag

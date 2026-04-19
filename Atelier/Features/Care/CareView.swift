@@ -83,9 +83,9 @@ struct CareView: View {
             
             if self.laundrySessions.isEmpty {
                 ContentUnavailableView(
-                    "Care Empty",
-                    systemImage: "sparkles",
-                    description: Text("TODO: Find good string")
+                    "No Active Sessions",
+                    systemImage: "washer.fill",
+                    description: Text("Start a wash to see progress and timers.")
                 )
                 .containerRelativeFrame(.vertical)
                 

@@ -19,6 +19,8 @@ struct OutfitListContent: View {
     @Environment(ApplianceManager.self)
     private var applianceManager
     
+    let title: String
+    
     @Query
     private var outfits: [Outfit]
     
@@ -32,10 +34,13 @@ struct OutfitListContent: View {
     var outfitState: TabFilterService
     
     init(
+        title          : String,
         filterManager  : FilterManager<FilterOutfitConfig>,
         outfitViewModel: OutfitViewModel,
         outfitState    : TabFilterService
     ) {
+        self.title = title
+        
         self.filterManager   = filterManager
         self.outfitViewModel = outfitViewModel
         self.outfitState     = outfitState
@@ -59,6 +64,28 @@ struct OutfitListContent: View {
                 pagingView
             }
         }
+        .toolbar {
+            ToolbarItem(placement: .title) {
+                Text(String(repeating: " ", count: 150))
+                    .overlay(alignment: .leading) {
+                        Text(self.title)
+                            .font(.title)
+                            .fontWeight(.bold)
+                    }
+            }
+            
+            if !outfitState.items.isEmpty {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Filter", systemImage: "line.3.horizontal.decrease") {
+                        outfitViewModel.isFilterSheetVisible = true
+                    }
+                }
+            }
+            
+            ToolbarItem(placement: .topBarTrailing) {
+                Button("Add", systemImage: "plus") { outfitViewModel.isAddOutfitSheetVisible = true }
+            }
+        }
         .onChange(of: outfits, initial: true) { old, newValue in
             outfitViewModel.handleGarmentChange(newValue, manager: outfitManager)
         }
@@ -66,8 +93,8 @@ struct OutfitListContent: View {
     
     private var emptyStateView: some View {
         ContentUnavailableView(
-            "Outfits Empty",
-            systemImage: "tshirt",
+            "No Fits Found",
+            systemImage: "hanger",
             description: Text("Time to create your drip")
         )
         .containerRelativeFrame(.vertical)
@@ -75,9 +102,9 @@ struct OutfitListContent: View {
     
     private var emptyFilteredView: some View {
         ContentUnavailableView(
-            "No Outfits Found",
-            systemImage: "magnifyingglass",
-            description: Text("Try adjusting your filters.")
+            "No Items Found",
+            systemImage: "line.3.horizontal.decrease.circle",
+            description: Text("We couldn't find any outfits matching your current filters.")
         )
         .containerRelativeFrame(.vertical)
     }

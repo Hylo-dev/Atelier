@@ -17,8 +17,13 @@ struct GarmentListContent: View {
     @Environment(ApplianceManager.self)
     private var applianceManager: ApplianceManager
     
+    
+    let title: String
+    
+    
     @Query
     private var garments: [Garment]
+    
     
     @Bindable
     var filterManager: FilterManager<FilterGarmentConfig>
@@ -29,11 +34,15 @@ struct GarmentListContent: View {
     @Bindable
     var wardrobeState: TabFilterService
     
+    
     init(
+        title            : String,
         filterManager    : FilterManager<FilterGarmentConfig>,
         wardrobeViewModel: WardrobeViewModel,
         wardrobeState    : TabFilterService
     ) {
+        self.title             = title
+        
         self.filterManager     = filterManager
         self.wardrobeViewModel = wardrobeViewModel
         self.wardrobeState     = wardrobeState
@@ -46,7 +55,7 @@ struct GarmentListContent: View {
     }
     
     var body: some View {
-        let _ = Self._printChanges()
+//        let _ = Self._printChanges()
         
         Group {
             if garments.isEmpty && !filterManager.isFiltering {
@@ -59,6 +68,30 @@ struct GarmentListContent: View {
                 pagingView
             }
         }
+        .toolbar {
+            ToolbarItem(placement: .title) {
+                Text(String(repeating: " ", count: 150))
+                    .overlay(alignment: .leading) {
+                        Text(title)
+                            .font(.title)
+                            .fontWeight(.bold)
+                    }
+            }
+            
+            if !garments.isEmpty {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Filter", systemImage: "line.3.horizontal.decrease") {
+                        wardrobeViewModel.isFilterSheetVisible = true
+                    }
+                }
+            }
+            
+            ToolbarItem(placement: .topBarTrailing) {
+                Button("Add", systemImage: "plus") {
+                    wardrobeViewModel.isAddGarmentSheetVisible = true
+                }
+            }
+        }
         .onChange(of: garments, initial: true) { _, newGarments in
             wardrobeViewModel.handleGarmentChange(
                 newGarments,
@@ -69,8 +102,8 @@ struct GarmentListContent: View {
     
     private var emptyView: some View {
         ContentUnavailableView(
-            "Closet Empty",
-            systemImage: "hanger",
+            "Your Closet is Empty",
+            systemImage: "cabinet.fill",
             description: Text("Time to fill this closet up")
         )
         .containerRelativeFrame(.vertical)
@@ -78,9 +111,9 @@ struct GarmentListContent: View {
     
     private var emptyFilteredView: some View {
         ContentUnavailableView(
-            "No Garments Found",
-            systemImage: "magnifyingglass",
-            description: Text("Try adjusting your filters.")
+            "No Items Found",
+            systemImage: "line.3.horizontal.decrease.circle",
+            description: Text("We couldn't find any garments matching your current filters.")
         )
         .containerRelativeFrame(.vertical)
     }

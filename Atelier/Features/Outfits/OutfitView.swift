@@ -43,6 +43,7 @@ struct OutfitView: View {
         bodyModifiers(
             ZStack {
                 OutfitListContent(
+                    title          : title,
                     filterManager  : filterManager,
                     outfitViewModel: outfitViewModel,
                     outfitState    : outfitState
@@ -57,28 +58,6 @@ struct OutfitView: View {
             .success,
             trigger: outfitViewModel.isDeleted
         )
-        .toolbar {
-            ToolbarItem(placement: .title) {
-                Text(String(repeating: " ", count: 150))
-                    .overlay(alignment: .leading) {
-                        Text(self.title)
-                            .font(.title)
-                            .fontWeight(.bold)
-                    }
-            }
-            
-            if !outfitState.items.isEmpty {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("Filter", systemImage: "line.3.horizontal.decrease") {
-                        outfitViewModel.isFilterSheetVisible = true
-                    }
-                }
-            }
-            
-            ToolbarItem(placement: .topBarTrailing) {
-                Button("Add", systemImage: "plus") { outfitViewModel.isAddOutfitSheetVisible = true }
-            }
-        }
         .onChange(of: outfitViewModel.processedOutfit) { _, newValue in
             if outfitState.items != newValue.tag {
                 outfitState.items = newValue.tag

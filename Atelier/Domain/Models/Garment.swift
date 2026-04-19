@@ -34,6 +34,7 @@ extension AtelierSchemaV1 {
         var category    : GarmentCategory
         
         var subCategoryRaw: String
+        
         @MainActor
         var subCategory: GarmentSubCategory {
             get { (GarmentSubCategory(rawValue: subCategoryRaw) ?? category.subCategory.first)! }
