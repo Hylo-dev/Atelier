@@ -106,6 +106,8 @@ final class OutfitEditorViewModel {
             garments         : Array(self.garments),
             season           : self.selectedSeason,
             fullLookImagePath: self.fullLookImagePath,
+//            isFavorite       : self.isFavorite,
+            notes            : self.notes,
             occasion         : Array(self.selectedOccasion)
         )
         
@@ -121,6 +123,7 @@ final class OutfitEditorViewModel {
         item.fullLookImagePath = self.fullLookImagePath
         item.wearCount         = self.wearCount
         item.garments          = Array(garments)
+        item.notes             = self.notes
         item.totalValue        = garments.reduce(0) { $0 + ($1.price ?? 0) }
         
         item.refreshAllMetadata()

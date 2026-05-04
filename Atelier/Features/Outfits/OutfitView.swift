@@ -78,7 +78,7 @@ struct OutfitView: View {
     private func bodyModifiers(_ view: some View) -> some View {
         view
             .navigationDestination(item: $outfitViewModel.navigatedOutfit) { item in
-                InfoOutfitView(item)
+                OutfitInfoView(item)
                     .onAppear {
                         withAnimation {
                             outfitState.hiddenSectionBar = true

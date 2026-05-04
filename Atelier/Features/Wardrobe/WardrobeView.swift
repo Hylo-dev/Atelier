@@ -59,7 +59,7 @@ struct WardrobeView: View {
     private func bodyModifiers(_ view: some View) -> some View {
         view
             .navigationDestination(item: $wardrobeViewModel.selectedItem) { item in
-                InfoGarmentView(item, garmentManager: self.garmentManager)
+                GarmentInfoView(item, garmentManager: self.garmentManager)
                     .onAppear {
                         withAnimation { wardrobeState.hiddenSectionBar = true }
                     }

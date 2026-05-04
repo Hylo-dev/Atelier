@@ -17,6 +17,8 @@ struct OutfitEditorView: View {
     private var outfitManager: OutfitManager
         
     let outfit: Outfit?
+    
+    
 
     
     
@@ -52,8 +54,10 @@ struct OutfitEditorView: View {
                 
         HeroListView(
             editorViewModel.fullLookImagePath,
-            previewImage  : uiImageToSave,
-            isImageClicked: $showCamera
+            previewImage       : uiImageToSave,
+            isImageClicked     : $showCamera,
+            colorPlaceholder   : editorViewModel.item?.colors.map { $0.toColor() } ?? [.accentColor],
+            placeholderGradient: true
         ) {
             
         } content: { // MARK: - Section
@@ -66,6 +70,7 @@ struct OutfitEditorView: View {
             
             sectionNotes
         }
+        .heroHeight(550)
         .sensoryFeedback(.success, trigger: self.isSaved)
         .navigationTitle(outfit == nil ? "New Outfit" : "Edit Outfit")
         .navigationBarTitleDisplayMode(.inline)
@@ -106,7 +111,6 @@ struct OutfitEditorView: View {
         } message: {
             Text(editorViewModel.alertManager.message)
         }
-        
     }
     
     

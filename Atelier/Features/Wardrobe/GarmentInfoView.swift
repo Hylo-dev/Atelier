@@ -8,7 +8,7 @@
 import SwiftUI
 import SwiftData
 
-struct InfoGarmentView: View {
+struct GarmentInfoView: View {
     
     @Environment(\.dismiss)
     private var dismiss
@@ -185,6 +185,8 @@ struct InfoGarmentView: View {
                     value: price
                 )
             }
+            
+            RowInfoView(title: "Status", value: self.item.state.rawValue)
         }
     }
     
@@ -264,15 +266,16 @@ struct InfoGarmentView: View {
     @ViewBuilder
     private var outfitsRow: some View {
         
-        HorizontalScrollList(
-            title: "Outfits",
-            items: item.outfits
-        ) { outfit in
-            ModelCardView(
-                title    : outfit.name,
-                imagePath: outfit.fullLookImagePath
-            )
-            .frame(width: 150, height: 250)
+        SectionList(titleKey: "Outfits") {
+            HorizontalScrollList(
+                items: item.outfits
+            ) { outfit in
+                ModelCardView(
+                    title    : outfit.name,
+                    imagePath: outfit.fullLookImagePath
+                )
+                .frame(width: 150, height: 250)
+            }
         }
     }
 }
@@ -293,7 +296,7 @@ struct InfoGarmentView: View {
         style: .casual
     )
     
-    InfoGarmentView(
+    GarmentInfoView(
         garment,
         garmentManager: garmentManager
     )

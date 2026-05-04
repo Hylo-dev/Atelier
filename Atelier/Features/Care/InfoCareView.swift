@@ -52,10 +52,12 @@ struct InfoCareView: View {
             settingsSection
             
             if !item.garments.isEmpty {
-                garmentsGridSection
+                garmentsListSection
             }
             
-            symbolsSection
+            if !item.laundrySymbols.isEmpty {
+                symbolsSection
+            }
         }
         .sensoryFeedback(.success, trigger: isDeleted)
         .toolbar {
@@ -175,34 +177,25 @@ struct InfoCareView: View {
     
     
     @ViewBuilder
-    private var garmentsGridSection: some View {
+    private var garmentsListSection: some View {
+        
         
         Section("Garments") {
-            let useTwoRows = item.garments.count > 3
-            let rows = Array(
-                repeating: GridItem(.fixed(125), spacing: 15),
-                count    : useTwoRows ? 2 : 1
-            )
             
-            ScrollView(
-                .horizontal,
-                showsIndicators: false
-            ) {
-                LazyHGrid(
-                    rows     : rows,
-                    alignment: .center,
-                    spacing  : 15
-                ) {
-                    ForEach(item.garments, id: \.id) { garment in
-                        ModelCardView(
-                            title    : garment.name,
-                            imagePath: garment.imagePath
-                        )
-                        .frame(width: 150, height: 250)
-                    }
-                }
+            HorizontalScrollList(
+                items: item.garments,
+            ) { garment in
+                ModelCardView(
+                    title      : garment.name,
+                    subheadline: garment.subCategory.rawValue,
+                    imagePath  : garment.imagePath
+                )
+                .frame(width: 150, height: 250)
             }
         }
+        .listRowInsets(EdgeInsets())
+        .padding(.leading, 15)
+        .padding(.vertical, 5)
     }
     
     

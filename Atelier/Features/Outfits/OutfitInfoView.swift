@@ -9,8 +9,7 @@
 import SwiftUI
 import Glur
 
-struct InfoOutfitView: View {
-    
+struct OutfitInfoView: View {
     
     
     // MARK: - Parameters Variables
@@ -40,6 +39,7 @@ struct InfoOutfitView: View {
     private var containerWidth: CGFloat = 0
     
     
+    
     init(_ outfit: Outfit) {
         self.outfit = outfit
         
@@ -47,7 +47,6 @@ struct InfoOutfitView: View {
         self.deleteItem           = false
         self.isDeleted            = false
     }
-    
     
     
     var body: some View {
@@ -289,10 +288,11 @@ struct InfoOutfitView: View {
         SectionList(titleKey: "Notes") {
             VStack(alignment: .leading) {
                 Text(outfit.notes!)
-                .font(.body)
-                .fontWeight(.regular)
-                .multilineTextAlignment(.leading)
-                .frame(maxWidth: .infinity, alignment: .leading)
+                    .font(.body)
+                    .fontWeight(.regular)
+                    .fontDesign(.rounded)
+                    .multilineTextAlignment(.leading)
+                    .frame(maxWidth: .infinity, alignment: .leading)
             }
             .padding(.horizontal, 8)
             .padding(.vertical, 10)
@@ -303,16 +303,19 @@ struct InfoOutfitView: View {
     @ViewBuilder
     private var garmentsLazyRow: some View {
         
-        HorizontalScrollList(
-            title: "Items",
-            items: outfit.garments
-        ) { garment in
-            ModelCardView(
-                title      : garment.name,
-                subheadline: garment.subCategory.rawValue,
-                imagePath  : garment.imagePath
-            )
-            .frame(width: 150, height: 250)
+        SectionList(titleKey: "Items") {
+            HorizontalScrollList(
+                items: outfit.garments,
+            ) { garment in
+                ModelCardView(
+                    title      : garment.name,
+                    subheadline: garment.subCategory.rawValue,
+                    imagePath  : garment.imagePath
+                )
+                .frame(width: 150, height: 250)
+            }
         }
+        
+        
     }
 }

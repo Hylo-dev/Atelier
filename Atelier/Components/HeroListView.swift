@@ -22,6 +22,8 @@ struct HeroListView<TitleContent: View, BodyContent: View>: View {
     private let titleHeroList: TitleContent
     private let content      : BodyContent
     
+    private var frameHeight: CGFloat = 700
+    
     init(
         _ imagePath        : String?,
         previewImage       : UIImage?      = nil,
@@ -51,7 +53,6 @@ struct HeroListView<TitleContent: View, BodyContent: View>: View {
                 
                 LazyVStack(spacing: 24) {
                     content
-                    
                 }
                 .padding(.horizontal)
                 .padding(.bottom, 40)
@@ -69,7 +70,7 @@ struct HeroListView<TitleContent: View, BodyContent: View>: View {
             icon    : iconPlaceholder,
             uiImage : previewImage
         )
-        .frame(height: 700)
+        .frame(height: frameHeight)
         .visualEffect { content, proxy in
             let minY = proxy.frame(in: .global).minY
             let isScrollingDown = minY > 0
@@ -105,5 +106,11 @@ struct HeroListView<TitleContent: View, BodyContent: View>: View {
         .onTapGesture {
             self.isImageClicked = true
         }
+    }
+    
+    func heroHeight(_ height: CGFloat) -> Self {
+        var copy = self
+        copy.frameHeight = height
+        return copy
     }
 }

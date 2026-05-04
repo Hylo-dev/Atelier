@@ -9,33 +9,27 @@ import SwiftUI
 import SwiftData
 
 struct HorizontalScrollList<T: PersistentModel, Content: View>: View {
-    let title: String
     let items: [T]
     
     @ViewBuilder
     var content: (T) -> Content
     
     init(
-        title: String,
-        items: [T],
+        items               : [T],
         @ViewBuilder content: @escaping (T) -> Content
     ) {
-        self.title   = title
-        self.items   = items
-        self.content = content
+        self.items               = items
+        self.content             = content
     }
     
     var body: some View {
-        SectionList(titleKey: title) {
-            
-            ScrollView(.horizontal) {
-                LazyHStack(spacing: 15) {
-                    ForEach(items, id: \.id) { item in
-                        content(item)
-                    }
+        
+        ScrollView(.horizontal) {
+            LazyHStack(spacing: 15) {
+                ForEach(items, id: \.id) { item in
+                    content(item)
                 }
             }
         }
-        .padding(.vertical, 10)
     }
 }

@@ -74,7 +74,7 @@ struct OutfitListContent: View {
                     }
             }
             
-            if !outfitState.items.isEmpty {
+            if !outfits.isEmpty {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Filter", systemImage: "line.3.horizontal.decrease") {
                         outfitViewModel.isFilterSheetVisible = true

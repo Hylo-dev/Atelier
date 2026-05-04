@@ -60,6 +60,7 @@ struct GarmentEditorView: View {
             // Section 5: Composition Garment
             self.sectionComposition
         }
+        .heroHeight(550)
         .navigationTitle(item == nil ? "New Garment" : "Edit Garment")
         .navigationBarTitleDisplayMode(.inline)
         .scrollDismissesKeyboard(.interactively)

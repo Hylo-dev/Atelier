@@ -29,7 +29,10 @@ struct CareContextCardView: View {
     var body: some View {
         
         // TODO: When item status is `completed` change card UI
-        NavigationLink(value: item) {
+        Button {
+            viewModel.selectedItem = item
+            
+        } label: {
             MultipleCardView(
                 title      : "\(item.targetTemperature)° \(item.suggestedProgram.displayName)",
                 subheadline: item.subheadline,

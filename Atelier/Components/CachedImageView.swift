@@ -32,7 +32,8 @@ struct CachedImageView: View {
     }
     
     var body: some View {
-        LazyImage(url: self.imageURL) { state in
+        
+        LazyImage(url: imageURL) { state in
             if let image = state.image {
                 image
                     .resizable()
@@ -48,7 +49,10 @@ struct CachedImageView: View {
                     )
                 
             } else {
-                self.placeholderView(isError: state.error != nil)
+                self.placeholderView(
+                    iconError: "washer.fill",
+                    isError  : state.error != nil
+                )
             }
         }
         .processors([
@@ -64,12 +68,15 @@ struct CachedImageView: View {
     }
     
     @ViewBuilder
-    private func placeholderView(isError: Bool) -> some View {
+    private func placeholderView(
+        iconError: String = "photo.badge.exclamationmark",
+        isError: Bool
+    ) -> some View {
         ZStack {
             Color.gray.opacity(0.1)
             
             if isError {
-                Image(systemName: "photo.badge.exclamationmark")
+                Image(systemName: iconError)
                     .font(.largeTitle)
                     .foregroundStyle(.secondary)
                 
